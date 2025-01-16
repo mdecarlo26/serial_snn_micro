@@ -1,0 +1,13 @@
+
+
+Synchronous stats
+
+Event driven
+	Spikes are handled one at a time through whole network
+		lose some temporal info but less compute (how much of loss)
+	spikes are handled in a delayed fashion. Causes multiple spikes in network at same time
+		more computation cost but preserve temporal info (better in general)
+
+Need to implement only FF LIF or other layers like Conv?
+
+Too heavy for micro controller?

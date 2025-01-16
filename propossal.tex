@@ -1,0 +1,152 @@
+\documentclass[journal]{IEEEtran}
+\usepackage{amsmath}
+\begin{document}
+%
+\title{Spiking Neural Networks\\ on Serial CPU}
+\author{Marc~DeCarlo,
+        Nagarajan~Kandasamy% <-this % stops a space
+\thanks{Revised January 7, 2025}}
+
+
+% The paper headers
+\markboth{}%
+{DeCarlo \MakeLowercase{\textit{et al.}}: Spiking Neural Networks on Serial CPU}
+
+
+% make the title area
+\maketitle 
+
+% As a general rule, do not put math, special symbols or citations
+% in the abstract or keywords.
+\begin{abstract}
+The goal is to bring the event-driven paradigm of a Spiking Neural Network (SNN) to embed it on a serial CPU with minimal energy and performance loss compared to a neuromorphic hardware approach.
+\end{abstract}
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+\IEEEPARstart{T}{his} paper addresses the challenge of maintaining decay accuracy in event-driven spiking neural network simulations. Traditional synchronous approaches struggle with computational inefficiency, while naive asynchronous methods often sacrifice accuracy due to unaccounted delays in neuron updates. This work presents a method to achieve high accuracy while preserving the event-driven nature of simulations, critical for applications requiring real-time responses.
+
+The method ensures that each neuron's state is updated accurately by considering its last spike time and its interspike activity, leveraging an event queue for spike handling and dynamic decay calculations.
+
+\section{Neuron Dynamics}
+The dynamics of a Leaky Integrate-and-Fire (LIF) neuron are given by:
+
+\begin{equation}
+\frac{dV(t)}{dt} =
+\begin{cases} 
+\frac{-\left[V(t) - V_{\text{rest}}\right] + R_m I(t)}{\tau_m} & \text{if } V(t) < V_{\text{th}} \\
+0 & \text{if } V(t) \geq V_{\text{th}}
+\end{cases}
+\label{eq:LIF_dynamics}
+\end{equation}
+
+Here, $V(t)$ is the membrane potential, $V_{\text{rest}}$ is the resting potential, $R_m$ is the membrane resistance, $I(t)$ is the input current, $\tau_m$ is the membrane time constant, and $V_{\text{th}}$ is the firing threshold.
+
+\subsection{Key Challenges}
+In an event-driven framework, accurately maintaining the decay function requires:
+\begin{itemize}
+    \item Efficient calculation of decay using $\Delta t$ (time elapsed since the last update).
+    \item A mechanism to service neurons waiting for update due to computational delays without affecting accuracy.
+\end{itemize}
+
+\section{Problem Overview}
+The problem involves simulating a spiking neural network in an event-driven manner, balancing:
+- \textbf{Accuracy}: Ensuring that the decay and spike timings are computed close to event-driven equivalence.
+- \textbf{Efficiency}: Minimizing unnecessary computations for inactive neurons and monitoring of the system.
+
+This paper proposes a hybrid approach that combines event queues with dynamic state recalculation for idle neurons. This method accurately updates neurons based on the exact elapsed time $\Delta t$, derived as follows:
+
+\subsection{Total Simulation Time and $\Delta t$}
+
+The \textbf{total simulation time} ($T_{\text{total}}$) is determined by:
+\begin{itemize}
+    \item Input duration: $T_{\text{input}}$ (e.g., 100 ms for a presented stimulus).
+    \item Post-stimulus observation: $T_{\text{post}}$ (e.g., 20 ms).
+\end{itemize}
+\[
+T_{\text{total}} = T_{\text{input}} + T_{\text{post}}
+\]
+
+The \textbf{delta time} ($\Delta t$) is the granularity of updates and is chosen based on:
+\begin{itemize}
+    \item Decay time constant $\tau$: $\Delta t \leq \frac{\tau}{10}$. (random rule needs to be experimentally derived)
+\end{itemize}
+
+\subsection{Keeping Track of Simulation Time}
+
+Simulation time is tracked using a global clock, $T_{\text{sim}}$, which advances in discrete steps based on events. Key components include:
+\begin{itemize}
+    \item \textbf{Event Queue:} Each event in the queue is timestamped, ensuring chronological processing.
+    \item \textbf{Time Increment:} After processing an event, $T_{\text{sim}}$ is updated to the timestamp of the next event.
+\end{itemize}
+
+Neurons that remain idle between events use $T_{\text{sim}}$ to calculate the elapsed time ($\Delta t$) since their last update, ensuring accurate decay calculations.
+
+\subsection{Dynamic $\Delta t$ Adjustment}
+
+Dynamic adjustment of $\Delta t$ improves efficiency by tailoring the update frequency to the activity level of neurons:
+\begin{itemize}
+    \item \textbf{Active Neurons:} For neurons involved in frequent spiking or events, $\Delta t$ is minimized to maintain high temporal resolution.
+    \item \textbf{Idle Neurons:} For neurons with no incoming spikes, $\Delta t$ is extended, reducing computational overhead.
+\end{itemize}
+
+This adjustment is governed by:
+\[
+\Delta t = \min(\Delta t_{\text{max}}, T_{\text{next}} - T_{\text{last}}),
+\]
+where $\Delta t_{\text{max}}$ is a predefined upper limit, $T_{\text{next}}$ is the time of the next event, and $T_{\text{last}}$ is the neuron's last update time.
+
+
+\subsection{Accounting for Runtime and Neuron Update Delays}
+
+In an event-driven system, the runtime per update is influenced by the number of active events and their interdependencies. The computational efficiency is optimized by:
+
+1. \textbf{Dynamic Delta Time Adjustment:} Adjusting $\Delta t$ based on network activity ensures a balance between computational load and accuracy.
+2. \textbf{Latency Management:} Each neuron's $\Delta t$ is recalculated based on its last update time and the current simulation time, ensuring accurate decay computations even with delayed updates.
+
+
+
+\section{Implementation Outline}
+\subsection{Initialization}
+\begin{itemize}
+    \item Set simulation parameters: $T_{\text{total}}$, $\Delta t$, neuron properties ($V_{\text{rest}}$, $V_{\text{th}}$, $\tau_m$).
+    \item Initialize event queue and neuron states.
+\end{itemize}
+
+
+\subsection{Event-Driven Simulation Loop}
+\begin{enumerate}
+    \item \textbf{Process Events:}
+    \begin{itemize}
+        \item Dequeue next event.
+        \item Update neuron's membrane potential $V(t)$ using:
+        \[ V(t) = V_{\text{rest}} + (V_{\text{prev}} - V_{\text{rest}}) e^{-\Delta t / \tau_m} \]
+    \end{itemize}
+    \item \textbf{Handle Spikes:}
+    \begin{itemize}
+        \item If $V(t) \geq V_{\text{th}}$, emit a spike and reset $V(t)$ to $V_{\text{rest}}$.
+        \item Enqueue connected neurons with spike propagation delay.
+    \end{itemize}
+    \item \textbf{Update Idle Neurons:}
+    \begin{itemize}
+        \item Recalculate decay for neurons without recent spikes based on elapsed $\Delta t$.
+    \end{itemize}
+\end{enumerate}
+
+
+
+\section*{Acknowledgment}
+Thank you 
+
+\begin{thebibliography}{1}
+
+\bibitem{IEEEhowto:kopka}
+% H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
+%   0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+
+\end{thebibliography}
+
+
+\end{document}
+
+
