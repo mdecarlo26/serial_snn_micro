@@ -9,11 +9,11 @@ BUILD_DIR = $(SRC_DIR)/build
 EXE_NAME = main
 
 # Source and object files
-SRCS = $(SRC_DIR)/$(EXE_NAME).c
-OBJS = $(BUILD_DIR)/$(EXE_NAME).o
+SRCS = $(SRC_DIR)/$(EXE_NAME).c $(SRC_DIR)/file_operations.c
+OBJS = $(BUILD_DIR)/$(EXE_NAME).o $(BUILD_DIR)/file_operations.o
 
 # Output executable
-TARGET = $(BUILD_DIR)/$(EXE_NAME)
+TARGET = $(EXE_NAME)
 
 # Default target
 all: $(TARGET)
@@ -30,7 +30,8 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 
 # Clean target
 clean:
-	rm -rf $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(TARGET)
+	rm -rf $(BUILD_DIR) *.o
 
 # Run target
 run: $(TARGET)

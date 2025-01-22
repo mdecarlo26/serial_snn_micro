@@ -1,71 +1,77 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 import snntorch as snn
-import snntorch.functional as SF
-import snntorch.spikegen as spikegen
-import numpy as np
+from snntorch import spikegen
 from torch.utils.data import DataLoader, TensorDataset
 
-# Define the network architecture
-class SNN(nn.Module):
-    def __init__(self, num_inputs, num_hidden, num_outputs):
-        super(SNN, self).__init__()
-        self.fc1 = nn.Linear(num_inputs, num_hidden)
-        self.lif1 = snn.Leaky(beta=0.9)
-        self.fc2 = nn.Linear(num_hidden, num_outputs)
-        self.lif2 = snn.Leaky(beta=0.9)
+# Load Data
+data = torch.tensor([[float(line.strip())] for line in open("data.txt")])
+labels = torch.tensor([int(float(line.strip())) for line in open("labels.txt")])  # Ensure labels are 0 or 1
 
+# Prepare Dataset and DataLoader
+dataset = TensorDataset(data, labels)
+dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+
+# Define SNN with 2 LIF layers, each with 10 neurons
+class TwoLayerSNN(nn.Module):
+    def __init__(self):
+        super(TwoLayerSNN, self).__init__()
+        self.fc1 = nn.Linear(1, 10)  # First layer: input -> 10 neurons
+        self.lif1 = snn.Leaky(beta=0.8)
+        self.fc2 = nn.Linear(10, 2)  # Second layer: 10 neurons -> 2 output neurons (for 2 classes)
+        self.lif2 = snn.Leaky(beta=0.8)
+        
     def forward(self, x):
-        cur1 = self.fc1(x)
-        spk1, mem1 = self.lif1(cur1)
-        cur2 = self.fc2(spk1)
-        spk2, mem2 = self.lif2(cur2)
-        return spk2, mem2
+        mem1 = self.lif1.init_leaky()
+        mem2 = self.lif2.init_leaky()
+        spk1_rec, mem1_rec = [], []
+        spk2_rec, mem2_rec = [], []
+        
+        for step in range(20):  # Simulating 20 time steps
+            cur = self.fc1(x)
+            spk1, mem1 = self.lif1(cur, mem1)
+            cur = self.fc2(spk1)
+            spk2, mem2 = self.lif2(cur, mem2)
+            spk1_rec.append(spk1)
+            mem1_rec.append(mem1)
+            spk2_rec.append(spk2)
+            mem2_rec.append(mem2)
+        
+        # Return summed spikes over time (this is the final classification logits)
+        summed_spikes = torch.stack(spk2_rec, dim=0).sum(0)  # Shape: [batch_size, num_classes]
+        
+        return summed_spikes
 
-# Load the dummy data
-data = np.loadtxt("dummy_data.txt")
-labels = np.loadtxt("dummy_labels.txt")
+# Instantiate the model
+model = TwoLayerSNN()
 
-# Convert data to PyTorch tensors
-data = torch.tensor(data, dtype=torch.float32).unsqueeze(1)
-labels = torch.tensor(labels, dtype=torch.float32).unsqueeze(1)
+# Loss and Optimizer
+loss_fn = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
 
-# Convert data to spikes
-num_steps = 10
-spike_data = spikegen.rate(data, num_steps=num_steps)
-
-# Create DataLoader
-dataset = TensorDataset(spike_data, labels)
-dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
-
-# Initialize the network
-num_inputs = 1
-num_hidden = 10
-num_outputs = 1
-net = SNN(num_inputs, num_hidden, num_outputs)
-
-# Define loss function and optimizer
-criterion = nn.BCELoss()
-optimizer = optim.Adam(net.parameters(), lr=0.01)
-
-# Training loop
-num_epochs = 100
+# Training Loop
+num_epochs = 10
 for epoch in range(num_epochs):
     for batch_data, batch_labels in dataloader:
-        spk_out, mem_out = net(batch_data)
-        loss = criterion(spk_out, batch_labels)
+        # Convert to spike trains
+        batch_data = spikegen.rate(batch_data, num_steps=20)  # Convert data to spike train
+        
         optimizer.zero_grad()
+        logits = model(batch_data)  # Get the final summed spikes over time
+        
+        # Compute the loss (CrossEntropyLoss expects logits with shape [batch_size, num_classes])
+        loss = loss_fn(logits, batch_labels)
         loss.backward()
         optimizer.step()
-    if (epoch + 1) % 10 == 0:
-        print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}")
+    
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {loss.item()}")
 
-# Save the final weights and output to text files
-np.savetxt("weights_fc1.txt", net.fc1.weight.detach().numpy())
-np.savetxt("weights_fc2.txt", net.fc2.weight.detach().numpy())
-
-# Generate final output for the entire dataset
+# Test the Model
 with torch.no_grad():
-    spk_out, _ = net(spike_data)
-np.savetxt("final_output.txt", spk_out.detach().numpy())
+    test_data = spikegen.rate(data, num_steps=20)
+    logits = model(test_data)  # Get the final summed spikes over time
+    
+    # Get predictions from the logits
+    predictions = logits.argmax(1)  # Get class predictions based on maximum spikes
+    accuracy = (predictions == labels).float().mean()
+    print(f"Test Accuracy: {accuracy.item() * 100:.2f}%")

@@ -52,7 +52,7 @@ for epoch in range(num_epochs):
         spk_out, mem_out = net(batch_data)
         loss = criterion(spk_out, batch_labels)
         optimizer.zero_grad()
-        loss.backward()
+        loss.backward(retain_graph=True)
         optimizer.step()
     if (epoch + 1) % 10 == 0:
         print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {loss.item():.4f}")
