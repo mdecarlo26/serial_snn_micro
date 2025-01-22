@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "file_operations.h"
 
 #define MAX_LAYERS 10
 #define MAX_NEURONS 100
@@ -32,7 +33,7 @@ unsigned char ping_pong_buffer_1[(MAX_NEURONS + 7) / 8];
 unsigned char ping_pong_buffer_2[(MAX_NEURONS + 7) / 8];
 
 // Function prototypes
-void initialize_network(int neurons_per_layer[]);
+void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2);
 void free_network();
 void set_bit(unsigned char buffer[], int index, int value);
 int get_bit(const unsigned char buffer[], int index);
@@ -41,7 +42,7 @@ void update_layer(const unsigned char input[], unsigned char output[], Layer *la
 void initialize_input_spikes(unsigned char input[], int num_neurons);
 
 // Function to initialize weights and neuron properties
-void initialize_network(int neurons_per_layer[]) {
+void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2) {
     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
     for (int l = 0; l < network.num_layers; l++) {
         network.layers[l].num_neurons = neurons_per_layer[l];
@@ -52,8 +53,10 @@ void initialize_network(int neurons_per_layer[]) {
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             network.layers[l].weights[i] = (float *)malloc((l == 0 ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons) * sizeof(float));
-            for (int j = 0; j < (l == 0 ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons); j++) {
-                network.layers[l].weights[i][j] = 1;
+            if (l == 0) {
+                memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l].num_neurons * sizeof(float));
+            } else if (l == 1) {
+                memcpy(network.layers[l].weights[i], weights_fc2[i], network.layers[l - 1].num_neurons * sizeof(float));
             }
         }
     }
@@ -139,37 +142,72 @@ int main() {
     network.num_layers = 3;
     int neurons_per_layer[] = {10, 10, 10};
 
-    initialize_network(neurons_per_layer);
+    // Load weights from files
+    float **weights_fc1 = (float **)malloc(10 * sizeof(float *));
+    float **weights_fc2 = (float **)malloc(10 * sizeof(float *));
+    for (int i = 0; i < 10; i++) {
+        weights_fc1[i] = (float *)malloc(10 * sizeof(float));
+        weights_fc2[i] = (float *)malloc(10 * sizeof(float));
+    }
+    load_weights("weights_fc1.txt", weights_fc1, 10, 10);
+    load_weights("weights_fc2.txt", weights_fc2, 10, 10);
+
+    initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
+
+    // Load data from file
+    float data[200];
+    load_data("dummy_data.txt", data, 200);
 
     // Initialize input to the first layer
     unsigned char *input = ping_pong_buffer_1;
     unsigned char *output = ping_pong_buffer_2;
 
-    // Initialize input spikes for the first layer
-    initialize_input_spikes(input, network.layers[0].num_neurons);
+    // Process each data point
+    FILE *output_file = fopen("model_output.txt", "w");
+    if (output_file == NULL) {
+        perror("Failed to open output file");
+        exit(EXIT_FAILURE);
+    }
 
-    // Process each layer
-    for (int l = 0; l < network.num_layers; l++) {
-        int num_neurons = network.layers[l].num_neurons;
-        int input_size = (l == 0) ? num_neurons : network.layers[l - 1].num_neurons;
-
-        // Simulate tau time steps for the current layer
-        for (int t = 0; t < TAU; t++) {
-            update_layer(input, output, &network.layers[l], input_size);
-            // Swap the buffers
-            unsigned char *temp = input;
-            input = output;
-            output = temp;
+    for (int d = 0; d < 200; d++) {
+        // Initialize input spikes for the first layer
+        for (int i = 0; i < network.layers[0].num_neurons; i++) {
+            set_bit(input, i, data[d] > 0 ? 1 : 0);
         }
+
+        // Process each layer
+        for (int l = 0; l < network.num_layers; l++) {
+            int num_neurons = network.layers[l].num_neurons;
+            int input_size = (l == 0) ? num_neurons : network.layers[l - 1].num_neurons;
+
+            // Simulate tau time steps for the current layer
+            for (int t = 0; t < TAU; t++) {
+                update_layer(input, output, &network.layers[l], input_size);
+                // Swap the buffers
+                unsigned char *temp = input;
+                input = output;
+                output = temp;
+            }
+        }
+
+        // Save the output of the last layer
+        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+            int output = get_bit(input, i);
+            fprintf(output_file, "%d ", output);
+        }
+        fprintf(output_file, "\n");
     }
 
-    // Print the output of the last layer
-    for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-        printf("Neuron %d output: %d\n", i, get_bit(input, i));
-    }
+    fclose(output_file);
 
     // Free the allocated memory
     free_network();
+    for (int i = 0; i < 10; i++) {
+        free(weights_fc1[i]);
+        free(weights_fc2[i]);
+    }
+    free(weights_fc1);
+    free(weights_fc2);
 
     return 0;
 }

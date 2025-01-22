@@ -6,12 +6,14 @@ CFLAGS = -Wall -Wextra -O2
 SRC_DIR = .
 BUILD_DIR = $(SRC_DIR)/build
 
+EXE_NAME = main
+
 # Source and object files
-SRCS = $(SRC_DIR)/main.c
-OBJS = $(BUILD_DIR)/main.o
+SRCS = $(SRC_DIR)/$(EXE_NAME).c
+OBJS = $(BUILD_DIR)/$(EXE_NAME).o
 
 # Output executable
-TARGET = $(BUILD_DIR)/snn_micro
+TARGET = $(BUILD_DIR)/$(EXE_NAME)
 
 # Default target
 all: $(TARGET)
