@@ -278,7 +278,6 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
                 set_bit(output, i, t, 0); // Neuron does not fire
                 continue;
             }
-            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
             if (sum > layer->neurons[i].voltage_thresh) {
                 layer->neurons[i].membrane_potential += 1.0; // Increase potential if neuron fired
             }
@@ -289,6 +288,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             } else {
                 set_bit(output, i, t, 0); // Neuron does not fire
             }
+            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
             printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", i, t, layer->neurons[i].membrane_potential);
         }
     }
