@@ -136,9 +136,9 @@ int main() {
                 printf("Simulating Layer %d\n", l);
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
-                char **temp = ping_pong_buffer_1;
-                ping_pong_buffer_1 = ping_pong_buffer_2;
-                ping_pong_buffer_2 = temp;
+                // char **temp = ping_pong_buffer_1;
+                // ping_pong_buffer_1 = ping_pong_buffer_2;
+                // ping_pong_buffer_2 = temp;
 
                 // Print neuron states after processing each layer
                 printf("Neuron states in layer %d after processing:\n", l);
