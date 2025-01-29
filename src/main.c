@@ -46,7 +46,7 @@ int get_bit(const char **buffer, int x, int y);
 void simulate_layer(const char **input, char **output, float **weights, int num_neurons, int input_size);
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
 void initialize_input_spikes(char **input, int num_neurons);
-void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
+void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks);
 void print_weights(float **weights, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
@@ -110,11 +110,17 @@ int main() {
     }
 
     printf("Starting Sim\n");
+    int num_chunks = TIME_WINDOW / TAU;
     for (int d = 1; d < NUM_SAMPLES; d++) {
-        int firing_counts[MAX_NEURONS] = {0};
+        int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
+        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+            firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
+        }
 
         // Process each chunk of TAU time steps
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
+            int chunk_index = chunk / TAU;
+
             // Initialize input spikes for the first layer using spike trains
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
@@ -134,7 +140,7 @@ int main() {
 
                 // Simulate tau time steps for the current layer
                 // printf("Simulating Layer %d\n", l);
-                // update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+                update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
                 char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
@@ -152,14 +158,20 @@ int main() {
             for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
                 for (int t = 0; t < TAU; t++) {
                     if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
-                        firing_counts[i]++;
+                        firing_counts[i][chunk_index]++;
                     }
                 }
             }
         }
-        break;
+
         // Classify the spike train for the current data sample
-        classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
+        classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
+
+        // Free firing counts memory
+        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+            free(firing_counts[i]);
+        }
+        free(firing_counts);
     }
     printf("Sim Finished\n");
     fclose(output_file);
@@ -293,13 +305,17 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
 }
 
 // Function to classify spike trains based on the firing frequency of the last layer
-void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index) {
+void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks) {
     // Determine the classification based on the neuron with the highest firing frequency
     int max_firing_count = 0;
     int classification = -1;
     for (int i = 0; i < num_neurons; i++) {
-        if (firing_counts[i] > max_firing_count) {
-            max_firing_count = firing_counts[i];
+        int total_firing_count = 0;
+        for (int j = 0; j < num_chunks; j++) {
+            total_firing_count += firing_counts[i][j];
+        }
+        if (total_firing_count > max_firing_count) {
+            max_firing_count = total_firing_count;
             classification = i;
         }
     }
