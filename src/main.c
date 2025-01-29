@@ -146,6 +146,7 @@ int main() {
 
                 // Print ping pong buffers
                 print_ping_pong_buffers((const unsigned char **)ping_pong_buffer_1, (const unsigned char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                break;
             }
 
             // Accumulate firing counts for the last layer
@@ -279,7 +280,7 @@ void update_layer(const unsigned char **input, unsigned char **output, Layer *la
                     }
                 }
             }
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2ff\n", i, t, sum, layer->neurons[i].membrane_potential);
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
             if (!any_fired) {
                 layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
                 set_bit(output, i, t, 0); // Neuron does not fire
