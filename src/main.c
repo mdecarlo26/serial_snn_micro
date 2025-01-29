@@ -110,9 +110,11 @@ int main() {
 
         // Initialize input spikes for the first layer using spike trains
         for (int t = 0; t < TIME_WINDOW; t++) {
+            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[l].num_neurons);
             for (int i = 0; i < network.layers[0].num_neurons; i++) {
                 set_bit(input, i, spike_trains[d][t]);
             }
+            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[l].num_neurons);
 
             // Print input spikes
             printf("Input spikes at time %d:\n", t);
@@ -146,9 +148,9 @@ int main() {
                     firing_counts[i]++;
                 }
             }
-        }
         if (d == 1) {
             break;
+        }
         }
 
         // Classify the spike train for the current data sample
@@ -179,7 +181,7 @@ int main() {
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2) {
     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
     for (int l = 0; l < network.num_layers; l++) {
-        printf("Initializing Layer %d\n", l);
+        // printf("Initializing Layer %d\n", l);
         network.layers[l].layer_num = l;
         network.layers[l].num_neurons = neurons_per_layer[l];
         network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
@@ -190,7 +192,7 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             if (l > 0) { // Only allocate weights for layers after the first layer
                 network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
-                printf("Allocating Weights for Neuron %d in Layer %d\n", i, l);
+                // printf("Allocating Weights for Neuron %d in Layer %d\n", i, l);
                 if (l == 1) {
                     memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
                 } else if (l == 2) {
