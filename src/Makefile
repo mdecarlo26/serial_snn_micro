@@ -9,8 +9,8 @@ BUILD_DIR = $(SRC_DIR)/build
 EXE_NAME = main
 
 # Source and object files
-SRCS = $(SRC_DIR)/$(EXE_NAME).c $(SRC_DIR)/file_operations.c
-OBJS = $(BUILD_DIR)/$(EXE_NAME).o $(BUILD_DIR)/file_operations.o
+SRCS = $(SRC_DIR)/$(EXE_NAME).c $(SRC_DIR)/file_operations.c $(SRC_DIR)/rate_encoding.c
+OBJS = $(BUILD_DIR)/$(EXE_NAME).o $(BUILD_DIR)/file_operations.o $(BUILD_DIR)/rate_encoding.o
 
 # Output executable
 TARGET = $(EXE_NAME)

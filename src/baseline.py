@@ -24,8 +24,8 @@ class SNN(nn.Module):
         return spk2, mem2
 
 # Load the dummy data
-data = np.loadtxt("dummy_data.txt")
-labels = np.loadtxt("dummy_labels.txt")
+data = np.loadtxt("data.txt")
+labels = np.loadtxt("labels.txt")
 
 # Convert data to PyTorch tensors
 data = torch.tensor(data, dtype=torch.float32).unsqueeze(1)

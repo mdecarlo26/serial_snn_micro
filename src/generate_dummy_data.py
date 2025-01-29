@@ -2,8 +2,8 @@ import numpy as np
 
 # Parameters
 num_samples = 100
-mean_class_1 = 5
-mean_class_2 = -5
+mean_class_1 = 1
+mean_class_2 = -1
 std_dev = 1
 
 # Generate data for class 1
@@ -17,8 +17,7 @@ labels_class_2 = np.zeros(num_samples)
 # Combine the data and labels
 data = np.concatenate((data_class_1, data_class_2)).astype(float)
 labels = np.concatenate((labels_class_1, labels_class_2)).astype(int)
-print(labels)
 
 # Save the data and labels to text files
-np.savetxt("dummy_data.txt", data)
-np.savetxt("dummy_labels.txt", labels)
+np.savetxt("data.txt", data)
+np.savetxt("labels.txt", labels)

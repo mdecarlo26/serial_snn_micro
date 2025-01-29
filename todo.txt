@@ -1,0 +1,2 @@
+need to add inihibition to main.c
+need to add spike generation in main.c

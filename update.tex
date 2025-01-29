@@ -1,0 +1,62 @@
+% filepath: /c:/Drexel/Research/Kand/snn_micro/src/review.tex
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+
+\def\IEEEkeywordsname{Keywords}
+
+\begin{document}
+
+\title{Spiking Neural Network Simulation and Classification}
+
+\author{\IEEEauthorblockN{Your Name}
+\IEEEauthorblockA{\textit{Department of Electrical and Computer Engineering} \\
+\textit{Drexel University}\\
+Philadelphia, PA, USA \\
+your.email@drexel.edu}
+}
+
+\maketitle
+
+\begin{abstract}
+This paper presents a comprehensive study of a Spiking Neural Network (SNN) simulation and classification project. The project involves simulating an SNN using a simple model with multiple layers of neurons, each having a membrane potential, voltage threshold, and decay rate. The simulation processes input spikes through the network layers and updates the neurons' states based on the input and their weights. Additionally, a small SNN is implemented to classify data with two classes, where the data is a single float value per sample. The data is converted to spikes for the classification task. This paper provides an in-depth explanation of the project's intricacies, including the main simulation code, the classification model, and the data used.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Spiking Neural Network, SNN, Simulation, Classification, Neural Network, IEEE
+\end{IEEEkeywords}
+
+\section{Introduction}
+Spiking Neural Networks (SNNs) are a type of artificial neural network that more closely mimic the behavior of biological neurons. Unlike traditional neural networks, SNNs use spikes, or discrete events, to transmit information between neurons. This project aims to simulate an SNN and implement a small SNN for data classification.
+
+\section{Main Simulation Code}
+The main simulation code is implemented in \texttt{main.c}. The code initializes the network, processes input spikes through the network layers, and updates the neurons' states based on the input and their weights. The high-level approach involves the following steps:
+
+\begin{enumerate}
+    \item \textbf{Network Initialization}: The network is initialized with a specified number of neurons per layer. Each neuron is assigned initial values for membrane potential, voltage threshold, and decay rate.
+    \item \textbf{Input Initialization}: Input spikes for the first layer are initialized with random values.
+    \item \textbf{Layer Processing}: Each layer of the network is processed for a specified number of time steps (\texttt{TAU}). During each time step, the neurons' states are updated based on the input spikes and their weights. The membrane potential of each neuron is decayed, and neurons fire if their membrane potential exceeds the voltage threshold.
+    \item \textbf{Output}: The output of the last layer is printed, showing which neurons fired.
+    \item \textbf{Memory Cleanup}: The dynamically allocated memory for the network is freed.
+\end{enumerate}
+
+\section{Classification Model}
+The classification model is implemented in \texttt{classify\_snn.py}. The model is a small SNN that classifies data with two classes. The data is a single float value per sample, and it is converted to spikes for the classification task. The model consists of two Leaky Integrate-and-Fire (LIF) layers, each with 10 neurons. The training loop involves converting the data to spike trains, computing the loss using cross-entropy, and updating the model parameters using backpropagation.
+
+\section{Data}
+The data used in this project is generated using \texttt{generate\_dummy\_data.py}. The data consists of two classes sampled from normal distributions. Class 1 is sampled from a normal distribution with mean 1 and standard deviation 1, while Class 2 is sampled from a normal distribution with mean -1 and standard deviation 1. The data and labels are saved to text files for use in the simulation and classification tasks.
+
+\section{Conclusion}
+This project demonstrates the simulation of an SNN and the implementation of a small SNN for data classification. The main simulation code processes input spikes through the network layers and updates the neurons' states based on the input and their weights. The classification model converts data to spikes and classifies it using a small SNN. The data used in this project is generated from normal distributions and saved to text files. This project provides a comprehensive understanding of SNNs and their applications in simulation and classification tasks.
+
+\section*{Acknowledgment}
+The authors would like to thank the Department of Electrical and Computer Engineering at Drexel University for their support and resources.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

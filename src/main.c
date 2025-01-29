@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include "file_operations.h"
+#include "rate_encoding.h"
 
 #define MAX_LAYERS 10
 #define MAX_NEURONS 100
 #define TAU 10
 #define VOLTAGE_THRESH 1.0
 #define DECAY_RATE 0.9
+#define TIME_WINDOW 100  // Length of the time window in ms
+#define MAX_RATE 50      // Maximum spike rate (spikes per time window)
 
 typedef struct {
     float membrane_potential;
@@ -40,6 +43,102 @@ int get_bit(const unsigned char buffer[], int index);
 void simulate_layer(const unsigned char input[], unsigned char output[], float weights[][MAX_NEURONS], int num_neurons, int input_size);
 void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
 void initialize_input_spikes(unsigned char input[], int num_neurons);
+
+int main() {
+    srand(time(NULL));  // Seed the random number generator
+
+    // Example initialization
+    network.num_layers = 3;
+    int neurons_per_layer[] = {1, 10, 2};
+
+    // Load weights from files
+    float **weights_fc1 = (float **)malloc(10 * sizeof(float *));
+    float **weights_fc2 = (float **)malloc(20 * sizeof(float *));
+    for (int i = 0; i < 10; i++) {
+        weights_fc1[i] = (float *)malloc(10 * sizeof(float));
+        weights_fc2[i] = (float *)malloc(10 * sizeof(float));
+    }
+    load_weights("weights_fc1.txt", weights_fc1, 10, 1);
+    load_weights("weights_fc2.txt", weights_fc2, 2, 10);
+
+    initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
+
+    // Load data from file
+    float data[200];
+    load_data("dummy_data.txt", data, 200);
+
+    // Allocate memory for spike trains
+    unsigned char **spike_trains = (unsigned char **)malloc(200 * sizeof(unsigned char *));
+    for (int i = 0; i < 200; i++) {
+        spike_trains[i] = (unsigned char *)calloc(TIME_WINDOW, sizeof(unsigned char));
+    }
+
+    // Perform rate encoding
+    rate_encoding(data, 200, TIME_WINDOW, MAX_RATE, spike_trains);
+
+    // Print the spike trains
+    print_spike_trains(spike_trains, 200, TIME_WINDOW);
+
+    // Initialize input to the first layer
+    unsigned char *input = ping_pong_buffer_1;
+    unsigned char *output = ping_pong_buffer_2;
+
+    // Process each data point
+    FILE *output_file = fopen("model_output.txt", "w");
+    if (output_file == NULL) {
+        perror("Failed to open output file");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int d = 0; d < 200; d++) {
+        // Initialize input spikes for the first layer using spike trains
+        for (int t = 0; t < TIME_WINDOW; t++) {
+            for (int i = 0; i < network.layers[0].num_neurons; i++) {
+                set_bit(input, i, spike_trains[d][t]);
+            }
+
+            // Process each layer
+            for (int l = 0; l < network.num_layers; l++) {
+                int num_neurons = network.layers[l].num_neurons;
+                int input_size = (l == 0) ? num_neurons : network.layers[l - 1].num_neurons;
+
+                // Simulate tau time steps for the current layer
+                for (int tau = 0; tau < TAU; tau++) {
+                    update_layer(input, output, &network.layers[l], input_size);
+                    // Swap the buffers
+                    unsigned char *temp = input;
+                    input = output;
+                    output = temp;
+                }
+            }
+
+            // Save the output of the last layer
+            for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+                int output = get_bit(input, i);
+                fprintf(output_file, "%d ", output);
+            }
+            fprintf(output_file, "\n");
+        }
+    }
+
+    fclose(output_file);
+
+    // Free the allocated memory
+    free_network();
+    for (int i = 0; i < 10; i++) {
+        free(weights_fc1[i]);
+        free(weights_fc2[i]);
+    }
+    free(weights_fc1);
+    free(weights_fc2);
+
+    for (int i = 0; i < 200; i++) {
+        free(spike_trains[i]);
+    }
+    free(spike_trains);
+
+    return 0;
+}
 
 // Function to initialize weights and neuron properties
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2) {
@@ -135,79 +234,4 @@ void initialize_input_spikes(unsigned char input[], int num_neurons) {
     for (int i = 0; i < num_neurons; i++) {
         set_bit(input, i, rand() % 2); // Randomly set spikes (0 or 1)
     }
-}
-
-int main() {
-    // Example initialization
-    network.num_layers = 3;
-    int neurons_per_layer[] = {10, 10, 10};
-
-    // Load weights from files
-    float **weights_fc1 = (float **)malloc(10 * sizeof(float *));
-    float **weights_fc2 = (float **)malloc(10 * sizeof(float *));
-    for (int i = 0; i < 10; i++) {
-        weights_fc1[i] = (float *)malloc(10 * sizeof(float));
-        weights_fc2[i] = (float *)malloc(10 * sizeof(float));
-    }
-    load_weights("weights_fc1.txt", weights_fc1, 10, 10);
-    load_weights("weights_fc2.txt", weights_fc2, 10, 10);
-
-    initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
-
-    // Load data from file
-    float data[200];
-    load_data("dummy_data.txt", data, 200);
-
-    // Initialize input to the first layer
-    unsigned char *input = ping_pong_buffer_1;
-    unsigned char *output = ping_pong_buffer_2;
-
-    // Process each data point
-    FILE *output_file = fopen("model_output.txt", "w");
-    if (output_file == NULL) {
-        perror("Failed to open output file");
-        exit(EXIT_FAILURE);
-    }
-
-    for (int d = 0; d < 200; d++) {
-        // Initialize input spikes for the first layer
-        for (int i = 0; i < network.layers[0].num_neurons; i++) {
-            set_bit(input, i, data[d] > 0 ? 1 : 0);
-        }
-
-        // Process each layer
-        for (int l = 0; l < network.num_layers; l++) {
-            int num_neurons = network.layers[l].num_neurons;
-            int input_size = (l == 0) ? num_neurons : network.layers[l - 1].num_neurons;
-
-            // Simulate tau time steps for the current layer
-            for (int t = 0; t < TAU; t++) {
-                update_layer(input, output, &network.layers[l], input_size);
-                // Swap the buffers
-                unsigned char *temp = input;
-                input = output;
-                output = temp;
-            }
-        }
-
-        // Save the output of the last layer
-        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-            int output = get_bit(input, i);
-            fprintf(output_file, "%d ", output);
-        }
-        fprintf(output_file, "\n");
-    }
-
-    fclose(output_file);
-
-    // Free the allocated memory
-    free_network();
-    for (int i = 0; i < 10; i++) {
-        free(weights_fc1[i]);
-        free(weights_fc2[i]);
-    }
-    free(weights_fc1);
-    free(weights_fc2);
-
-    return 0;
 }
