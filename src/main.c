@@ -67,11 +67,11 @@ int main() {
     load_weights("weights_fc1.txt", weights_fc1, 10, 1);
     load_weights("weights_fc2.txt", weights_fc2, 2, 10);
     printf("Weights loaded\n");
-    // Print model overview
-    print_model_overview();
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
     printf("Network initialized\n");
 
+    // Print model overview
+    print_model_overview();
 
     // Load data from file
     float data[200];
