@@ -67,6 +67,7 @@ int main() {
     printf("Weights loaded\n");
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
     printf("Network initialized\n");
+
     // Load data from file
     float data[200];
     load_data("data.txt", data, 200);
@@ -130,12 +131,10 @@ int main() {
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
     }
-    printf("Finished Sim\n");
 
     fclose(output_file);
 
     // Free the allocated memory
-    free_network();
     for (int i = 0; i < 10; i++) {
         free(weights_fc1[i]);
     }
