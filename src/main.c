@@ -55,9 +55,9 @@ int main() {
 
     // Load weights from files
     float **weights_fc1 = (float **)malloc(10 * sizeof(float *));
-    float **weights_fc2 = (float **)malloc(20 * sizeof(float *));
+    float **weights_fc2 = (float **)malloc(2 * sizeof(float *));
     for (int i = 0; i < 10; i++) {
-        weights_fc1[i] = (float *)malloc(10 * sizeof(float));
+        weights_fc1[i] = (float *)malloc(1 * sizeof(float));
         weights_fc2[i] = (float *)malloc(10 * sizeof(float));
     }
     load_weights("weights_fc1.txt", weights_fc1, 10, 1);
@@ -104,7 +104,7 @@ int main() {
             // Process each layer
             for (int l = 0; l < network.num_layers; l++) {
                 int num_neurons = network.layers[l].num_neurons;
-                int input_size = (l == 0) ? num_neurons : network.layers[l - 1].num_neurons;
+                int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
                 for (int tau = 0; tau < TAU; tau++) {
@@ -233,13 +233,6 @@ void update_layer(const unsigned char input[], unsigned char output[], Layer *la
         } else {
             set_bit(output, i, 0); // Neuron does not fire
         }
-    }
-}
-
-// Function to initialize input spikes for the first layer
-void initialize_input_spikes(unsigned char input[], int num_neurons) {
-    for (int i = 0; i < num_neurons; i++) {
-        set_bit(input, i, rand() % 2); // Randomly set spikes (0 or 1)
     }
 }
 
