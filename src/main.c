@@ -33,24 +33,24 @@ typedef struct {
 
 Network network;
 
-// Define the global ping pong buffers as bit masks using chars
-unsigned char ping_pong_buffer_1[(MAX_NEURONS + 7) / 8];
-unsigned char ping_pong_buffer_2[(MAX_NEURONS + 7) / 8];
+// Define the global ping pong buffers as 2D arrays
+unsigned char ping_pong_buffer_1[MAX_NEURONS][TAU];
+unsigned char ping_pong_buffer_2[MAX_NEURONS][TAU];
 
 // Function prototypes
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2);
 void free_network();
-void set_bit(unsigned char buffer[], int index, int value);
-int get_bit(const unsigned char buffer[], int index);
-void simulate_layer(const unsigned char input[], unsigned char output[], float **weights, int num_neurons, int input_size);
-void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
-void initialize_input_spikes(unsigned char input[], int num_neurons);
+void set_bit(unsigned char buffer[][TAU], int x, int y, int value);
+int get_bit(const unsigned char buffer[][TAU], int x, int y);
+void simulate_layer(const unsigned char input[][TAU], unsigned char output[][TAU], float **weights, int num_neurons, int input_size);
+void update_layer(const unsigned char input[][TAU], unsigned char output[][TAU], Layer *layer, int input_size);
+void initialize_input_spikes(unsigned char input[][TAU], int num_neurons);
 void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
 void print_weights(float **weights, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
-void print_spike_buffer(const unsigned char buffer[], int size);
-void print_ping_pong_buffers(const unsigned char *buffer1, const unsigned char *buffer2, int size);
+void print_spike_buffer(const unsigned char buffer[][TAU], int size);
+void print_ping_pong_buffers(const unsigned char buffer1[][TAU], const unsigned char buffer2[][TAU], int size);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -94,8 +94,8 @@ int main() {
     print_spike_trains(spike_trains, 10, TIME_WINDOW);
 
     // Initialize input to the first layer
-    unsigned char *input = ping_pong_buffer_1;
-    unsigned char *output = ping_pong_buffer_2;
+    unsigned char (*input)[TAU] = ping_pong_buffer_1;
+    unsigned char (*output)[TAU] = ping_pong_buffer_2;
 
     // Process each data point
     FILE *output_file = fopen("model_output.txt", "w");
@@ -111,9 +111,9 @@ int main() {
         // Process each chunk of TAU time steps
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
             // Initialize input spikes for the first layer using spike trains
-            for (int t = chunk; t < chunk + TAU; t++) {
+            for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                    set_bit(input, i, spike_trains[d][t]);
+                    set_bit(input, i, t, spike_trains[d][chunk + t]);
                 }
             }
             print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[0].num_neurons);
@@ -128,13 +128,11 @@ int main() {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
-                for (int tau = 0; tau < TAU; tau++) {
-                    update_layer(input, output, &network.layers[l], input_size);
-                    // Swap the buffers
-                    unsigned char *temp = input;
-                    input = output;
-                    output = temp;
-                }
+                update_layer(input, output, &network.layers[l], input_size);
+                // Swap the buffers
+                unsigned char (*temp)[TAU] = input;
+                input = output;
+                output = temp;
 
                 // Print neuron states after processing each layer
                 printf("Neuron states in layer %d after processing:\n", l);
@@ -146,8 +144,10 @@ int main() {
 
             // Accumulate firing counts for the last layer
             for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-                if (get_bit(input, i)) {
-                    firing_counts[i]++;
+                for (int t = 0; t < TAU; t++) {
+                    if (get_bit(input, i, t)) {
+                        firing_counts[i]++;
+                    }
                 }
             }
         }
@@ -220,61 +220,67 @@ void free_network() {
 }
 
 // Function to set a bit in the buffer
-void set_bit(unsigned char buffer[], int index, int value) {
-    unsigned char mask = 1 << (index & 7);
+void set_bit(unsigned char buffer[][TAU], int x, int y, int value) {
+    unsigned char mask = 1 << (y & 7);
     if (value) {
-        buffer[index >> 3] |= mask;
+        buffer[x][y >> 3] |= mask;
     } else {
-        buffer[index >> 3] &= ~mask;
+        buffer[x][y >> 3] &= ~mask;
     }
 }
 
 // Function to get a bit from the buffer
-int get_bit(const unsigned char buffer[], int index) {
-    unsigned char mask = 1 << (index & 7);
-    return (buffer[index >> 3] & mask) != 0;
+int get_bit(const unsigned char buffer[][TAU], int x, int y) {
+    unsigned char mask = 1 << (y & 7);
+    return (buffer[x][y >> 3] & mask) != 0;
 }
 
 // Function to simulate neuron firing in a layer
-void simulate_layer(const unsigned char input[], unsigned char output[], float **weights, int num_neurons, int input_size) {
+void simulate_layer(const unsigned char input[][TAU], unsigned char output[][TAU], float **weights, int num_neurons, int input_size) {
     for (int i = 0; i < num_neurons; i++) {
         float sum = 0;
         for (int j = 0; j < input_size; j++) {
-            sum += get_bit(input, j) * weights[i][j];
+            for (int t = 0; t < TAU; t++) {
+                sum += get_bit(input, j, t) * weights[i][j];
+            }
         }
-        set_bit(output, i, sum > VOLTAGE_THRESH); // Assuming a threshold of 0.5 for neuron firing
+        for (int t = 0; t < TAU; t++) {
+            set_bit(output, i, t, sum > VOLTAGE_THRESH); // Assuming a threshold of 0.5 for neuron firing
+        }
     }
 }
 
 // Function to update the entire layer based on the buffer
-void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size) {
+void update_layer(const unsigned char input[][TAU], unsigned char output[][TAU], Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
-        float sum = 0;
-        int any_fired = 0;
-        for (int j = 0; j < input_size; j++) {
-            if (get_bit(input, j)) {
-                any_fired = 1;
-                if(layer->layer_num == 0){
-                    sum += 1;
-                } else {
-                    sum += layer->weights[i][j];
+        for (int t = 0; t < TAU; t++) {
+            float sum = 0;
+            int any_fired = 0;
+            for (int j = 0; j < input_size; j++) {
+                if (get_bit(input, j, t)) {
+                    any_fired = 1;
+                    if(layer->layer_num == 0){
+                        sum += 1;
+                    } else {
+                        sum += layer->weights[i][j];
+                    }
                 }
             }
-        }
-        if (!any_fired) {
-            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
-            set_bit(output, i, 0); // Neuron does not fire
-            continue;
-        }
-        layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
-        if (sum > layer->neurons[i].voltage_thresh) {
-            layer->neurons[i].membrane_potential += 1.0; // Increase potential if neuron fired
-        }
-        if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
-            set_bit(output, i, 1); // Neuron fires
-            layer->neurons[i].membrane_potential = 0; // Reset potential
-        } else {
-            set_bit(output, i, 0); // Neuron does not fire
+            if (!any_fired) {
+                layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
+                set_bit(output, i, t, 0); // Neuron does not fire
+                continue;
+            }
+            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
+            if (sum > layer->neurons[i].voltage_thresh) {
+                layer->neurons[i].membrane_potential += 1.0; // Increase potential if neuron fired
+            }
+            if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
+                set_bit(output, i, t, 1); // Neuron fires
+                layer->neurons[i].membrane_potential = 0; // Reset potential
+            } else {
+                set_bit(output, i, t, 0); // Neuron does not fire
+            }
         }
     }
 }
@@ -331,15 +337,17 @@ void print_neuron_states(Layer *layer) {
 }
 
 // Function to print the spike buffer
-void print_spike_buffer(const unsigned char buffer[], int size) {
+void print_spike_buffer(const unsigned char buffer[][TAU], int size) {
     for (int i = 0; i < size; i++) {
-        printf("%d ", get_bit(buffer, i));
+        for (int t = 0; t < TAU; t++) {
+            printf("%d ", get_bit(buffer, i, t));
+        }
+        printf("\n");
     }
-    printf("\n");
 }
 
 // Function to print the ping pong buffers
-void print_ping_pong_buffers(const unsigned char *buffer1, const unsigned char *buffer2, int size) {
+void print_ping_pong_buffers(const unsigned char buffer1[][TAU], const unsigned char buffer2[][TAU], int size) {
     printf("Ping Buffer:\n");
     print_spike_buffer(buffer1, size);
     printf("Pong Buffer:\n");
