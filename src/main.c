@@ -41,7 +41,7 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
 void free_network();
 void set_bit(unsigned char buffer[], int index, int value);
 int get_bit(const unsigned char buffer[], int index);
-void simulate_layer(const unsigned char input[], unsigned char output[], float weights[][MAX_NEURONS], int num_neurons, int input_size);
+void simulate_layer(const unsigned char input[], unsigned char output[], float **weights, int num_neurons, int input_size);
 void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
 void initialize_input_spikes(unsigned char input[], int num_neurons);
 void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
@@ -111,9 +111,9 @@ int main() {
             }
 
             // Process each layer
-            for (int l = 0; l < network.num_layers; l++) {
+            for (int l = 1; l < network.num_layers; l++) { // Start from the second layer
                 int num_neurons = network.layers[l].num_neurons;
-                int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
+                int input_size = network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
                 for (int tau = 0; tau < TAU; tau++) {
@@ -215,7 +215,7 @@ int get_bit(const unsigned char buffer[], int index) {
 }
 
 // Function to simulate neuron firing in a layer
-void simulate_layer(const unsigned char input[], unsigned char output[], float weights[][MAX_NEURONS], int num_neurons, int input_size) {
+void simulate_layer(const unsigned char input[], unsigned char output[], float **weights, int num_neurons, int input_size) {
     for (int i = 0; i < num_neurons; i++) {
         float sum = 0;
         for (int j = 0; j < input_size; j++) {
@@ -286,12 +286,14 @@ void print_model_overview() {
     printf("Model Overview:\n");
     for (int l = 0; l < network.num_layers; l++) {
         printf("Layer %d: %d neurons\n", l, network.layers[l].num_neurons);
-        for (int i = 0; i < network.layers[l].num_neurons; i++) {
-            printf("  Neuron %d weights: ", i);
-            for (int j = 0; j < (l == 0 ? 1 : network.layers[l - 1].num_neurons); j++) {
-                printf("%f ", network.layers[l].weights[i][j]);
+        if (l > 0) { // Only print weights for layers after the first layer
+            for (int i = 0; i < network.layers[l].num_neurons; i++) {
+                printf("  Neuron %d weights: ", i);
+                for (int j = 0; j < network.layers[l - 1].num_neurons; j++) {
+                    printf("%f ", network.layers[l].weights[i][j]);
+                }
+                printf("\n");
             }
-            printf("\n");
         }
     }
 }
