@@ -132,6 +132,7 @@ int main() {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
+                printf("Simulating Layer %d\n", l);
                 update_layer((const unsigned char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
                 unsigned char **temp = ping_pong_buffer_1;
