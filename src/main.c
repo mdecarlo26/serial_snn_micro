@@ -44,7 +44,7 @@ int get_bit(const unsigned char buffer[], int index);
 void simulate_layer(const unsigned char input[], unsigned char output[], float weights[][MAX_NEURONS], int num_neurons, int input_size);
 void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
 void initialize_input_spikes(unsigned char input[], int num_neurons);
-void classify_spike_trains(unsigned char **spike_trains, int num_samples, int time_window, FILE *output_file);
+void classify_spike_trains(int *firing_counts, int num_samples, FILE *output_file);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -93,6 +93,8 @@ int main() {
     }
 
     for (int d = 0; d < 200; d++) {
+        int firing_counts[MAX_NEURONS] = {0};
+
         // Initialize input spikes for the first layer using spike trains
         for (int t = 0; t < TIME_WINDOW; t++) {
             for (int i = 0; i < network.layers[0].num_neurons; i++) {
@@ -113,10 +115,17 @@ int main() {
                     output = temp;
                 }
             }
+
+            // Accumulate firing counts for the last layer
+            for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+                if (get_bit(input, i)) {
+                    firing_counts[i]++;
+                }
+            }
         }
 
         // Classify the spike train for the current data sample
-        classify_spike_trains(spike_trains, 200, TIME_WINDOW, output_file);
+        classify_spike_trains(firing_counts, 1, output_file);
     }
 
     fclose(output_file);
@@ -235,19 +244,8 @@ void initialize_input_spikes(unsigned char input[], int num_neurons) {
 }
 
 // Function to classify spike trains based on the firing frequency of the last layer
-void classify_spike_trains(unsigned char **spike_trains, int num_samples, int time_window, FILE *output_file) {
+void classify_spike_trains(int *firing_counts, int num_samples, FILE *output_file) {
     for (int d = 0; d < num_samples; d++) {
-        int firing_counts[MAX_NEURONS] = {0};
-
-        // Count the number of times each neuron in the last layer fires
-        for (int t = 0; t < time_window; t++) {
-            for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-                if (spike_trains[d][t] == 1) {
-                    firing_counts[i]++;
-                }
-            }
-        }
-
         // Determine the classification based on the neuron with the highest firing frequency
         int max_firing_count = 0;
         int classification = 1;
