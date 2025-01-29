@@ -165,12 +165,13 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             network.layers[l].weights[i] = (float *)malloc((l == 0 ? 1 : network.layers[l - 1].num_neurons) * sizeof(float));
-            printf("Copying Weights\n");
+            printf("Copying Weights. Layer %d\n",l);
             if (l == 0) {
                 memcpy(network.layers[l].weights[i], weights_fc1[i], 1 * sizeof(float));
             } else if (l == 1) {
                 memcpy(network.layers[l].weights[i], weights_fc2[i], 10 * sizeof(float));
             }
+            printf("Finished Copying Weights. Layer %d\n",l);
         }
     }
 }
