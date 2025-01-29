@@ -244,7 +244,8 @@ void set_bit(unsigned char **buffer, int x, int y, int value) {
 
 // Function to get a bit from the buffer
 int get_bit(const unsigned char **buffer, int x, int y) {
-    printf("Getting bit at x: %d, y: %d, result: %c\n", x, y,buffer[x][y]);
+    // printf("Getting bit at x: %d, y: %d, result: %c\n", x, y,buffer[x][y]);
+    print_spike_buffer(buffer, 10);
     unsigned char mask = 1 << (y & 7);
     return (buffer[x][y >> 3] & mask) != 0;
 }
