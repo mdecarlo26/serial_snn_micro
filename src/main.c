@@ -44,7 +44,7 @@ int get_bit(const unsigned char buffer[], int index);
 void simulate_layer(const unsigned char input[], unsigned char output[], float weights[][MAX_NEURONS], int num_neurons, int input_size);
 void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
 void initialize_input_spikes(unsigned char input[], int num_neurons);
-void classify_spike_trains(int *firing_counts, int num_samples, FILE *output_file);
+void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -60,8 +60,8 @@ int main() {
         weights_fc1[i] = (float *)malloc(10 * sizeof(float));
         weights_fc2[i] = (float *)malloc(10 * sizeof(float));
     }
-    load_weights("weights_fc1.txt", weights_fc1, 10, 10);
-    load_weights("weights_fc2.txt", weights_fc2, 10, 10);
+    load_weights("weights_fc1.txt", weights_fc1, 10, 1);
+    load_weights("weights_fc2.txt", weights_fc2, 2, 10);
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
 
@@ -125,7 +125,7 @@ int main() {
         }
 
         // Classify the spike train for the current data sample
-        classify_spike_trains(firing_counts, 1, output_file);
+        classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
     }
 
     fclose(output_file);
@@ -158,11 +158,11 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].membrane_potential = 0;
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-            network.layers[l].weights[i] = (float *)malloc((l == 0 ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons) * sizeof(float));
+            network.layers[l].weights[i] = (float *)malloc((l == 0 ? 1 : network.layers[l - 1].num_neurons) * sizeof(float));
             if (l == 0) {
-                memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l].num_neurons * sizeof(float));
+                memcpy(network.layers[l].weights[i], weights_fc1[i], 1 * sizeof(float));
             } else if (l == 1) {
-                memcpy(network.layers[l].weights[i], weights_fc2[i], network.layers[l - 1].num_neurons * sizeof(float));
+                memcpy(network.layers[l].weights[i], weights_fc2[i], 10 * sizeof(float));
             }
         }
     }
@@ -244,19 +244,17 @@ void initialize_input_spikes(unsigned char input[], int num_neurons) {
 }
 
 // Function to classify spike trains based on the firing frequency of the last layer
-void classify_spike_trains(int *firing_counts, int num_samples, FILE *output_file) {
-    for (int d = 0; d < num_samples; d++) {
-        // Determine the classification based on the neuron with the highest firing frequency
-        int max_firing_count = 0;
-        int classification = 1;
-        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-            if (firing_counts[i] > max_firing_count) {
-                max_firing_count = firing_counts[i];
-                classification = i;
-            }
+void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index) {
+    // Determine the classification based on the neuron with the highest firing frequency
+    int max_firing_count = 0;
+    int classification = -1;
+    for (int i = 0; i < num_neurons; i++) {
+        if (firing_counts[i] > max_firing_count) {
+            max_firing_count = firing_counts[i];
+            classification = i;
         }
-
-        // Output the classification and the firing count to the file
-        fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d\n", d, classification, max_firing_count);
     }
+
+    // Output the classification and the firing count to the file
+    fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d\n", sample_index, classification, max_firing_count);
 }
