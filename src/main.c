@@ -10,7 +10,7 @@
 #define TAU 10
 #define VOLTAGE_THRESH 1.0
 #define DECAY_RATE 0.9
-#define TIME_WINDOW 20  // Length of the time window in ms
+#define TIME_WINDOW 100  // Length of the time window in ms
 #define MAX_RATE 50      // Maximum spike rate (spikes per time window)
 
 typedef struct {
@@ -105,23 +105,24 @@ int main() {
     }
 
     printf("Starting Sim\n");
-    for (int d = 1; d < 200; d++) {
+    for (int d = 0; d < 200; d++) {
         int firing_counts[MAX_NEURONS] = {0};
 
-        // Initialize input spikes for the first layer using spike trains
-        for (int t = 0; t < TIME_WINDOW; t++) {
-            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[0].num_neurons);
-            for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                set_bit(input, i, spike_trains[d][t]);
+        // Process each chunk of TAU time steps
+        for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
+            // Initialize input spikes for the first layer using spike trains
+            for (int t = chunk; t < chunk + TAU; t++) {
+                for (int i = 0; i < network.layers[0].num_neurons; i++) {
+                    set_bit(input, i, spike_trains[d][t]);
+                }
             }
-            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
-            printf("Input spikes at time %d:\n", t);
+            printf("Input spikes at chunk %d:\n", chunk);
             print_spike_buffer(input, network.layers[0].num_neurons);
 
             // Process each layer
-            for (int l = 0; l < network.num_layers; l++) { // Start from the second layer
+            for (int l = 0; l < network.num_layers; l++) {
                 int num_neurons = network.layers[l].num_neurons;
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
@@ -148,12 +149,6 @@ int main() {
                     firing_counts[i]++;
                 }
             }
-        if (d == 1) {
-            break;
-        }
-        }
-        if (d == 1) {
-            break;
         }
 
         // Classify the spike train for the current data sample
