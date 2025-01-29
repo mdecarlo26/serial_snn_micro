@@ -55,9 +55,11 @@ int main() {
 
     // Load weights from files
     float **weights_fc1 = (float **)malloc(10 * sizeof(float *));
-    float **weights_fc2 = (float **)malloc(20 * sizeof(float *));
+    float **weights_fc2 = (float **)malloc(2 * sizeof(float *));
     for (int i = 0; i < 10; i++) {
         weights_fc1[i] = (float *)malloc(1 * sizeof(float));
+    }
+    for (int i = 0; i < 2; i++) {
         weights_fc2[i] = (float *)malloc(10 * sizeof(float));
     }
     load_weights("weights_fc1.txt", weights_fc1, 10, 1);
@@ -134,6 +136,8 @@ int main() {
     free_network();
     for (int i = 0; i < 10; i++) {
         free(weights_fc1[i]);
+    }
+    for (int i = 0; i < 2; i++) {
         free(weights_fc2[i]);
     }
     free(weights_fc1);
