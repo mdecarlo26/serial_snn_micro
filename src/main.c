@@ -44,6 +44,7 @@ int get_bit(const unsigned char buffer[], int index);
 void simulate_layer(const unsigned char input[], unsigned char output[], float weights[][MAX_NEURONS], int num_neurons, int input_size);
 void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
 void initialize_input_spikes(unsigned char input[], int num_neurons);
+void classify_spike_trains(unsigned char **spike_trains, int num_samples, int time_window, FILE *output_file);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -59,14 +60,14 @@ int main() {
         weights_fc1[i] = (float *)malloc(10 * sizeof(float));
         weights_fc2[i] = (float *)malloc(10 * sizeof(float));
     }
-    load_weights("weights_fc1.txt", weights_fc1, 10, 1);
-    load_weights("weights_fc2.txt", weights_fc2, 2, 10);
+    load_weights("weights_fc1.txt", weights_fc1, 10, 10);
+    load_weights("weights_fc2.txt", weights_fc2, 10, 10);
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
 
     // Load data from file
     float data[200];
-    load_data("data.txt", data, 200);
+    load_data("dummy_data.txt", data, 200);
 
     // Allocate memory for spike trains
     unsigned char **spike_trains = (unsigned char **)malloc(200 * sizeof(unsigned char *));
@@ -85,7 +86,7 @@ int main() {
     unsigned char *output = ping_pong_buffer_2;
 
     // Process each data point
-    FILE *output_file = fopen("model_output.txt", "w+");
+    FILE *output_file = fopen("model_output.txt", "w");
     if (output_file == NULL) {
         perror("Failed to open output file");
         exit(EXIT_FAILURE);
@@ -112,14 +113,10 @@ int main() {
                     output = temp;
                 }
             }
-
-            // Save the output of the last layer
-            for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-                int output = get_bit(input, i);
-                fprintf(output_file, "%d ", output);
-            }
-            fprintf(output_file, "\n");
         }
+
+        // Classify the spike train for the current data sample
+        classify_spike_trains(spike_trains, 200, TIME_WINDOW, output_file);
     }
 
     fclose(output_file);
@@ -234,5 +231,34 @@ void update_layer(const unsigned char input[], unsigned char output[], Layer *la
 void initialize_input_spikes(unsigned char input[], int num_neurons) {
     for (int i = 0; i < num_neurons; i++) {
         set_bit(input, i, rand() % 2); // Randomly set spikes (0 or 1)
+    }
+}
+
+// Function to classify spike trains based on the firing frequency of the last layer
+void classify_spike_trains(unsigned char **spike_trains, int num_samples, int time_window, FILE *output_file) {
+    for (int d = 0; d < num_samples; d++) {
+        int firing_counts[MAX_NEURONS] = {0};
+
+        // Count the number of times each neuron in the last layer fires
+        for (int t = 0; t < time_window; t++) {
+            for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+                if (spike_trains[d][t] == 1) {
+                    firing_counts[i]++;
+                }
+            }
+        }
+
+        // Determine the classification based on the neuron with the highest firing frequency
+        int max_firing_count = 0;
+        int classification = -1;
+        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+            if (firing_counts[i] > max_firing_count) {
+                max_firing_count = firing_counts[i];
+                classification = i;
+            }
+        }
+
+        // Output the classification and the firing count to the file
+        fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d\n", d, classification, max_firing_count);
     }
 }
