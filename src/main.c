@@ -50,6 +50,7 @@ void print_weights(float **weights, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const unsigned char buffer[], int size);
+void print_ping_pong_buffers(const unsigned char *buffer1, const unsigned char *buffer2, int size);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -120,7 +121,7 @@ int main() {
             // Process each layer
             for (int l = 0; l < network.num_layers; l++) { // Start from the second layer
                 int num_neurons = network.layers[l].num_neurons;
-                int input_size = network.layers[l - 1].num_neurons;
+                int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
                 for (int tau = 0; tau < TAU; tau++) {
@@ -134,6 +135,9 @@ int main() {
                 // Print neuron states after processing each layer
                 printf("Neuron states in layer %d after processing:\n", l);
                 print_neuron_states(&network.layers[l]);
+
+                // Print ping pong buffers
+                print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[l].num_neurons);
             }
 
             // Accumulate firing counts for the last layer
@@ -143,8 +147,8 @@ int main() {
                 }
             }
         }
-        if (d==1){
-            return 0;
+        if (d == 1) {
+            break;
         }
 
         // Classify the spike train for the current data sample
@@ -330,4 +334,12 @@ void print_spike_buffer(const unsigned char buffer[], int size) {
         printf("%d ", get_bit(buffer, i));
     }
     printf("\n");
+}
+
+// Function to print the ping pong buffers
+void print_ping_pong_buffers(const unsigned char *buffer1, const unsigned char *buffer2, int size) {
+    printf("Ping Pong Buffer 1:\n");
+    print_spike_buffer(buffer1, size);
+    printf("Ping Pong Buffer 2:\n");
+    print_spike_buffer(buffer2, size);
 }
