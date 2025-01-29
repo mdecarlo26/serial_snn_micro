@@ -35,23 +35,23 @@ typedef struct {
 Network network;
 
 // Define the global ping pong buffers as pointers to 2D arrays
-unsigned char **ping_pong_buffer_1;
-unsigned char **ping_pong_buffer_2;
+char **ping_pong_buffer_1;
+char **ping_pong_buffer_2;
 
 // Function prototypes
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2);
 void free_network();
-void set_bit(unsigned char **buffer, int x, int y, int value);
-int get_bit(const unsigned char **buffer, int x, int y);
-void simulate_layer(const unsigned char **input, unsigned char **output, float **weights, int num_neurons, int input_size);
-void update_layer(const unsigned char **input, unsigned char **output, Layer *layer, int input_size);
-void initialize_input_spikes(unsigned char **input, int num_neurons);
+void set_bit(char **buffer, int x, int y, int value);
+int get_bit(const char **buffer, int x, int y);
+void simulate_layer(const char **input, char **output, float **weights, int num_neurons, int input_size);
+void update_layer(const char **input, char **output, Layer *layer, int input_size);
+void initialize_input_spikes(char **input, int num_neurons);
 void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
 void print_weights(float **weights, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
-void print_spike_buffer(const unsigned char **buffer, int size);
-void print_ping_pong_buffers(const unsigned char **buffer1, const unsigned char **buffer2, int size);
+void print_spike_buffer(const char **buffer, int size);
+void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -76,11 +76,11 @@ int main() {
     printf("Network initialized\n");
 
     // Allocate memory for ping pong buffers
-    ping_pong_buffer_1 = (unsigned char **)malloc(MAX_NEURONS * sizeof(unsigned char *));
-    ping_pong_buffer_2 = (unsigned char **)malloc(MAX_NEURONS * sizeof(unsigned char *));
+    ping_pong_buffer_1 = (char **)malloc(MAX_NEURONS * sizeof(char *));
+    ping_pong_buffer_2 = (char **)malloc(MAX_NEURONS * sizeof(char *));
     for (int i = 0; i < MAX_NEURONS; i++) {
-        ping_pong_buffer_1[i] = (unsigned char *)calloc(TAU, sizeof(unsigned char));
-        ping_pong_buffer_2[i] = (unsigned char *)calloc(TAU, sizeof(unsigned char));
+        ping_pong_buffer_1[i] = (char *)calloc(TAU, sizeof(char));
+        ping_pong_buffer_2[i] = (char *)calloc(TAU, sizeof(char));
     }
 
     // Print model overview
@@ -121,11 +121,11 @@ int main() {
                     set_bit(ping_pong_buffer_1, i, t, spike_trains[d][chunk + t]);
                 }
             }
-            print_ping_pong_buffers((const unsigned char **)ping_pong_buffer_1, (const unsigned char **)ping_pong_buffer_2, network.layers[0].num_neurons);
+            print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
             printf("Input spikes at chunk %d:\n", chunk);
-            print_spike_buffer((const unsigned char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
             // Process each layer
             for (int l = 0; l < network.num_layers; l++) {
@@ -134,9 +134,9 @@ int main() {
 
                 // Simulate tau time steps for the current layer
                 printf("Simulating Layer %d\n", l);
-                update_layer((const unsigned char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+                update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
-                unsigned char **temp = ping_pong_buffer_1;
+                char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
                 ping_pong_buffer_2 = temp;
 
@@ -145,14 +145,14 @@ int main() {
                 print_neuron_states(&network.layers[l]);
 
                 // Print ping pong buffers
-                print_ping_pong_buffers((const unsigned char **)ping_pong_buffer_1, (const unsigned char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
                 break;
             }
 
             // Accumulate firing counts for the last layer
             for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
                 for (int t = 0; t < TAU; t++) {
-                    if (get_bit((const unsigned char **)ping_pong_buffer_1, i, t)) {
+                    if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
                         firing_counts[i]++;
                     }
                 }
@@ -232,26 +232,18 @@ void free_network() {
     free(network.layers);
 }
 
-// Function to set a bit in the buffer
-void set_bit(unsigned char **buffer, int x, int y, int value) {
-    unsigned char mask = 1 << (y & 7);
-    if (value) {
-        buffer[x][y >> 3] |= mask;
-    } else {
-        buffer[x][y >> 3] &= ~mask;
-    }
+// Function to set a value in the buffer
+void set_bit(char **buffer, int x, int y, int value) {
+    buffer[x][y] = value;
 }
 
-// Function to get a bit from the buffer
-int get_bit(const unsigned char **buffer, int x, int y) {
-    // printf("Getting bit at x: %d, y: %d, result: %c\n", x, y,buffer[x][y]);
-    print_spike_buffer(buffer, 1);
-    unsigned char mask = 1 << (y & 7);
-    return (buffer[x][y >> 3] & mask) != 0;
+// Function to get a value from the buffer
+int get_bit(const char **buffer, int x, int y) {
+    return buffer[x][y];
 }
 
 // Function to simulate neuron firing in a layer
-void simulate_layer(const unsigned char **input, unsigned char **output, float **weights, int num_neurons, int input_size) {
+void simulate_layer(const char **input, char **output, float **weights, int num_neurons, int input_size) {
     for (int i = 0; i < num_neurons; i++) {
         float sum = 0;
         for (int j = 0; j < input_size; j++) {
@@ -266,7 +258,7 @@ void simulate_layer(const unsigned char **input, unsigned char **output, float *
 }
 
 // Function to update the entire layer based on the buffer
-void update_layer(const unsigned char **input, unsigned char **output, Layer *layer, int input_size) {
+void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
         for (int t = 0; t < TAU; t++) {
             float sum = 0;
@@ -355,7 +347,7 @@ void print_neuron_states(Layer *layer) {
 }
 
 // Function to print the spike buffer
-void print_spike_buffer(const unsigned char **buffer, int size) {
+void print_spike_buffer(const char **buffer, int size) {
     for (int i = 0; i < size; i++) {
         for (int t = 0; t < TAU; t++) {
             printf("%d ", get_bit(buffer, i, t));
@@ -365,7 +357,7 @@ void print_spike_buffer(const unsigned char **buffer, int size) {
 }
 
 // Function to print the ping pong buffers
-void print_ping_pong_buffers(const unsigned char **buffer1, const unsigned char **buffer2, int size) {
+void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size) {
     printf("Ping:\n");
     print_spike_buffer(buffer1, size);
     printf("Pong:\n");
