@@ -169,12 +169,16 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].membrane_potential = 0;
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-            network.layers[l].weights[i] = (float *)malloc((l == 0 ? 1 : network.layers[l - 1].num_neurons) * sizeof(float));
-            printf("Allocating Weights for Neuron %d in Layer %d\n", i, l);
-            if (l == 0) {
-                memcpy(network.layers[l].weights[i], weights_fc1[i], 1 * sizeof(float));
-            } else if (l == 1) {
-                memcpy(network.layers[l].weights[i], weights_fc2[i], 10 * sizeof(float));
+            if (l > 0) { // Only allocate weights for layers after the first layer
+                network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
+                printf("Allocating Weights for Neuron %d in Layer %d\n", i, l);
+                if (l == 1) {
+                    memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
+                } else if (l == 2) {
+                    memcpy(network.layers[l].weights[i], weights_fc2[i], network.layers[l - 1].num_neurons * sizeof(float));
+                }
+            } else {
+                network.layers[l].weights[i] = NULL; // No weights for the first layer
             }
         }
     }
@@ -184,7 +188,9 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
 void free_network() {
     for (int l = 0; l < network.num_layers; l++) {
         for (int i = 0; i < network.layers[l].num_neurons; i++) {
-            free(network.layers[l].weights[i]);
+            if (network.layers[l].weights[i] != NULL) {
+                free(network.layers[l].weights[i]);
+            }
         }
         free(network.layers[l].weights);
         free(network.layers[l].neurons);
