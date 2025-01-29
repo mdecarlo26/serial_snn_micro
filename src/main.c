@@ -79,7 +79,7 @@ int main() {
     rate_encoding(data, 200, TIME_WINDOW, MAX_RATE, spike_trains);
 
     // Print the spike trains
-    print_spike_trains(spike_trains, 200, TIME_WINDOW);
+    // print_spike_trains(spike_trains, 200, TIME_WINDOW);
 
     // Initialize input to the first layer
     unsigned char *input = ping_pong_buffer_1;
@@ -250,7 +250,7 @@ void classify_spike_trains(unsigned char **spike_trains, int num_samples, int ti
 
         // Determine the classification based on the neuron with the highest firing frequency
         int max_firing_count = 0;
-        int classification = -1;
+        int classification = 1;
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             if (firing_counts[i] > max_firing_count) {
                 max_firing_count = firing_counts[i];
