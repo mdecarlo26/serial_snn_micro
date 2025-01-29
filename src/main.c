@@ -243,6 +243,7 @@ void set_bit(unsigned char **buffer, int x, int y, int value) {
 
 // Function to get a bit from the buffer
 int get_bit(const unsigned char **buffer, int x, int y) {
+    printf("Getting bit at x: %d, y: %d, result: %d\n", x, y,buffer[x][y]);
     unsigned char mask = 1 << (y & 7);
     return (buffer[x][y >> 3] & mask) != 0;
 }
@@ -278,7 +279,7 @@ void update_layer(const unsigned char **input, unsigned char **output, Layer *la
                     }
                 }
             }
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %f\n", i, t, sum, layer->neurons[i].membrane_potential);
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2ff\n", i, t, sum, layer->neurons[i].membrane_potential);
             if (!any_fired) {
                 layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
                 set_bit(output, i, t, 0); // Neuron does not fire
@@ -295,7 +296,7 @@ void update_layer(const unsigned char **input, unsigned char **output, Layer *la
             } else {
                 set_bit(output, i, t, 0); // Neuron does not fire
             }
-            printf("Updated Membrane Potential for Neuron %d at Time %d: %f\n", i, t, layer->neurons[i].membrane_potential);
+            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
