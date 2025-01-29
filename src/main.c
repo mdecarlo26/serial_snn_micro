@@ -67,7 +67,7 @@ int main() {
 
     // Load data from file
     float data[200];
-    load_data("dummy_data.txt", data, 200);
+    load_data("data.txt", data, 200);
 
     // Allocate memory for spike trains
     unsigned char **spike_trains = (unsigned char **)malloc(200 * sizeof(unsigned char *));
