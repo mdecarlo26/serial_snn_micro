@@ -157,6 +157,7 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
     for (int l = 0; l < network.num_layers; l++) {
         network.layers[l].num_neurons = neurons_per_layer[l];
+        printf("fail\n");
         network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
         network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
         for (int i = 0; i < network.layers[l].num_neurons; i++) {
