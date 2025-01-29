@@ -45,6 +45,7 @@ void simulate_layer(const unsigned char input[], unsigned char output[], float w
 void update_layer(const unsigned char input[], unsigned char output[], Layer *layer, int input_size);
 void initialize_input_spikes(unsigned char input[], int num_neurons);
 void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
+void print_weights(float **weights, int rows, int cols);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -157,7 +158,6 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
     for (int l = 0; l < network.num_layers; l++) {
         network.layers[l].num_neurons = neurons_per_layer[l];
-        printf("fail\n");
         network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
         network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
         for (int i = 0; i < network.layers[l].num_neurons; i++) {
@@ -165,13 +165,14 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             network.layers[l].weights[i] = (float *)malloc((l == 0 ? 1 : network.layers[l - 1].num_neurons) * sizeof(float));
-            printf("Copying Weights. Layer %d\n",l);
+            printf("Copying Weights\n");
             if (l == 0) {
+                print_weights(weights_fc1, 10, 1);
                 memcpy(network.layers[l].weights[i], weights_fc1[i], 1 * sizeof(float));
             } else if (l == 1) {
+                print_weights(weights_fc2, 2, 10);
                 memcpy(network.layers[l].weights[i], weights_fc2[i], 10 * sizeof(float));
             }
-            printf("Finished Copying Weights. Layer %d\n",l);
         }
     }
 }
@@ -258,4 +259,15 @@ void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_fil
 
     // Output the classification and the firing count to the file
     fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d\n", sample_index, classification, max_firing_count);
+}
+
+// Function to print the weight matrix
+void print_weights(float **weights, int rows, int cols) {
+    printf("Weights:\n");
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            printf("%f ", weights[i][j]);
+        }
+        printf("\n");
+    }
 }
