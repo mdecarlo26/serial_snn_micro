@@ -89,7 +89,7 @@ int main() {
     rate_encoding(data, 200, TIME_WINDOW, MAX_RATE, spike_trains);
     printf("Encoding Spikes\n");
     // Print the spike trains
-    // print_spike_trains(spike_trains, 200, TIME_WINDOW);
+    print_spike_trains(spike_trains, 1, TIME_WINDOW);
 
     // Initialize input to the first layer
     unsigned char *input = ping_pong_buffer_1;
@@ -113,8 +113,8 @@ int main() {
             }
 
             // Print input spikes
-            printf("Input spikes at time %d:\n", t);
-            print_spike_buffer(input, network.layers[0].num_neurons);
+            // printf("Input spikes at time %d:\n", t);
+            // print_spike_buffer(input, network.layers[0].num_neurons);
 
             // Process each layer
             for (int l = 1; l < network.num_layers; l++) { // Start from the second layer
@@ -131,8 +131,8 @@ int main() {
                 }
 
                 // Print neuron states after processing each layer
-                printf("Neuron states in layer %d after processing:\n", l);
-                print_neuron_states(&network.layers[l]);
+                // printf("Neuron states in layer %d after processing:\n", l);
+                // print_neuron_states(&network.layers[l]);
             }
 
             // Accumulate firing counts for the last layer
