@@ -9,9 +9,9 @@
 #define MAX_NEURONS 100
 #define TAU 10
 #define VOLTAGE_THRESH 1.0
-#define DECAY_RATE 0.9
-#define TIME_WINDOW 100  // Length of the time window in ms
-#define MAX_RATE 50      // Maximum spike rate (spikes per time window)
+#define DECAY_RATE 0.8
+#define TIME_WINDOW 20  // Length of the time window in ms
+#define MAX_RATE 10      // Maximum spike rate (spikes per time window)
 
 typedef struct {
     float membrane_potential;
@@ -105,7 +105,7 @@ int main() {
     }
 
     printf("Starting Sim\n");
-    for (int d = 0; d < 200; d++) {
+    for (int d = 1; d < 200; d++) {
         int firing_counts[MAX_NEURONS] = {0};
 
         // Process each chunk of TAU time steps
@@ -116,6 +116,7 @@ int main() {
                     set_bit(input, i, spike_trains[d][t]);
                 }
             }
+            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
             printf("Input spikes at chunk %d:\n", chunk);
@@ -150,6 +151,7 @@ int main() {
                 }
             }
         }
+        break;
 
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
@@ -338,8 +340,8 @@ void print_spike_buffer(const unsigned char buffer[], int size) {
 
 // Function to print the ping pong buffers
 void print_ping_pong_buffers(const unsigned char *buffer1, const unsigned char *buffer2, int size) {
-    printf("Ping Pong Buffer 1:\n");
+    printf("Ping Buffer:\n");
     print_spike_buffer(buffer1, size);
-    printf("Ping Pong Buffer 2:\n");
+    printf("Pong Buffer:\n");
     print_spike_buffer(buffer2, size);
 }
