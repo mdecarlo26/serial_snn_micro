@@ -110,11 +110,11 @@ int main() {
 
         // Initialize input spikes for the first layer using spike trains
         for (int t = 0; t < TIME_WINDOW; t++) {
-            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[l].num_neurons);
+            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[0].num_neurons);
             for (int i = 0; i < network.layers[0].num_neurons; i++) {
                 set_bit(input, i, spike_trains[d][t]);
             }
-            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[l].num_neurons);
+            print_ping_pong_buffers(ping_pong_buffer_1, ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
             printf("Input spikes at time %d:\n", t);
