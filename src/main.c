@@ -24,6 +24,7 @@ typedef struct {
     Neuron *neurons;
     float **weights;
     int num_neurons;
+    int layer_num;
 } Layer;
 
 typedef struct {
@@ -193,6 +194,7 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
     for (int l = 0; l < network.num_layers; l++) {
         printf("Initializing Layer %d\n", l);
+        network.layers[l].layer_num = l;
         network.layers[l].num_neurons = neurons_per_layer[l];
         network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
         network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
@@ -269,7 +271,11 @@ void update_layer(const unsigned char **input, unsigned char **output, Layer *la
             for (int j = 0; j < input_size; j++) {
                 if (get_bit(input, j, t)) {
                     any_fired = 1;
-                    sum += layer->weights[i][j];
+                    if (layer->layer_num == 0) {
+                        sum += 1.0; // Input layer
+                    } else {
+                        sum += layer->weights[i][j]; // Hidden layer
+                    }
                 }
             }
             if (!any_fired) {
