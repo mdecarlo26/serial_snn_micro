@@ -47,6 +47,8 @@ void initialize_input_spikes(unsigned char input[], int num_neurons);
 void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
 void print_weights(float **weights, int rows, int cols);
 void print_model_overview();
+void print_neuron_states(Layer *layer);
+void print_spike_buffer(const unsigned char buffer[], int size);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -110,6 +112,10 @@ int main() {
                 set_bit(input, i, spike_trains[d][t]);
             }
 
+            // Print input spikes
+            printf("Input spikes at time %d:\n", t);
+            print_spike_buffer(input, network.layers[0].num_neurons);
+
             // Process each layer
             for (int l = 1; l < network.num_layers; l++) { // Start from the second layer
                 int num_neurons = network.layers[l].num_neurons;
@@ -123,6 +129,10 @@ int main() {
                     input = output;
                     output = temp;
                 }
+
+                // Print neuron states after processing each layer
+                printf("Neuron states in layer %d after processing:\n", l);
+                print_neuron_states(&network.layers[l]);
             }
 
             // Accumulate firing counts for the last layer
@@ -296,4 +306,19 @@ void print_model_overview() {
             }
         }
     }
+}
+
+// Function to print the states of neurons in a layer
+void print_neuron_states(Layer *layer) {
+    for (int i = 0; i < layer->num_neurons; i++) {
+        printf("  Neuron %d: Membrane Potential = %f\n", i, layer->neurons[i].membrane_potential);
+    }
+}
+
+// Function to print the spike buffer
+void print_spike_buffer(const unsigned char buffer[], int size) {
+    for (int i = 0; i < size; i++) {
+        printf("%d ", get_bit(buffer, i));
+    }
+    printf("\n");
 }
