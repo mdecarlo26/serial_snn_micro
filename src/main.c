@@ -142,7 +142,9 @@ int main() {
                 }
             }
         }
-        return 0;
+        if (d==2){
+            return 0;
+        }
 
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
