@@ -111,7 +111,7 @@ int main() {
 
     printf("Starting Sim\n");
     int num_chunks = TIME_WINDOW / TAU;
-    for (int d = 1; d < NUM_SAMPLES; d++) {
+    for (int d = 0; d < NUM_SAMPLES; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
@@ -308,7 +308,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks) {
     // Determine the classification based on the neuron with the highest firing frequency
     int max_firing_count = 0;
-    int classification = -1;
+    int classification = 0;
     for (int i = 0; i < num_neurons; i++) {
         int total_firing_count = 0;
         for (int j = 0; j < num_chunks; j++) {
