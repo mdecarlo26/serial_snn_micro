@@ -10,7 +10,7 @@
 #define TAU 10
 #define VOLTAGE_THRESH 1.0
 #define DECAY_RATE 0.9
-#define TIME_WINDOW 100  // Length of the time window in ms
+#define TIME_WINDOW 20  // Length of the time window in ms
 #define MAX_RATE 50      // Maximum spike rate (spikes per time window)
 
 typedef struct {
