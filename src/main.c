@@ -104,7 +104,7 @@ int main() {
     }
 
     printf("Starting Sim\n");
-    for (int d = 0; d < 200; d++) {
+    for (int d = 1; d < 200; d++) {
         int firing_counts[MAX_NEURONS] = {0};
 
         // Initialize input spikes for the first layer using spike trains
@@ -143,7 +143,7 @@ int main() {
                 }
             }
         }
-        if (d==2){
+        if (d==1){
             return 0;
         }
 
