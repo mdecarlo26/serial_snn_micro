@@ -161,7 +161,7 @@ int main() {
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
     }
-
+    printf("Sim Finished\n");
     fclose(output_file);
 
     // Free the allocated memory
@@ -204,7 +204,7 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             if (l > 0) { // Only allocate weights for layers after the first layer
                 network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
-                printf("Allocating Weights for Neuron %d in Layer %d\n", i, l);
+                // printf("Allocating Weights for Neuron %d in Layer %d\n", i, l);
                 if (l == 1) {
                     memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
                 } else if (l == 2) {
