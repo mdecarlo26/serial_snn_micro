@@ -100,7 +100,7 @@ int main() {
     rate_encoding(data, NUM_SAMPLES, TIME_WINDOW, MAX_RATE, spike_trains);
     printf("Encoding Spikes\n");
     // Print the spike trains
-    print_spike_trains(spike_trains, 10, TIME_WINDOW);
+    // print_spike_trains(spike_trains, 10, TIME_WINDOW);
 
     // Process each data point
     FILE *output_file = fopen("model_output.txt", "w");
@@ -121,11 +121,11 @@ int main() {
                     set_bit(ping_pong_buffer_1, i, t, spike_trains[d][chunk + t]);
                 }
             }
-            print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
+            // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
-            printf("Input spikes at chunk %d:\n", chunk);
-            print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            // printf("Input spikes at chunk %d:\n", chunk);
+            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
             // Process each layer
             for (int l = 0; l < network.num_layers; l++) {
@@ -133,19 +133,19 @@ int main() {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
-                printf("Simulating Layer %d\n", l);
-                update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+                // printf("Simulating Layer %d\n", l);
+                // update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
                 char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
                 ping_pong_buffer_2 = temp;
 
                 // Print neuron states after processing each layer
-                printf("Neuron states in layer %d after processing:\n", l);
-                print_neuron_states(&network.layers[l]);
+                // printf("Neuron states in layer %d after processing:\n", l);
+                // print_neuron_states(&network.layers[l]);
 
                 // Print ping pong buffers
-                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
             }
 
             // Accumulate firing counts for the last layer
@@ -273,7 +273,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
                 }
             }
             layer->neurons[i].membrane_potential += sum; // Increase potential if neuron fired
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
+            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
             if (!any_fired) {
                 layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
                 set_bit(output, i, t, 0); // Neuron does not fire
