@@ -46,6 +46,7 @@ void update_layer(const unsigned char input[], unsigned char output[], Layer *la
 void initialize_input_spikes(unsigned char input[], int num_neurons);
 void classify_spike_trains(int *firing_counts, int num_neurons, FILE *output_file, int sample_index);
 void print_weights(float **weights, int rows, int cols);
+void print_model_overview();
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -66,8 +67,11 @@ int main() {
     load_weights("weights_fc1.txt", weights_fc1, 10, 1);
     load_weights("weights_fc2.txt", weights_fc2, 2, 10);
     printf("Weights loaded\n");
+    // Print model overview
+    print_model_overview();
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2);
     printf("Network initialized\n");
+
 
     // Load data from file
     float data[200];
@@ -166,7 +170,7 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             network.layers[l].weights[i] = (float *)malloc((l == 0 ? 1 : network.layers[l - 1].num_neurons) * sizeof(float));
-            printf("Copying Weights, Nueron %d\n",i);
+            printf("Copying Weights\n");
             if (l == 0) {
                 print_weights(weights_fc1, 10, 1);
                 memcpy(network.layers[l].weights[i], weights_fc1[i], 1 * sizeof(float));
@@ -270,5 +274,20 @@ void print_weights(float **weights, int rows, int cols) {
             printf("%f ", weights[i][j]);
         }
         printf("\n");
+    }
+}
+
+// Function to print the model overview
+void print_model_overview() {
+    printf("Model Overview:\n");
+    for (int l = 0; l < network.num_layers; l++) {
+        printf("Layer %d: %d neurons\n", l, network.layers[l].num_neurons);
+        for (int i = 0; i < network.layers[l].num_neurons; i++) {
+            printf("  Neuron %d weights: ", i);
+            // for (int j = 0; j < (l == 0 ? 1 : network.layers[l - 1].num_neurons); j++) {
+            //     printf("%f ", network.layers[l].weights[i][j]);
+            // }
+            printf("\n");
+        }
     }
 }
