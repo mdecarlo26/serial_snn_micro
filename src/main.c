@@ -158,7 +158,6 @@ int main() {
             }
         }
 
-            break;
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d);
     }
@@ -279,6 +278,7 @@ void update_layer(const unsigned char **input, unsigned char **output, Layer *la
                     }
                 }
             }
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %f\n", i, t, sum, layer->neurons[i].membrane_potential);
             if (!any_fired) {
                 layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
                 set_bit(output, i, t, 0); // Neuron does not fire
@@ -291,9 +291,11 @@ void update_layer(const unsigned char **input, unsigned char **output, Layer *la
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1); // Neuron fires
                 layer->neurons[i].membrane_potential = 0; // Reset potential
+                printf("Neuron %d fires at Time %d\n", i, t);
             } else {
                 set_bit(output, i, t, 0); // Neuron does not fire
             }
+            printf("Updated Membrane Potential for Neuron %d at Time %d: %f\n", i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
