@@ -146,7 +146,6 @@ int main() {
 
                 // Print ping pong buffers
                 print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
-                break;
             }
 
             // Accumulate firing counts for the last layer
