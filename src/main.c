@@ -3,6 +3,7 @@
 #include <string.h>
 #include "file_operations.h"
 #include "rate_encoding.h"
+#include <time.h>
 
 #define MAX_LAYERS 10
 #define MAX_NEURONS 100
@@ -65,7 +66,7 @@ int main() {
 
     // Load data from file
     float data[200];
-    load_data("dummy_data.txt", data, 200);
+    load_data("data.txt", data, 200);
 
     // Allocate memory for spike trains
     unsigned char **spike_trains = (unsigned char **)malloc(200 * sizeof(unsigned char *));
@@ -84,7 +85,7 @@ int main() {
     unsigned char *output = ping_pong_buffer_2;
 
     // Process each data point
-    FILE *output_file = fopen("model_output.txt", "w");
+    FILE *output_file = fopen("model_output.txt", "w+");
     if (output_file == NULL) {
         perror("Failed to open output file");
         exit(EXIT_FAILURE);

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "rate_encoding.h"
+#include <time.h>
 
 void rate_encoding(float *data, int data_size, int time_window, int max_rate, unsigned char **spike_trains) {
     for (int i = 0; i < data_size; i++) {
