@@ -126,7 +126,7 @@ int main() {
                     set_bit(ping_pong_buffer_1, i, t, spike_trains[d][chunk + t]);
                 }
             }
-            // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
+            print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
             // printf("Input spikes at chunk %d:\n", chunk);
@@ -150,7 +150,7 @@ int main() {
                 // print_neuron_states(&network.layers[l]);
 
                 // Print ping pong buffers
-                // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
             }
 
             // Accumulate firing counts for the last layer
