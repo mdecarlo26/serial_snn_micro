@@ -172,6 +172,7 @@ int main() {
             free(firing_counts[i]);
         }
         free(firing_counts);
+        break;
     }
     printf("Sim Finished\n");
     fclose(output_file);
