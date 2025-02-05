@@ -99,7 +99,7 @@ int main() {
     rate_encoding(data, NUM_SAMPLES, TIME_WINDOW, MAX_RATE, spike_trains);
     printf("Encoding Spikes\n");
     // Print the spike trains
-    // print_spike_trains(spike_trains, 10, TIME_WINDOW);
+    print_spike_trains(spike_trains, 10, TIME_WINDOW);
 
     // Process each data point
     FILE *output_file = fopen("model_output.txt", "w");
