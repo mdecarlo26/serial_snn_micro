@@ -2,8 +2,8 @@ import numpy as np
 
 # Parameters
 num_samples = 100
-mean_class_1 = 1
-mean_class_2 = -1
+mean_class_1 = 2
+mean_class_2 = 4
 std_dev = 1
 
 # Generate data for class 1

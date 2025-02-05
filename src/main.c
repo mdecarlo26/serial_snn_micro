@@ -43,7 +43,6 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
 void free_network();
 void set_bit(char **buffer, int x, int y, int value);
 int get_bit(const char **buffer, int x, int y);
-void simulate_layer(const char **input, char **output, float **weights, int num_neurons, int input_size);
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
 void initialize_input_spikes(char **input, int num_neurons);
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks);
@@ -164,6 +163,7 @@ int main() {
             }
         }
 
+        print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
 
@@ -253,21 +253,6 @@ int get_bit(const char **buffer, int x, int y) {
     return buffer[x][y];
 }
 
-// Function to simulate neuron firing in a layer
-void simulate_layer(const char **input, char **output, float **weights, int num_neurons, int input_size) {
-    for (int i = 0; i < num_neurons; i++) {
-        float sum = 0;
-        for (int j = 0; j < input_size; j++) {
-            for (int t = 0; t < TAU; t++) {
-                sum += get_bit(input, j, t) * weights[i][j];
-            }
-        }
-        for (int t = 0; t < TAU; t++) {
-            set_bit(output, i, t, sum > VOLTAGE_THRESH); // Assuming a threshold of 0.5 for neuron firing
-        }
-    }
-}
-
 // Function to update the entire layer based on the buffer
 void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
@@ -308,7 +293,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks) {
     // Determine the classification based on the neuron with the highest firing frequency
     int max_firing_count = 0;
-    int classification = 0;
+    int classification = -1;
     for (int i = 0; i < num_neurons; i++) {
         int total_firing_count = 0;
         for (int j = 0; j < num_chunks; j++) {
