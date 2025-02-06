@@ -110,7 +110,7 @@ int main() {
 
     printf("Starting Sim\n");
     int num_chunks = TIME_WINDOW / TAU;
-    for (int d = 0; d < NUM_SAMPLES; d++) {
+    for (int d = 1; d < NUM_SAMPLES; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
@@ -141,6 +141,7 @@ int main() {
                 printf("Simulating Layer %d\n", l);
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
+                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
                 char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
                 ping_pong_buffer_2 = temp;
@@ -150,7 +151,7 @@ int main() {
                 // print_neuron_states(&network.layers[l]);
 
                 // Print ping pong buffers
-                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
             }
 
             // Accumulate firing counts for the last layer
@@ -257,6 +258,8 @@ int get_bit(const char **buffer, int x, int y) {
 // Function to update the entire layer based on the buffer
 void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
+        if (layer->neurons[i].membrane_potential)
+            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
         for (int t = 0; t < TAU; t++) {
             float sum = 0;
             int any_fired = 0;
@@ -274,21 +277,22 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             if (layer->neurons[i].membrane_potential < 0) {
                 layer->neurons[i].membrane_potential = 0; // Floor potential to 0
             }
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
             if (!any_fired) {
-                layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
                 set_bit(output, i, t, 0); // Neuron does not fire
                 continue;
             }
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1); // Neuron fires
                 layer->neurons[i].membrane_potential = 0; // Reset potential
+                printf("Neuron %d fires at Time %d\n", i, t);
             } else {
                 set_bit(output, i, t, 0); // Neuron does not fire
             }
-            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
             if (layer->neurons[i].membrane_potential < 0) {
                 layer->neurons[i].membrane_potential = 0; // Floor potential to 0
             }
+            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
