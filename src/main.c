@@ -13,6 +13,7 @@
 #define TIME_WINDOW 20  // Length of the time window in ms
 #define MAX_RATE 10      // Maximum spike rate (spikes per time window)
 #define NUM_SAMPLES 200  // Number of data samples
+#define DEBUG 0
 
 typedef struct {
     float membrane_potential;
@@ -50,7 +51,9 @@ void print_weights(float **weights, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const char **buffer, int size);
+#ifdef DEBUG
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
+#endif
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -126,11 +129,9 @@ int main() {
                     set_bit(ping_pong_buffer_1, i, t, spike_trains[d][chunk + t]);
                 }
             }
+            #ifdef DEBUG
             print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
-
-            // Print input spikes
-            // printf("Input spikes at chunk %d:\n", chunk);
-            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            #endif
 
             // Process each layer
             for (int l = 0; l < network.num_layers; l++) {
@@ -138,20 +139,15 @@ int main() {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 // Simulate tau time steps for the current layer
-                printf("Simulating Layer %d\n", l);
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
                 // Swap the buffers
-                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
                 char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
                 ping_pong_buffer_2 = temp;
 
-                // Print neuron states after processing each layer
-                // printf("Neuron states in layer %d after processing:\n", l);
-                // print_neuron_states(&network.layers[l]);
-
-                // Print ping pong buffers
-                // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                #ifdef DEBUG
+                print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
+                #endif
             }
 
             // Accumulate firing counts for the last layer
@@ -164,7 +160,6 @@ int main() {
             }
         }
 
-        print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
 
@@ -276,7 +271,9 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             if (layer->neurons[i].membrane_potential < 0) {
                 layer->neurons[i].membrane_potential = 0; // Floor potential to 0
             }
+            #ifdef DEBUG
             printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
+            #endif
             if (!any_fired) {
                 set_bit(output, i, t, 0); // Neuron does not fire
                 continue;
@@ -284,14 +281,18 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1); // Neuron fires
                 layer->neurons[i].membrane_potential = 0; // Reset potential
+                #ifdef DEBUG
                 printf("Neuron %d fires at Time %d\n", i, t);
+                #endif
             } else {
                 set_bit(output, i, t, 0); // Neuron does not fire
             }
             if (layer->neurons[i].membrane_potential < 0) {
                 layer->neurons[i].membrane_potential = 0; // Floor potential to 0
             }
+            #ifdef DEBUG
             printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", i, t, layer->neurons[i].membrane_potential);
+            #endif
         }
     }
 }
@@ -362,9 +363,11 @@ void print_spike_buffer(const char **buffer, int size) {
 }
 
 // Function to print the ping pong buffers
+#ifdef DEBUG
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size) {
     printf("Ping:\n");
     print_spike_buffer(buffer1, size);
     printf("Pong:\n");
     print_spike_buffer(buffer2, size);
 }
+#endif
