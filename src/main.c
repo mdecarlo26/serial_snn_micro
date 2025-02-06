@@ -13,7 +13,7 @@
 #define TIME_WINDOW 20  // Length of the time window in ms
 #define MAX_RATE 10      // Maximum spike rate (spikes per time window)
 #define NUM_SAMPLES 200  // Number of data samples
-#define DEBUG 0
+#define DEBUG 1
 
 typedef struct {
     float membrane_potential;
