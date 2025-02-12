@@ -94,21 +94,13 @@ int main() {
     // Print model overview
     print_model_overview();
 
-    // Load data from file
-    float data[NUM_SAMPLES];
-    load_data("data.txt", data, NUM_SAMPLES);
-
-    // Allocate memory for spike trains
-    unsigned char **spike_trains = (unsigned char **)malloc(NUM_SAMPLES * sizeof(unsigned char *));
+    // Load initial spikes from CSV file
+    float **initial_spikes = (float **)malloc(NUM_SAMPLES * sizeof(float *));
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        spike_trains[i] = (unsigned char *)calloc(TIME_WINDOW, sizeof(unsigned char));
+        initial_spikes[i] = (float *)malloc(TIME_WINDOW * sizeof(float));
     }
-
-    // Perform rate encoding
-    rate_encoding(data, NUM_SAMPLES, TIME_WINDOW, MAX_RATE, spike_trains);
-    printf("Encoding Spikes\n");
-    // Print the spike trains
-    // print_spike_trains(spike_trains, 10, TIME_WINDOW);
+    load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
+    printf("Initial spikes loaded\n");
 
     // Process each data point
     FILE *output_file = fopen("model_output.txt", "w");
@@ -129,10 +121,10 @@ int main() {
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
             int chunk_index = chunk / TAU;
 
-            // Initialize input spikes for the first layer using spike trains
+            // Initialize input spikes for the first layer using initial spikes
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                    set_bit(ping_pong_buffer_1, i, t, spike_trains[d][chunk + t]);
+                    set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t]);
                 }
             }
             // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
@@ -197,9 +189,9 @@ int main() {
     free(weights_fc2);
 
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        free(spike_trains[i]);
+        free(initial_spikes[i]);
     }
-    free(spike_trains);
+    free(initial_spikes);
 
     for (int i = 0; i < MAX_NEURONS; i++) {
         free(ping_pong_buffer_1[i]);

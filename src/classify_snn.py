@@ -53,13 +53,17 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=5e-2,betas=(0.9, 0.999))
 
 # Training Loop
+initial_spikes = []
 num_epochs = 20
 for epoch in range(num_epochs):
     for batch_data, batch_labels in dataloader:
         # Convert to spike trains
         batch_data = spikegen.rate(batch_data, num_steps=time_steps)  # Convert data to spike train
         # print(batch_data.shape)
-        print(batch_data.detach().numpy().reshape(-1))
+        # print(batch_data.detach().numpy().reshape(-1))
+        if epoch == 0:
+            temp = batch_data.detach().clone()
+            initial_spikes.append(temp.detach().numpy().reshape(-1))
         
         optimizer.zero_grad()
         spk_rec, _ = model(batch_data)
@@ -85,6 +89,10 @@ with torch.no_grad():
     accuracy = (predictions == labels).float().mean()
     print(f"Test Accuracy: {accuracy.item() * 100:.2f}%")
 
+print(len(initial_spikes))
+print(initial_spikes[0].shape)
+stacked_spikes = np.stack(initial_spikes, axis=-1)
+np.savetxt("spikes.csv", stacked_spikes, delimiter=",")
 np.savetxt("weights_fc1.txt", model.fc1.weight.detach().numpy())
 np.savetxt("weights_fc2.txt", model.fc2.weight.detach().numpy())
 np.savetxt("bias_fc1.txt", model.fc1.bias.detach().numpy())

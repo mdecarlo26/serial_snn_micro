@@ -56,3 +56,21 @@ void save_output(const char *filename, unsigned char *output, int num_neurons) {
     fprintf(file, "\n");
     fclose(file);
 }
+
+// Function to read a CSV file and dump it into a 2D array
+void load_csv(const char *filename, float **array, int rows, int cols) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Failed to open CSV file");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            if (fscanf(file, "%f,", &array[i][j]) != 1) {
+                perror("Failed to read value from CSV file");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    fclose(file);
+}
