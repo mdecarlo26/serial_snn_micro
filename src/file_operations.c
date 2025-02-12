@@ -17,6 +17,19 @@ void load_weights(const char *filename, float **weights, int rows, int cols) {
     fclose(file);
 }
 
+// Function to load biases from a file
+void load_bias(const char *filename, float *bias, int size) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        perror("Failed to open bias file");
+        exit(EXIT_FAILURE);
+    }
+    for (int i = 0; i < size; i++) {
+        fscanf(file, "%f", &bias[i]);
+    }
+    fclose(file);
+}
+
 // Function to load data from a file
 void load_data(const char *filename, float *data, int num_samples) {
     FILE *file = fopen(filename, "r");
