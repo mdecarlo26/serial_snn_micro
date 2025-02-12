@@ -289,7 +289,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             }
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1); // Neuron fires
-                layer->neurons[i].membrane_potential = 0; // Reset potential
+                layer->neurons[i].membrane_potential -= VOLTAGE_THRESH; // Reset potential
                 printf("Neuron %d fires at Time %d\n", i, t);
             } else {
                 set_bit(output, i, t, 0); // Neuron does not fire
