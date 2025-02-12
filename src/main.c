@@ -47,7 +47,7 @@ int get_bit(const char **buffer, int x, int y);
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
 void initialize_input_spikes(char **input, int num_neurons);
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks);
-void print_weights(float **weights, int rows, int cols);
+void print_weights(float **weights, float *bias, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const char **buffer, int size);
@@ -175,7 +175,7 @@ int main() {
         // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
-        // break;
+        break;
 
         // Free firing counts memory
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
@@ -328,14 +328,15 @@ void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_fi
     fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d\n", sample_index, classification, max_firing_count);
 }
 
-// Function to print the weight matrix
-void print_weights(float **weights, int rows, int cols) {
-    printf("Weights:\n");
+// Function to print the weight matrix and biases
+void print_weights(float **weights, float *bias, int rows, int cols) {
+    printf("Weights and Biases:\n");
     for (int i = 0; i < rows; i++) {
+        printf("Neuron %d weights: ", i);
         for (int j = 0; j < cols; j++) {
             printf("%f ", weights[i][j]);
         }
-        printf("\n");
+        printf(" | Bias: %f\n", bias[i]);
     }
 }
 
@@ -344,14 +345,8 @@ void print_model_overview() {
     printf("Model Overview:\n");
     for (int l = 0; l < network.num_layers; l++) {
         printf("Layer %d: %d neurons\n", l, network.layers[l].num_neurons);
-        if (l > 0) { // Only print weights for layers after the first layer
-            for (int i = 0; i < network.layers[l].num_neurons; i++) {
-                printf("  Neuron %d weights: ", i);
-                for (int j = 0; j < network.layers[l - 1].num_neurons; j++) {
-                    printf("%f ", network.layers[l].weights[i][j]);
-                }
-                printf("\n");
-            }
+        if (l > 0) { // Only print weights and biases for layers after the first layer
+            print_weights(network.layers[l].weights, network.layers[l].bias, network.layers[l].num_neurons, network.layers[l - 1].num_neurons);
         }
     }
 }
