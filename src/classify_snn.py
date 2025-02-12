@@ -11,12 +11,12 @@ from torch.utils.data import DataLoader, TensorDataset
 base = 'c:\\Drexel\\Research\\Kand\\snn_micro\\src'
 data = torch.tensor([[float(line.strip())] for line in open(base + "\\data.txt")])
 labels = torch.tensor([int(float(line.strip())) for line in open(base + "\\labels.txt")])  # Make sure labels are 0 or 1
-
-data = (data - data.mean()) / data.std()
+b_size = 1
+time_steps = 10
 
 # Prepare Dataset and DataLoader
 dataset = TensorDataset(data, labels)
-dataloader = DataLoader(dataset, batch_size=10, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=b_size, shuffle=True)
 
 # Define SNN with 2 LIF layers, each with 10 neurons
 class TwoLayerSNN(nn.Module):
@@ -25,16 +25,15 @@ class TwoLayerSNN(nn.Module):
         self.fc1 = nn.Linear(1, 10)  # First layer: input -> 10 neurons
         self.lif1 = snn.Leaky(beta=0.8)
         self.fc2 = nn.Linear(10, 2)  # Second layer: 10 neurons -> 2 output neurons (for 2 classes)
-        self.lif2 = snn.Leaky(beta=0.8,output=True)
+        self.lif2 = snn.Leaky(beta=0.8, output=True)
         
     def forward(self, x):
         mem1 = self.lif1.init_leaky()
         mem2 = self.lif2.init_leaky()
         spk1_rec, mem1_rec = [], []
         spk2_rec, mem2_rec = [], []
-        
-        for step in range(20):  # Simulating 20 time steps
-            cur = self.fc1(x)
+        for step in range(time_steps):  # Simulating 20 time steps
+            cur = self.fc1(x[step])
             spk1, mem1 = self.lif1(cur, mem1)
             cur = self.fc2(spk1)
             spk2, mem2 = self.lif2(cur, mem2)
@@ -50,16 +49,17 @@ class TwoLayerSNN(nn.Module):
 model = TwoLayerSNN()
 
 # Loss and Optimizer
-# loss_fn = SF.ce_rate_loss()
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=5e-2,betas=(0.9, 0.999))
 
 # Training Loop
-num_epochs = 10
+num_epochs = 20
 for epoch in range(num_epochs):
     for batch_data, batch_labels in dataloader:
         # Convert to spike trains
-        # batch_data = spikegen.rate(batch_data, num_steps=10)  # Convert data to spike train
+        batch_data = spikegen.rate(batch_data, num_steps=time_steps)  # Convert data to spike train
+        print(batch_data.shape)
+        print(batch_data)
         
         optimizer.zero_grad()
         spk_rec, _ = model(batch_data)
@@ -76,7 +76,7 @@ for epoch in range(num_epochs):
 
 # Test the Model
 with torch.no_grad():
-    test_data = data
+    test_data = spikegen.rate(data, num_steps=time_steps)  # Convert test data to spike train
     spk_rec, _ = model(test_data)
     
     # Use summed spikes over time to determine predictions
@@ -85,6 +85,7 @@ with torch.no_grad():
     accuracy = (predictions == labels).float().mean()
     print(f"Test Accuracy: {accuracy.item() * 100:.2f}%")
 
-
 np.savetxt("weights_fc1.txt", model.fc1.weight.detach().numpy())
 np.savetxt("weights_fc2.txt", model.fc2.weight.detach().numpy())
+np.savetxt("bias_fc1.txt", model.fc1.bias.detach().numpy())
+np.savetxt("bias_fc2.txt", model.fc2.bias.detach().numpy())
