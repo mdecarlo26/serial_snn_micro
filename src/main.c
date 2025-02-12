@@ -281,14 +281,14 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
                     if (layer->layer_num == 0) {
                         sum += 1.0; // Input layer
                     } else {
-                        sum += layer->weights[i][j]; // Hidden layer
+                        sum += layer->weights[i][j] + layer->bias[i]; // Hidden layer
                     }
                 }
             }
             layer->neurons[i].membrane_potential += sum; // Increase potential if neuron fired
-            if (layer->layer_num > 0) {
-                layer->neurons[i].membrane_potential += layer->bias[i]; // Add bias
-            }
+            // if (layer->layer_num > 0) {
+            //     layer->neurons[i].membrane_potential += layer->bias[i]; // Add bias
+            // }
             // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
             if (!any_fired) {
                 layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
