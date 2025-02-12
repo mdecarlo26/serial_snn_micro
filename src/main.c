@@ -138,8 +138,8 @@ int main() {
             // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
 
             // Print input spikes
-            // printf("Input spikes at chunk %d:\n", chunk);
-            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            printf("Input spikes at chunk %d:\n", chunk);
+            print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
             // Process each layer
             for (int l = 0; l < network.num_layers; l++) {
@@ -172,9 +172,10 @@ int main() {
             }
         }
 
-        print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
+        // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
+        break;
 
         // Free firing counts memory
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
