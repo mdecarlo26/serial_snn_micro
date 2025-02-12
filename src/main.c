@@ -167,7 +167,7 @@ int main() {
         // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
-        break;
+        // break;
 
         // Free firing counts memory
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
