@@ -11,12 +11,12 @@ from torch.utils.data import DataLoader, TensorDataset
 base = 'c:\\Drexel\\Research\\Kand\\snn_micro\\src'
 data = torch.tensor([[float(line.strip())] for line in open(base + "\\data.txt")])
 labels = torch.tensor([int(float(line.strip())) for line in open(base + "\\labels.txt")])  # Make sure labels are 0 or 1
-b_size = 1
+b_size = 5
 time_steps = 10
 
 # Prepare Dataset and DataLoader
 dataset = TensorDataset(data, labels)
-dataloader = DataLoader(dataset, batch_size=b_size, shuffle=True)
+dataloader = DataLoader(dataset, batch_size=b_size, shuffle=False)
 
 # Define SNN with 2 LIF layers, each with 10 neurons
 class TwoLayerSNN(nn.Module):
@@ -58,8 +58,8 @@ for epoch in range(num_epochs):
     for batch_data, batch_labels in dataloader:
         # Convert to spike trains
         batch_data = spikegen.rate(batch_data, num_steps=time_steps)  # Convert data to spike train
-        print(batch_data.shape)
-        print(batch_data)
+        # print(batch_data.shape)
+        # print(batch_data.detach().numpy().reshape(-1))
         
         optimizer.zero_grad()
         spk_rec, _ = model(batch_data)
