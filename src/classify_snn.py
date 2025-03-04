@@ -43,7 +43,7 @@ class TwoLayerSNN(nn.Module):
             mem2_rec.append(mem2)
         
         # Return summed spikes over time as logits (raw values for classification)
-        return torch.stack(spk2_rec, dim=0), torch.stack(mem2_rec, dim=0)
+        return torch.stack(spk2_rec, dim=0), torch.stack(mem2_rec, dim=0), torch.stack(spk1_rec, dim=0), torch.stack(mem1_rec, dim=0)
 
 # Instantiate the model
 model = TwoLayerSNN()
@@ -66,8 +66,7 @@ for epoch in range(num_epochs):
             initial_spikes.append(temp.detach().numpy().reshape(-1))
         
         optimizer.zero_grad()
-        spk_rec, _ = model(batch_data)
-        
+        spk_rec, mem_rec, spk1_rec, mem1_rec = model(batch_data)
         # Use summed spikes over time as the input to the loss function
         logits = spk_rec  # This is the output of the model
         
@@ -81,7 +80,9 @@ for epoch in range(num_epochs):
 # Test the Model
 with torch.no_grad():
     test_data = spikegen.rate(data, num_steps=time_steps)  # Convert test data to spike train
-    spk_rec, _ = model(test_data)
+    spk_rec, mem_rec, spk1_rec, mem1_rec = model(test_data)
+    
+    print(spk1_rec.shape)
     
     # Use summed spikes over time to determine predictions
     logits = spk_rec

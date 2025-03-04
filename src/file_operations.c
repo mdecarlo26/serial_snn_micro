@@ -2,6 +2,42 @@
 #include <stdlib.h>
 #include "file_operations.h"
 
+
+int read_spike_data(const char* filename, float spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_SIZE]) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        perror("Failed to open spike_data.bin");
+        return 1;
+    }
+
+    // Read spike data into pre-allocated 3D array
+    size_t items_read = fread(spikes, sizeof(float), NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, file);
+    if (items_read != NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE) {
+        fprintf(stderr, "Warning: Expected %d spike values, but read %zu\n", NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, items_read);
+    }
+
+    fclose(file);
+    return 0;
+}
+
+// Function to read label data from binary file
+int read_labels(const char* filename, int labels[NUM_SAMPLES]) {
+    FILE *file = fopen(filename, "rb");
+    if (!file) {
+        perror("Failed to open labels.bin");
+        return 1;
+    }
+
+    // Read label data into pre-allocated array
+    size_t items_read = fread(labels, sizeof(int), NUM_SAMPLES, file);
+    if (items_read != NUM_SAMPLES) {
+        fprintf(stderr, "Warning: Expected %d labels, but read %zu\n", NUM_SAMPLES, items_read);
+    }
+
+    fclose(file);
+    return 0;
+}
+
 // Function to load weights from a file
 void load_weights(const char *filename, float **weights, int rows, int cols) {
     FILE *file = fopen(filename, "r");

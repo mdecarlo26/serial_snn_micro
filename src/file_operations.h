@@ -1,6 +1,10 @@
 #ifndef FILE_OPERATIONS_H
 #define FILE_OPERATIONS_H
 
+#define NUM_SAMPLES 10000  // Total dataset size
+#define TIME_WINDOW 20         // Temporal steps in spike train
+#define INPUT_SIZE 784       // 28x28 flattened images
+
 void load_weights(const char *filename, float **weights, int rows, int cols);
 void load_bias(const char *filename, float *bias, int size);
 void load_data(const char *filename, float *data, int num_samples);

@@ -6,18 +6,23 @@
 #include <time.h>
 
 #define MAX_LAYERS 10
-#define MAX_NEURONS 100
+#define MAX_NEURONS 1000
 #define TAU 10
 #define VOLTAGE_THRESH 1.0
-#define DECAY_RATE 0.8
-#define TIME_WINDOW 10  // Length of the time window in ms
-#define MAX_RATE 10    // Maximum spike rate (spikes per time window)
-#define NUM_SAMPLES 200  // Number of data samples
+#define DECAY_RATE 0.95
+#define NUM_SAMPLES 10000  // Total dataset size
+#define TIME_WINDOW 20         // Temporal steps in spike train
+#define INPUT_SIZE 784       // 28x28 flattened images
+
+// #define TIME_WINDOW 10  // Length of the time window in ms
+// #define MAX_RATE 10    // Maximum spike rate (spikes per time window)
+// #define NUM_SAMPLES 200  // Number of data samples
 
 typedef struct {
     float membrane_potential;
     float voltage_thresh;
     float decay_rate;
+    float delayed_reset;
 } Neuron;
 
 typedef struct {
@@ -52,30 +57,34 @@ void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const char **buffer, int size);
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
+float*** allocate_spike_array();
+void free_spike_array(float*** spikes);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
 
     // Example initialization
     network.num_layers = 3;
-    int neurons_per_layer[] = {1, 10, 2};
+    int l1 = INPUT_SIZE;
+    int l2 = 256;
+    int l3 = 10;
+    int neurons_per_layer[] = {l1, l2, l3};
 
-    // Load weights from files
-    float **weights_fc1 = (float **)malloc(10 * sizeof(float *));
-    float **weights_fc2 = (float **)malloc(2 * sizeof(float *));
-    for (int i = 0; i < 10; i++) {
-        weights_fc1[i] = (float *)malloc(1 * sizeof(float));
+    // Allocate and load weights and biases with correct dimensions:
+    float **weights_fc1 = (float **)malloc(l2 * sizeof(float *));
+    float **weights_fc2 = (float **)malloc(l3 * sizeof(float *));
+    for (int i = 0; i < l2; i++) {
+        weights_fc1[i] = (float *)malloc(l1 * sizeof(float));
     }
-    for (int i = 0; i < 2; i++) {
-        weights_fc2[i] = (float *)malloc(10 * sizeof(float));
+    for (int i = 0; i < l3; i++) {
+        weights_fc2[i] = (float *)malloc(l2 * sizeof(float));
     }
-    load_weights("weights_fc1.txt", weights_fc1, 10, 1);
-    load_weights("weights_fc2.txt", weights_fc2, 2, 10);
+    load_weights("weights_fc1.txt", weights_fc1, l2, l1);
+    load_weights("weights_fc2.txt", weights_fc2, l3, l2);
     printf("Weights loaded\n");
-
     // Load biases from files
-    float *bias_fc1 = (float *)malloc(10 * sizeof(float));
-    float *bias_fc2 = (float *)malloc(2 * sizeof(float));
+    float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
+    float *bias_fc2 = (float *)malloc(l3 * sizeof(float));
     load_bias("bias_fc1.txt", bias_fc1, 10);
     load_bias("bias_fc2.txt", bias_fc2, 2);
     printf("Biases loaded\n");
@@ -93,13 +102,28 @@ int main() {
 
     // Print model overview
     print_model_overview();
+    float*** initial_spikes = allocate_spike_array();
+    if (!initial_spikes) return 1;
+    int* labels = (int*)malloc(NUM_SAMPLES * sizeof(int));
+    if (!labels) {
+        perror("Failed to allocate memory for labels");
+        free_spike_array(initial_spikes);
+        return 1;
+    }
+
+    // Read data into allocated arrays
+    if (read_spike_data("spike_data.bin", initial_spikes) || read_labels("labels.bin", labels)) {
+        free_spike_array(initial_spikes);
+        free(labels);
+        return 1;
+    }
 
     // Load initial spikes from CSV file
-    float **initial_spikes = (float **)malloc(NUM_SAMPLES * sizeof(float *));
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        initial_spikes[i] = (float *)malloc(TIME_WINDOW * sizeof(float));
-    }
-    load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
+    // float **initial_spikes = (float **)malloc(NUM_SAMPLES * sizeof(float *));
+    // for (int i = 0; i < NUM_SAMPLES; i++) {
+    //     initial_spikes[i] = (float *)malloc(TIME_WINDOW * sizeof(float));
+    // }
+    // load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
     printf("Initial spikes loaded\n");
 
     // Process each data point
@@ -111,7 +135,7 @@ int main() {
 
     printf("Starting Sim\n");
     int num_chunks = TIME_WINDOW / TAU;
-    for (int d = 110; d < NUM_SAMPLES; d++) {
+    for (int d = 0; d < NUM_SAMPLES; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
@@ -121,40 +145,31 @@ int main() {
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
             int chunk_index = chunk / TAU;
 
-            // Initialize input spikes for the first layer using initial spikes
+            // Initialize input spikes for the first layer from the loaded data
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                    set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t]);
+                    set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t][i]);
                 }
             }
-            // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[0].num_neurons);
 
-            // Print input spikes
             printf("Input spikes at chunk %d:\n", chunk);
             print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
-            // Process each layer
+            // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
                 int num_neurons = network.layers[l].num_neurons;
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
-                // Simulate tau time steps for the current layer
                 printf("Simulating Layer %d\n", l);
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
-                // Swap the buffers
+
+                // Swap the ping-pong buffers for the next layer
                 char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
                 ping_pong_buffer_2 = temp;
-
-                // Print neuron states after processing each layer
-                // printf("Neuron states in layer %d after processing:\n", l);
-                // print_neuron_states(&network.layers[l]);
-
-                // Print ping pong buffers
-                // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[l].num_neurons);
             }
 
-            // Accumulate firing counts for the last layer
+            // Accumulate firing counts for the final layer
             for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
                 for (int t = 0; t < TAU; t++) {
                     if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
@@ -163,13 +178,11 @@ int main() {
                 }
             }
         }
-        printf("Ouput spikes at sample %d:\n", d);
+        printf("Output spikes at sample %d:\n", d);
         print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
-        // Classify the spike train for the current data sample
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
-        break;
 
-        // Free firing counts memory
+        // Free firing counts memory for this sample
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             free(firing_counts[i]);
         }
@@ -188,10 +201,12 @@ int main() {
     free(weights_fc1);
     free(weights_fc2);
 
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        free(initial_spikes[i]);
-    }
-    free(initial_spikes);
+    // for (int i = 0; i < NUM_SAMPLES; i++) {
+    //     free(initial_spikes[i]);
+    // }
+    // free(initial_spikes);
+    free_spike_array(initial_spikes);
+    free(labels);
 
     for (int i = 0; i < MAX_NEURONS; i++) {
         free(ping_pong_buffer_1[i]);
@@ -219,7 +234,8 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
             network.layers[l].neurons[i].membrane_potential = 0;
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-            if (l > 0) { // Only allocate weights and biases for layers after the first layer
+            network.layers[l].neurons[i].delayed_reset = 0;
+            if (l > 0) { // Allocate weights and biases for layers after the input layer
                 network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
                 if (l == 1) {
                     memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
@@ -229,8 +245,8 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
                     network.layers[l].bias[i] = bias_fc2[i];
                 }
             } else {
-                network.layers[l].weights[i] = NULL; // No weights for the first layer
-                network.layers[l].bias[i] = 0; // No bias for the first layer
+                network.layers[l].weights[i] = NULL; // No weights for the input layer
+                network.layers[l].bias[i] = 0;         // No bias for the input layer
             }
         }
     }
@@ -265,40 +281,47 @@ int get_bit(const char **buffer, int x, int y) {
 void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
         for (int t = 0; t < TAU; t++) {
-            float sum = 0;
-            int any_fired = 0;
+            // Apply decay to the current membrane potential
+            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate;
+            // Apply delayed reset from previous spike event
+            layer->neurons[i].membrane_potential -= layer->neurons[i].delayed_reset;
+            layer->neurons[i].delayed_reset = 0;
+
+            float sum = 0.0f;
+            // For hidden/output layers, add bias only once per time step
+            if (layer->layer_num > 0) {
+                sum += layer->bias[i];
+            }
+            // Sum the contributions of incoming spikes
             for (int j = 0; j < input_size; j++) {
                 if (get_bit(input, j, t)) {
-                    any_fired = 1;
                     if (layer->layer_num == 0) {
-                        sum += 1.0; // Input layer
+                        sum += 1.0f; // For the input layer, each spike contributes a value of 1
                     } else {
-                        sum += layer->weights[i][j] + layer->bias[i]; // Hidden layer
+                        sum += layer->weights[i][j];
                     }
                 }
             }
-            layer->neurons[i].membrane_potential += sum; // Increase potential if neuron fired
-            // if (layer->layer_num > 0) {
-            //     layer->neurons[i].membrane_potential += layer->bias[i]; // Add bias
-            // }
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", i, t, sum, layer->neurons[i].membrane_potential);
-            if (!any_fired) {
-                layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay only
-                set_bit(output, i, t, 0); // Neuron does not fire
-                continue;
-            }
+            // Update membrane potential with the weighted sum of inputs
+            layer->neurons[i].membrane_potential += sum;
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
+                   i, t, sum, layer->neurons[i].membrane_potential);
+
+            // Check if the neuron fires (LIF threshold crossing)
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
-                set_bit(output, i, t, 1); // Neuron fires
-                layer->neurons[i].membrane_potential -= VOLTAGE_THRESH; // Reset potential
+                set_bit(output, i, t, 1);
+                // Set a delayed reset value so that the potential is zeroed in the next time step
+                layer->neurons[i].delayed_reset = layer->neurons[i].voltage_thresh;
                 printf("Neuron %d fires at Time %d\n", i, t);
             } else {
-                set_bit(output, i, t, 0); // Neuron does not fire
+                set_bit(output, i, t, 0);
             }
-            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate; // Apply decay
-            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", i, t, layer->neurons[i].membrane_potential);
+            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
+                   i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
+
 
 // Function to classify spike trains based on the firing frequency of the last layer
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks) {
@@ -367,3 +390,38 @@ void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int siz
     printf("Pong:\n");
     print_spike_buffer(buffer2, size);
 }
+
+float*** allocate_spike_array() {
+    float*** spikes = (float***)malloc(NUM_SAMPLES * sizeof(float**));
+    if (!spikes) {
+        perror("Failed to allocate memory for spike array");
+        return NULL;
+    }
+
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        spikes[i] = (float**)malloc(TIME_WINDOW* sizeof(float*));
+        if (!spikes[i]) {
+            perror("Failed to allocate memory for time steps");
+            return NULL;
+        }
+        for (int j = 0; j < TIME_WINDOW; j++) {
+            spikes[i][j] = (float*)malloc(INPUT_SIZE * sizeof(float));
+            if (!spikes[i][j]) {
+                perror("Failed to allocate memory for input size");
+                return NULL;
+            }
+        }
+    }
+
+    return spikes;
+}
+
+void free_spike_array(float*** spikes) {
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        for (int j = 0; j < TIME_WINDOW; j++) {
+            free(spikes[i][j]);
+        }
+        free(spikes[i]);
+    }
+    free(spikes);
+} 
