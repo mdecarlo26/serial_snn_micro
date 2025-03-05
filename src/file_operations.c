@@ -3,7 +3,7 @@
 #include "file_operations.h"
 
 
-int read_spike_data(const char* filename, float spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_SIZE]) {
+int read_spike_data(const char* filename, float ***spikes) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("Failed to open spike_data.bin");
@@ -21,7 +21,7 @@ int read_spike_data(const char* filename, float spikes[NUM_SAMPLES][TIME_WINDOW]
 }
 
 // Function to read label data from binary file
-int read_labels(const char* filename, int labels[NUM_SAMPLES]) {
+int read_labels(const char* filename, int *labels) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("Failed to open labels.bin");
