@@ -43,4 +43,4 @@ clear: clear
 redo: clean clear all run
 
 # Phony targets
-.PHONY: all clean redo run
+.PHONY: all clean redo run clear

@@ -141,6 +141,7 @@ int main() {
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
+        printf("Processing Sample %d\n", d);
 
         // Process each chunk of TAU time steps
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
