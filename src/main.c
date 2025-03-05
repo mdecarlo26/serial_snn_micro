@@ -59,6 +59,7 @@ void print_spike_buffer(const char **buffer, int size);
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
 char*** allocate_spike_array();
 void free_spike_array(char*** spikes);
+int validate_spike_data(char ***spikes);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -125,7 +126,12 @@ int main() {
     // }
     // load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
     printf("Initial spikes loaded\n");
-    print_spike_buffer((const char **)initial_spikes[0], INPUT_SIZE);
+    if (!validate_spike_data(initial_spikes)) {
+        printf("Invalid spike data\n");
+        free_spike_array(initial_spikes);
+        free(labels);
+        return 1;
+    }
     // printf("%d\n", initial_spikes[0][3][0]);
 
     // Process each data point
@@ -434,4 +440,25 @@ void free_spike_array(char*** spikes) {
     }
     printf("free3\n");
     free(spikes);
-} 
+}
+
+int validate_spike_data(char ***spikes) {
+    if (!spikes || !spikes[0] || !spikes[0][0]) {
+        fprintf(stderr, "Invalid spike pointer structure\n");
+        return 0;
+    }
+
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        for (int j = 0; j < TIME_WINDOW; j++) {
+            for (int k = 0; k < INPUT_SIZE; k++) {
+                char value = spikes[i][j][k];
+                if (value != 0 && value != 1) {
+                    fprintf(stderr, "Invalid value at [%d][%d][%d]: %d\n", i, j, k, value);
+                    return 0;
+                }
+            }
+        }
+    }
+    printf("All spike data loaded correctly.\n");
+    return 1;
+}
