@@ -125,6 +125,7 @@ int main() {
     // }
     // load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
     printf("Initial spikes loaded\n");
+    printf("%f\n", initial_spikes[0][0][0]);
 
     // Process each data point
     FILE *output_file = fopen("model_output.txt", "w");
@@ -150,7 +151,7 @@ int main() {
             // Initialize input spikes for the first layer from the loaded data
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                    printf("Setting bit %d, %d, %d\n", i, t, initial_spikes[d][chunk + t][i]);
+                    printf("Setting bit %d, %d, %f\n", i, t, initial_spikes[d][chunk + t][i]);
                     set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t][i]);
                 }
             }
