@@ -104,7 +104,7 @@ int main() {
     print_model_overview();
     char*** initial_spikes = allocate_spike_array();
     if (!initial_spikes) return 1;
-    int* labels = (int*)malloc(NUM_SAMPLES * sizeof(int));
+    char* labels = (char*)malloc(NUM_SAMPLES * sizeof(char));
     if (!labels) {
         perror("Failed to allocate memory for labels");
         free_spike_array(initial_spikes);
