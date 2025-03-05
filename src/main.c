@@ -125,7 +125,8 @@ int main() {
     // }
     // load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
     printf("Initial spikes loaded\n");
-    printf("%d\n", initial_spikes[0][3][0]);
+    print_spike_buffer((const char **)initial_spikes[0], INPUT_SIZE);
+    // printf("%d\n", initial_spikes[0][3][0]);
 
     // Process each data point
     FILE *output_file = fopen("model_output.txt", "w");
