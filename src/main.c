@@ -142,12 +142,11 @@ int main() {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
         printf("Processing Sample %d\n", d);
-        print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
         // Process each chunk of TAU time steps
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
             int chunk_index = chunk / TAU;
-
+            printf("Processing Chunk %d\n", chunk);
             // Initialize input spikes for the first layer from the loaded data
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
