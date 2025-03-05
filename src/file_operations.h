@@ -11,6 +11,6 @@ void load_data(const char *filename, float *data, int num_samples);
 void save_output(const char *filename, unsigned char *output, int num_neurons);
 void load_csv(const char *filename, float **array, int rows, int cols);
 int read_spike_data(const char* filename, char ***spikes);
-int read_labels(const char* filename, int *labels);
+int read_labels(const char* filename, char *labels);
 
 #endif // FILE_OPERATIONS_H

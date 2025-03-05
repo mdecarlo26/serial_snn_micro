@@ -21,7 +21,7 @@ int read_spike_data(const char* filename, char ***spikes) {
 }
 
 // Function to read label data from binary file
-int read_labels(const char* filename, int *labels) {
+int read_labels(const char* filename, char *labels) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("Failed to open labels.bin");
@@ -29,7 +29,7 @@ int read_labels(const char* filename, int *labels) {
     }
 
     // Read label data into pre-allocated array
-    size_t items_read = fread(labels, sizeof(int), NUM_SAMPLES, file);
+    size_t items_read = fread(labels, sizeof(char), NUM_SAMPLES, file);
     if (items_read != NUM_SAMPLES) {
         fprintf(stderr, "Warning: Expected %d labels, but read %zu\n", NUM_SAMPLES, items_read);
     }
