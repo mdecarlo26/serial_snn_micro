@@ -37,7 +37,8 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
-clear: clear
+clear:
+	clear
 
 # Redo target
 redo: clean clear all run
