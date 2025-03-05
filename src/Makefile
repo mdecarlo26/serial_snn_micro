@@ -37,8 +37,10 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
+clear: clear
+
 # Redo target
-redo: clean all run
+redo: clean clear all run
 
 # Phony targets
 .PHONY: all clean redo run
