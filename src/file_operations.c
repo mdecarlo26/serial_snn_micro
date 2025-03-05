@@ -3,7 +3,7 @@
 #include "file_operations.h"
 
 
-int read_spike_data(const char* filename, float ***spikes) {
+int read_spike_data(const char* filename, char ***spikes) {
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("Failed to open spike_data.bin");
@@ -11,7 +11,7 @@ int read_spike_data(const char* filename, float ***spikes) {
     }
 
     // Read spike data into pre-allocated 3D array
-    size_t items_read = fread(spikes, sizeof(float), NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, file);
+    size_t items_read = fread(spikes[0][0], sizeof(char), NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, file);
     if (items_read != NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE) {
         fprintf(stderr, "Warning: Expected %d spike values, but read %zu\n", NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, items_read);
     }

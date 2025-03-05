@@ -102,7 +102,7 @@ int main() {
 
     // Print model overview
     print_model_overview();
-    float*** initial_spikes = allocate_spike_array();
+    char*** initial_spikes = allocate_spike_array();
     if (!initial_spikes) return 1;
     int* labels = (int*)malloc(NUM_SAMPLES * sizeof(int));
     if (!labels) {
@@ -395,21 +395,21 @@ void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int siz
     print_spike_buffer(buffer2, size);
 }
 
-float*** allocate_spike_array() {
-    float*** spikes = (float***)malloc(NUM_SAMPLES * sizeof(float**));
+char*** allocate_spike_array() {
+    char*** spikes = (char***)malloc(NUM_SAMPLES * sizeof(char**));
     if (!spikes) {
         perror("Failed to allocate memory for spike array");
         return NULL;
     }
 
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        spikes[i] = (float**)malloc(TIME_WINDOW* sizeof(float*));
+        spikes[i] = (char**)malloc(TIME_WINDOW* sizeof(char*));
         if (!spikes[i]) {
             perror("Failed to allocate memory for time steps");
             return NULL;
         }
         for (int j = 0; j < TIME_WINDOW; j++) {
-            spikes[i][j] = (float*)malloc(INPUT_SIZE * sizeof(float));
+            spikes[i][j] = (char*)malloc(INPUT_SIZE * sizeof(char));
             if (!spikes[i][j]) {
                 perror("Failed to allocate memory for input size");
                 return NULL;

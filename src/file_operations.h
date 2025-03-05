@@ -10,7 +10,7 @@ void load_bias(const char *filename, float *bias, int size);
 void load_data(const char *filename, float *data, int num_samples);
 void save_output(const char *filename, unsigned char *output, int num_neurons);
 void load_csv(const char *filename, float **array, int rows, int cols);
-int read_spike_data(const char* filename, float ***spikes);
+int read_spike_data(const char* filename, char ***spikes);
 int read_labels(const char* filename, int *labels);
 
 #endif // FILE_OPERATIONS_H
