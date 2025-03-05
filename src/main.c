@@ -112,7 +112,7 @@ int main() {
     }
 
     // Read data into allocated arrays
-    if (read_spike_data("spike_data.bin", initial_spikes) || read_labels("labels.bin", labels)) {
+    if (read_spike_data("mnist_input_spikes.bin", initial_spikes) || read_labels("mnist_labels.bin", labels)) {
         free_spike_array(initial_spikes);
         free(labels);
         return 1;
@@ -361,7 +361,7 @@ void print_model_overview() {
     for (int l = 0; l < network.num_layers; l++) {
         printf("Layer %d: %d neurons\n", l, network.layers[l].num_neurons);
         if (l > 0) { // Only print weights and biases for layers after the first layer
-            print_weights(network.layers[l].weights, network.layers[l].bias, network.layers[l].num_neurons, network.layers[l - 1].num_neurons);
+            // print_weights(network.layers[l].weights, network.layers[l].bias, network.layers[l].num_neurons, network.layers[l - 1].num_neurons);
         }
     }
 }
