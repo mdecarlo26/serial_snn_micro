@@ -57,7 +57,7 @@ void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const char **buffer, int size);
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
-float*** allocate_spike_array();
+char*** allocate_spike_array();
 void free_spike_array(char*** spikes);
 
 int main() {
