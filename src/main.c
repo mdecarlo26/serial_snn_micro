@@ -308,20 +308,20 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             }
             // Update membrane potential with the weighted sum of inputs
             layer->neurons[i].membrane_potential += sum;
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-                   i, t, sum, layer->neurons[i].membrane_potential);
+            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
+            //        i, t, sum, layer->neurons[i].membrane_potential);
 
             // Check if the neuron fires (LIF threshold crossing)
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1);
                 // Set a delayed reset value so that the potential is zeroed in the next time step
                 layer->neurons[i].delayed_reset = layer->neurons[i].voltage_thresh;
-                printf("Neuron %d fires at Time %d\n", i, t);
+                // printf("Neuron %d fires at Time %d\n", i, t);
             } else {
                 set_bit(output, i, t, 0);
             }
-            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
-                   i, t, layer->neurons[i].membrane_potential);
+            // printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
+            //        i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
