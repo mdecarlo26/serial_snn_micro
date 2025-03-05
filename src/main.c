@@ -425,9 +425,12 @@ char*** allocate_spike_array() {
 void free_spike_array(char*** spikes) {
     for (int i = 0; i < NUM_SAMPLES; i++) {
         for (int j = 0; j < TIME_WINDOW; j++) {
+            printf("free1\n");
             free(spikes[i][j]);
         }
+            printf("free2\n");
         free(spikes[i]);
     }
+    printf("free3\n");
     free(spikes);
 } 
