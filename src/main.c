@@ -211,6 +211,7 @@ int main() {
     // free(initial_spikes);
     printf("Freeing spike array\n");
     free_spike_array(initial_spikes);
+    printf("Freeing labels\n");
     free(labels);
 
     for (int i = 0; i < MAX_NEURONS; i++) {
