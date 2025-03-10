@@ -60,6 +60,7 @@ void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int siz
 char*** allocate_spike_array();
 void free_spike_array(char*** spikes);
 int validate_spike_data(char ***spikes);
+void free_spike_3d(char ***data3d);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -428,6 +429,18 @@ char*** allocate_spike_array() {
 
     return spikes;
 }
+
+void free_spike_3d(char ***data3d) {
+    if (!data3d)
+        return;
+    if (data3d[0] && data3d[0][0])
+        free(data3d[0][0]);
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        free(data3d[i]);
+    }
+    free(data3d);
+}
+
 
 void free_spike_array(char*** spikes) {
     for (int i = 0; i < NUM_SAMPLES; i++) {
