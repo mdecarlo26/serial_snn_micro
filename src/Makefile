@@ -40,8 +40,13 @@ run: $(TARGET)
 clear:
 	clear
 
+pull:
+	git pull
+
 # Redo target
 redo: clean clear all run
 
+update: pull redo
+
 # Phony targets
-.PHONY: all clean redo run clear
+.PHONY: all clean redo run clear pull update

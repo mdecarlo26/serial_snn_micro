@@ -4,37 +4,92 @@
 
 
 int read_spike_data(const char* filename, char ***spikes) {
-    FILE *file = fopen(filename, "rb");
-    if (!file) {
-        perror("Failed to open spike_data.bin");
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("Error opening CSV file for reading");
         return 1;
     }
+    
+    char line[1024];
+    int row = 0;
+    while (fgets(line, sizeof(line), fp)) {
+        if (strlen(line) <= 1)
+            continue;  // skip empty lines
 
-    // Read spike data into pre-allocated 3D array
-    size_t items_read = fread(spikes[0][0], sizeof(char), NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, file);
-    if (items_read != NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE) {
-        fprintf(stderr, "Warning: Expected %d spike values, but read %zu\n", NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE, items_read);
+        if (row >= NUM_SAMPLES * TIME_WINDOW) {
+            fprintf(stderr, "Error: More rows in CSV than expected.\n");
+            fclose(fp);
+            return 1;
+        }
+        
+        // Determine which sample and time step this row belongs to.
+        int sample = row / TIME_WINDOW;
+        int time_idx = row % TIME_WINDOW;
+        
+        int col = 0;
+        char *token = strtok(line, ",");
+        while (token && col < INPUT_SIZE) {
+            int value = atoi(token);
+            spikes[sample][time_idx][col] = (char)value;
+            token = strtok(NULL, ",");
+            col++;
+        }
+        
+        if (col != INPUT_SIZE) {
+            fprintf(stderr, "Error: Row %d expected %d values, got %d.\n", row, INPUT_SIZE, col);
+            fclose(fp);
+            return 1;
+        }
+        row++;
     }
-
-    fclose(file);
+    
+    if (row != NUM_SAMPLES * TIME_WINDOW) {
+        fprintf(stderr, "Error: Total rows read (%d) does not match expected (%d).\n",
+                row, NUM_SAMPLES * TIME_WINDOW);
+        fclose(fp);
+        return 1;
+    }
+    
+    fclose(fp);
     return 0;
 }
 
 // Function to read label data from binary file
-int read_labels(const char* filename, char *labels) {
-    FILE *file = fopen(filename, "rb");
-    if (!file) {
-        perror("Failed to open labels.bin");
+int read_labels(const char* filename, char *labels, int num_samples) {
+    FILE *fp = fopen(filename, "r");
+    if (!fp) {
+        perror("Error opening labels CSV file");
         return 1;
     }
-
-    // Read label data into pre-allocated array
-    size_t items_read = fread(labels, sizeof(char), NUM_SAMPLES, file);
-    if (items_read != NUM_SAMPLES) {
-        fprintf(stderr, "Warning: Expected %d labels, but read %zu\n", NUM_SAMPLES, items_read);
+    
+    char line[1024];
+    if (!fgets(line, sizeof(line), fp)) {
+        perror("Error reading from labels CSV file");
+        fclose(fp);
+        return 1;
     }
-
-    fclose(file);
+    fclose(fp);
+    
+    // Remove newline if present.
+    size_t len = strlen(line);
+    if (len > 0 && line[len - 1] == '\n') {
+        line[len - 1] = '\0';
+    }
+    
+    int count = 0;
+    char *token = strtok(line, ",");
+    while (token != NULL && count < num_samples) {
+        int value = atoi(token);
+        labels[count] = (char)value;
+        count++;
+        token = strtok(NULL, ",");
+    }
+    
+    if (count != num_samples) {
+        fprintf(stderr, "Error: Expected %d labels, but found %d\n", num_samples, count);
+        return 1;
+    }
+    
     return 0;
 }
 

@@ -52,15 +52,20 @@ int get_bit(const char **buffer, int x, int y);
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
 void initialize_input_spikes(char **input, int num_neurons);
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks);
+
+// Debug Print Functions
 void print_weights(float **weights, float *bias, int rows, int cols);
 void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const char **buffer, int size);
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
+
+// Memory allocation functions
 char*** allocate_spike_array();
 void free_spike_array(char*** spikes);
 int validate_spike_data(char ***spikes);
-void free_spike_3d(char ***data3d);
+char *allocate_labels(int num_samples);
+void free_labels(char *labels);
 
 int main() {
     srand(time(NULL));  // Seed the random number generator
@@ -106,15 +111,10 @@ int main() {
     print_model_overview();
     char*** initial_spikes = allocate_spike_array();
     if (!initial_spikes) return 1;
-    char* labels = (char*)malloc(NUM_SAMPLES * sizeof(char));
-    if (!labels) {
-        perror("Failed to allocate memory for labels");
-        free_spike_array(initial_spikes);
-        return 1;
-    }
+    char* labels = allocate_labels(NUM_SAMPLES);
 
     // Read data into allocated arrays
-    if (read_spike_data("mnist_input_spikes.bin", initial_spikes) || read_labels("mnist_labels.bin", labels)) {
+    if (read_spike_data("mnist_input_spikes.csv", initial_spikes) || read_labels("mnist_labels.csv", labels, NUM_SAMPLES)) {
         free_spike_array(initial_spikes);
         free(labels);
         return 1;
@@ -213,14 +213,10 @@ int main() {
     free(weights_fc1);
     free(weights_fc2);
 
-    // for (int i = 0; i < NUM_SAMPLES; i++) {
-    //     free(initial_spikes[i]);
-    // }
-    // free(initial_spikes);
     printf("Freeing spike array\n");
     free_spike_array(initial_spikes);
     printf("Freeing labels\n");
-    free(labels);
+    free_labels(labels);
 
     for (int i = 0; i < MAX_NEURONS; i++) {
         free(ping_pong_buffer_1[i]);
@@ -406,53 +402,49 @@ void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int siz
 }
 
 char*** allocate_spike_array() {
-    char*** spikes = (char***)malloc(NUM_SAMPLES * sizeof(char**));
-    if (!spikes) {
-        perror("Failed to allocate memory for spike array");
+    char *data_block = malloc(NUM_SAMPLES * TIME_WINDOW * INPUT_SIZE * sizeof(char));
+    if (!data_block) {
+        perror("Memory allocation error for data block");
         return NULL;
     }
-
+    
+    // Allocate the array of sample pointers.
+    char ***spikes = malloc(NUM_SAMPLES * sizeof(char **));
+    if (!spikes) {
+        perror("Memory allocation error for spike array");
+        free(data_block);
+        return NULL;
+    }
+    
+    // For each sample, allocate an array of pointers (one per time step).
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        spikes[i] = (char**)malloc(TIME_WINDOW* sizeof(char*));
+        spikes[i] = malloc(TIME_WINDOW * sizeof(char *));
         if (!spikes[i]) {
-            perror("Failed to allocate memory for time steps");
+            perror("Memory allocation error for spike row pointers");
+            for (int j = 0; j < i; j++) {
+                free(spikes[j]);
+            }
+            free(spikes);
+            free(data_block);
             return NULL;
         }
+        // Set each time pointer to the correct offset in the contiguous block.
         for (int j = 0; j < TIME_WINDOW; j++) {
-            spikes[i][j] = (char*)malloc(INPUT_SIZE * sizeof(char));
-            if (!spikes[i][j]) {
-                perror("Failed to allocate memory for input size");
-                return NULL;
-            }
+            spikes[i][j] = data_block + (i * TIME_WINDOW * INPUT_SIZE) + (j * INPUT_SIZE);
         }
     }
-
+    
     return spikes;
 }
 
-void free_spike_3d(char ***data3d) {
-    if (!data3d)
-        return;
-    if (data3d[0] && data3d[0][0])
-        free(data3d[0][0]);
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        free(data3d[i]);
-    }
-    free(data3d);
-}
-
-
 void free_spike_array(char*** spikes) {
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        for (int j = 0; j < TIME_WINDOW; j++) {
-            printf("free1\n");
-            free(spikes[i][j]);
+    if (spikes) {
+        free(spikes[0][0]);  // Free the contiguous data block.
+        for (int i = 0; i < NUM_SAMPLES; i++) {
+            free(spikes[i]);  // Free each sample's row pointer array.
         }
-            printf("free2\n");
-        free(spikes[i]);
+        free(spikes);  // Free the array of sample pointers.
     }
-    printf("free3\n");
-    free(spikes);
 }
 
 int validate_spike_data(char ***spikes) {
@@ -474,4 +466,17 @@ int validate_spike_data(char ***spikes) {
     }
     printf("All spike data loaded correctly.\n");
     return 1;
+}
+
+char *allocate_labels(int num_samples) {
+    char *labels = malloc(num_samples * sizeof(char));
+    if (!labels) {
+        perror("Failed to allocate memory for labels");
+        return NULL;
+    }
+    return labels;
+}
+
+void free_labels(char *labels) {
+    free(labels);
 }
