@@ -151,6 +151,7 @@ int main() {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d, NUM_SAMPLES);
+        fflush(stdout);
         // printf("Processing Sample %d\n", d);
         // printf("Label: %d\n", labels[d]);
 
