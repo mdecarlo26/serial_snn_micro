@@ -164,7 +164,7 @@ int main() {
             }
 
             printf("Input spikes at chunk %d:\n", chunk);
-            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
             // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
@@ -198,7 +198,7 @@ int main() {
         }
         free(firing_counts);
     }
-    printf("Sim Finished\n");
+    printf("\033[1;32mSim Finished\033[0m\n");
     fclose(output_file);
 
     // Free the allocated memory
@@ -365,7 +365,7 @@ void print_weights(float **weights, float *bias, int rows, int cols) {
 
 // Function to print the model overview
 void print_model_overview() {
-    printf("Model Overview:\n");
+    printf("\033[1;32mModel Overview:\033[0m\n");
     for (int l = 0; l < network.num_layers; l++) {
         printf("Layer %d: %d neurons\n", l, network.layers[l].num_neurons);
         if (l > 0) { // Only print weights and biases for layers after the first layer

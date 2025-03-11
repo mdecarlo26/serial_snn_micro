@@ -99,6 +99,10 @@ void load_weights(const char *filename, float **weights, int rows, int cols) {
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             ret = fscanf(file, "%f", &weights[i][j]);
+            if (ret == EOF) {
+                perror("Failed to read weight from file");
+                exit(EXIT_FAILURE);
+            }
         }
     }
     fclose(file);
@@ -114,6 +118,10 @@ void load_bias(const char *filename, float *bias, int size) {
     int ret;
     for (int i = 0; i < size; i++) {
         ret = fscanf(file, "%f", &bias[i]);
+        if (ret == EOF) {
+            perror("Failed to read weight from file");
+            exit(EXIT_FAILURE);
+        }
     }
     fclose(file);
 }
@@ -128,6 +136,10 @@ void load_data(const char *filename, float *data, int num_samples) {
     int ret;
     for (int i = 0; i < num_samples; i++) {
         ret = fscanf(file, "%f", &data[i]);
+        if (ret == EOF) {
+            perror("Failed to read weight from file");
+            exit(EXIT_FAILURE);
+        }
     }
     fclose(file);
 }
