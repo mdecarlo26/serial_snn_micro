@@ -328,8 +328,8 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             }
             // Update membrane potential with the weighted sum of inputs
             layer->neurons[i].membrane_potential += sum;
-            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-            //        i, t, sum, layer->neurons[i].membrane_potential);
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
+                   i, t, sum, layer->neurons[i].membrane_potential);
 
             // Check if the neuron fires (LIF threshold crossing)
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
