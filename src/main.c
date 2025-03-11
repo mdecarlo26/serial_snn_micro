@@ -126,7 +126,6 @@ int main() {
     //     initial_spikes[i] = (float *)malloc(TIME_WINDOW * sizeof(float));
     // }
     // load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
-    printf("Initial spikes loaded\n");
     if (!validate_spike_data(initial_spikes)) {
         printf("Invalid spike data\n");
         free_spike_array(initial_spikes);
@@ -142,7 +141,7 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    printf("Starting Sim\n");
+    printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
     // for (int d = 0; d < NUM_SAMPLES; d++) {
     for (int d = 0; d < 1; d++) {
@@ -169,7 +168,6 @@ int main() {
 
             // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
-                int num_neurons = network.layers[l].num_neurons;
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
                 printf("Simulating Layer %d\n", l);
