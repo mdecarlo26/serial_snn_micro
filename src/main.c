@@ -4,6 +4,7 @@
 #include "file_operations.h"
 #include "rate_encoding.h"
 #include <time.h>
+#include <sys/time.h>
 
 #define MAX_LAYERS 10
 #define MAX_NEURONS 1000
@@ -142,6 +143,10 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
+
+    struct timeval start, stop;
+    gettimeofday(&start, NULL);
+
     printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
     for (int d = 0; d < NUM_SAMPLES; d++) {
@@ -207,6 +212,8 @@ int main() {
     printf("\033[1;32mSim Finished\033[0m\n");
     fclose(output_file);
 
+    gettimeofday(&stop, NULL);
+
     // Free the allocated memory
     for (int i = 0; i < 10; i++) {
         free(weights_fc1[i]);
@@ -230,6 +237,9 @@ int main() {
     free(ping_pong_buffer_2);
     free(bias_fc1);
     free(bias_fc2);
+
+    printf("Simulation took %lu ms\n", (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000);
+    printf("Average time per sample: %f ms\n", ((stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000) / NUM_SAMPLES);
 
     return 0;
 }
