@@ -151,7 +151,7 @@ int main() {
     printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
     // for (int d = 0; d < NUM_SAMPLES; d++) {
-    for (int d = 0; d < 1; d++) {
+    for (int d = 10; d < 11; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
