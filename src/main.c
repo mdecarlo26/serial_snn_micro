@@ -90,7 +90,6 @@ int main() {
     }
     load_weights("weights_fc1.txt", weights_fc1, l2, l1);
     load_weights("weights_fc2.txt", weights_fc2, l3, l2);
-    printf("weight 1: %.10f\n", weights_fc1[1][0]);
     printf("Weights loaded\n");
     // Load biases from files
     float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
@@ -151,7 +150,7 @@ int main() {
     printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
     // for (int d = 0; d < NUM_SAMPLES; d++) {
-    for (int d = 0; d < 5; d++) {
+    for (int d = 0; d < 1; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
