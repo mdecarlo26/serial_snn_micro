@@ -11,7 +11,7 @@ int read_spike_data(const char* filename, char ***spikes) {
         return 1;
     }
     
-    char line[1024];
+    char line[2048];
     int row = 0;
     while (fgets(line, sizeof(line), fp)) {
         if (strlen(line) <= 1)
