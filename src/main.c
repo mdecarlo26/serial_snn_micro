@@ -90,7 +90,7 @@ int main() {
     }
     load_weights("weights_fc1.txt", weights_fc1, l2, l1);
     load_weights("weights_fc2.txt", weights_fc2, l3, l2);
-    printf("weight 1: %f\n", weights_fc1[0][1]);
+    printf("weight 1: %f\n", weights_fc1[1][0]);
     printf("Weights loaded\n");
     // Load biases from files
     float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
