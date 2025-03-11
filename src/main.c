@@ -178,7 +178,7 @@ int main() {
             for (int l = 0; l < network.num_layers; l++) {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
-                // printf("Simulating Layer %d\n", l);
+                printf("Simulating Layer %d\n", l);
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
 
                 // Swap the ping-pong buffers for the next layer
@@ -340,8 +340,8 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             } else {
                 set_bit(output, i, t, 0);
             }
-            // printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
-            //        i, t, layer->neurons[i].membrane_potential);
+            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
+                   i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
