@@ -150,6 +150,8 @@ int main() {
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
+        printf("\r\033[KSample: %d", d);
+        fflush(stdout);
         // printf("Processing Sample %d\n", d);
         // printf("Label: %d\n", labels[d]);
 
@@ -201,6 +203,7 @@ int main() {
         }
         free(firing_counts);
     }
+    print("\n");
     printf("\033[1;32mSim Finished\033[0m\n");
     fclose(output_file);
 
