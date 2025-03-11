@@ -59,6 +59,7 @@ void print_model_overview();
 void print_neuron_states(Layer *layer);
 void print_spike_buffer(const char **buffer, int size);
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size);
+void print_firing_counts(int **firing_counts, int num_neurons, int num_chunks);
 
 // Memory allocation functions
 char*** allocate_spike_array();
@@ -163,8 +164,8 @@ int main() {
                 }
             }
 
-            printf("Input spikes at chunk %d:\n", chunk);
-            print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            // printf("Input spikes at chunk %d:\n", chunk);
+            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
             // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
@@ -190,6 +191,8 @@ int main() {
         }
         printf("Output spikes at sample %d:\n", d);
         print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
+        printf("Firing counts for sample %d:\n", d);
+        print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
 
         // Free firing counts memory for this sample
@@ -477,4 +480,14 @@ char *allocate_labels(int num_samples) {
 
 void free_labels(char *labels) {
     free(labels);
+}
+
+void print_firing_counts(int **firing_counts, int num_neurons, int num_chunks) {
+    for (int i = 0; i < num_neurons; i++) {
+        printf("Neuron %d: ", i);
+        for (int j = 0; j < num_chunks; j++) {
+            printf("%d ", firing_counts[i][j]);
+        }
+        printf("\n");
+    }
 }
