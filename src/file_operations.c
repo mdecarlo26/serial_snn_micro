@@ -63,28 +63,22 @@ int read_labels(const char* filename, char *labels, int num_samples) {
         return 1;
     }
     
-    char line[1024];
-    if (!fgets(line, sizeof(line), fp)) {
-        perror("Error reading from labels CSV file");
-        fclose(fp);
-        return 1;
-    }
-    fclose(fp);
-    
-    // Remove newline if present.
-    size_t len = strlen(line);
-    if (len > 0 && line[len - 1] == '\n') {
-        line[len - 1] = '\0';
-    }
-    
+    char line[16];
     int count = 0;
-    char *token = strtok(line, ",");
-    while (token != NULL && count < num_samples) {
-        int value = atoi(token);
+    while (fgets(line, sizeof(line), fp) && count < num_samples) {
+        // Remove any trailing newline character.
+        size_t len = strlen(line);
+        if (len > 0 && line[len - 1] == '\n') {
+            line[len - 1] = '\0';
+        }
+        
+        // Convert the line to an integer and store it as a char.
+        int value = atoi(line);
         labels[count] = (char)value;
         count++;
-        token = strtok(NULL, ",");
     }
+    
+    fclose(fp);
     
     if (count != num_samples) {
         fprintf(stderr, "Error: Expected %d labels, but found %d\n", num_samples, count);
