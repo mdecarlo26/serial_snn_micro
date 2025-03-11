@@ -150,7 +150,7 @@ int main() {
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
-        printf("\r\033[KSample: %d", d);
+        printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d, NUM_SAMPLES);
         fflush(stdout);
         // printf("Processing Sample %d\n", d);
         // printf("Label: %d\n", labels[d]);
