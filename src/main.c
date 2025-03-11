@@ -191,7 +191,7 @@ int main() {
         }
         printf("Output spikes at sample %d:\n", d);
         print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
-        printf("Firing counts for sample %d:\n", d);
+        printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
         print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
 
@@ -396,9 +396,9 @@ void print_spike_buffer(const char **buffer, int size) {
 
 // Function to print the ping pong buffers
 void print_ping_pong_buffers(const char **buffer1, const char **buffer2, int size) {
-    printf("Ping:\n");
+    printf("\033[1;33mPing:\033[0m\n");
     print_spike_buffer(buffer1, size);
-    printf("Pong:\n");
+    printf("\033[1;33mPong:\033[0m\n");
     print_spike_buffer(buffer2, size);
 }
 
