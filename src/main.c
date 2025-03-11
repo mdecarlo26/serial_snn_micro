@@ -90,6 +90,7 @@ int main() {
     }
     load_weights("weights_fc1.txt", weights_fc1, l2, l1);
     load_weights("weights_fc2.txt", weights_fc2, l3, l2);
+    printf("weight 1: %f\n", weights_fc1[10][100]);
     printf("Weights loaded\n");
     // Load biases from files
     float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
@@ -239,7 +240,7 @@ int main() {
     free(bias_fc2);
 
     printf("Simulation took %lu ms\n", (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000);
-    printf("Average time per sample: %f ms\n", ((stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000) / NUM_SAMPLES);
+    printf("Average time per sample: %ld ms\n", ((stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000) / NUM_SAMPLES);
 
     return 0;
 }
