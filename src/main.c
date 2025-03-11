@@ -203,7 +203,7 @@ int main() {
         }
         free(firing_counts);
     }
-    print("\n");
+    printf("\n");
     printf("\033[1;32mSim Finished\033[0m\n");
     fclose(output_file);
 
