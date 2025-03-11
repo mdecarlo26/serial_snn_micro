@@ -51,7 +51,7 @@ void set_bit(char **buffer, int x, int y, int value);
 int get_bit(const char **buffer, int x, int y);
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
 void initialize_input_spikes(char **input, int num_neurons);
-void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks);
+void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks, char* labels);
 
 // Debug Print Functions
 void print_weights(float **weights, float *bias, int rows, int cols);
@@ -144,19 +144,19 @@ int main() {
 
     printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
-    // for (int d = 0; d < NUM_SAMPLES; d++) {
-    for (int d = 0; d < 1; d++) {
+    for (int d = 0; d < NUM_SAMPLES; d++) {
+    // for (int d = 0; d < 1; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
-        printf("Processing Sample %d\n", d);
-        printf("Label: %d\n", labels[d]);
+        // printf("Processing Sample %d\n", d);
+        // printf("Label: %d\n", labels[d]);
 
         // Process each chunk of TAU time steps
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
             int chunk_index = chunk / TAU;
-            printf("Processing Chunk %d\n", chunk);
+            // printf("Processing Chunk %d\n", chunk);
             // Initialize input spikes for the first layer from the loaded data
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
@@ -171,8 +171,8 @@ int main() {
             for (int l = 0; l < network.num_layers; l++) {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
-                printf("Simulating Layer %d\n", l);
-                update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+                // printf("Simulating Layer %d\n", l);
+                // update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
 
                 // Swap the ping-pong buffers for the next layer
                 char **temp = ping_pong_buffer_1;
@@ -189,11 +189,11 @@ int main() {
                 }
             }
         }
-        printf("Output spikes at sample %d:\n", d);
-        print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
-        printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
-        print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
-        classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks);
+        // printf("Output spikes at sample %d:\n", d);
+        // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
+        // printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
+        // print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
+        classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks, labels);
 
         // Free firing counts memory for this sample
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
@@ -335,7 +335,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
 
 
 // Function to classify spike trains based on the firing frequency of the last layer
-void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks) {
+void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks, char* labels) {
     // Determine the classification based on the neuron with the highest firing frequency
     int max_firing_count = 0;
     int classification = -1;
@@ -351,7 +351,7 @@ void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_fi
     }
 
     // Output the classification and the firing count to the file
-    fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d\n", sample_index, classification, max_firing_count);
+    fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d, Label = %d\n", sample_index, classification, max_firing_count, labels[sample_index]);
 }
 
 // Function to print the weight matrix and biases
