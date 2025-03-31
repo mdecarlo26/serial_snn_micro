@@ -307,7 +307,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
         for (int t = 0; t < TAU; t++) {
             // Apply decay to the current membrane potential
             if (layer->neurons[i].membrane_potential > 0) {
-                layer->neurons[i].delayed_reset = layer->neurons[i].membrane_potential - layer->neurons[i].voltage_thresh;
+                layer->neurons[i].delayed_reset = layer->neurons[i].voltage_thresh;
             }else{
                 layer->neurons[i].delayed_reset = 0;
             }
