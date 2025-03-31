@@ -343,7 +343,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1);
                 // Set a delayed reset value so that the potential is zeroed in the next time step
-                layer->neurons[i].delayed_reset = layer->neurons[i].voltage_thresh;
+                layer->neurons[i].delayed_reset = layer->neurons[i].membrane_potential-layer->neurons[i].voltage_thresh;
                 // printf("Neuron %d fires at Time %d\n", i, t);
             } else {
                 set_bit(output, i, t, 0);
