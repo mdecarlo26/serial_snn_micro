@@ -348,8 +348,8 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             } else {
                 set_bit(output, i, t, 0);
             }
-            // printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
-            //        i, t, layer->neurons[i].membrane_potential);
+            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
+                   i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
