@@ -301,30 +301,23 @@ int get_bit(const char **buffer, int x, int y) {
     return buffer[x][y];
 }
 
+int heaviside(float x, int threshold) {
+    return (x > threshold) ? 1 : 0;
+}
+
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
         for (int t = 0; t < TAU; t++) {
-            // Apply decay to the current membrane potential
-            if (layer->neurons[i].membrane_potential > 0) {
-                layer->neurons[i].delayed_reset = layer->neurons[i].voltage_thresh;
-            }else{
-                layer->neurons[i].delayed_reset = 0;
-            }
-            layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate;
-            // Apply delayed reset from previous spike event
-            layer->neurons[i].membrane_potential -= layer->neurons[i].delayed_reset;
+
 
             float sum = 0.0f;
-            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-            //        i, t, sum, layer->neurons[i].membrane_potential);
-            // For hidden/output layers, add bias only once per time step
             if (layer->layer_num > 0) {
                 sum += layer->bias[i];
             }
-            // Sum the contributions of incoming spikes
+
             for (int j = 0; j < input_size; j++) {
-                if (get_bit(input, j, t)) {
+                if (get_bit(input, j, t)) { // if incoming spike is present
                     if (layer->layer_num == 0) {
                         sum += 1.0f; // For the input layer, each spike contributes a value of 1
                     } else {
@@ -332,27 +325,12 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
                     }
                 }
             }
-            // if (sum >= 100){
-            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-            //        i, t, sum, layer->neurons[i].membrane_potential);
-            // }
 
-            // Update membrane potential with the weighted sum of inputs
-            layer->neurons[i].membrane_potential += sum;
-            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-            //        i, t, sum, layer->neurons[i].membrane_potential);
-
-            // Check if the neuron fires (LIF threshold crossing)
-            if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
-                set_bit(output, i, t, 1);
-                // Set a delayed reset value so that the potential is zeroed in the next time step
-                // layer->neurons[i].delayed_reset = layer->neurons[i].membrane_potential-layer->neurons[i].voltage_thresh;
-                // printf("Neuron %d fires at Time %d\n", i, t);
-            } else {
-                set_bit(output, i, t, 0);
-            }
-            // printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
-            //        i, t, layer->neurons[i].membrane_potential);
+            float new_mem = 0;
+            int reset_signal = heaviside(layer->neurons[i].membrane_potential,0);
+            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            layer->neurons[i].membrane_potential = new_mem;
+            set_bit(output, i, t, heaviside(layer->neurons[i].membrane_potential), layer->neurons[i].voltage_thresh); // Reset output for this time step
         }
     }
 }
