@@ -310,7 +310,7 @@ int heaviside(float x, int threshold) {
 void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
         for (int t = 0; t < TAU; t++) {
-
+            printf("Time step %d\n", t);
 
             float sum = 0.0f;
             if (layer->layer_num > 0) {
