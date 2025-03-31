@@ -117,7 +117,7 @@ void load_bias(const char *filename, float *bias, int size) {
     }
     int ret;
     for (int i = 0; i < size; i++) {
-        ret = fscanf(file, "%e", &bias[i]);
+        ret = fscanf(file, "%f", &bias[i]);
         if (ret == EOF) {
             perror("Failed to read weight from file");
             exit(EXIT_FAILURE);
