@@ -307,10 +307,14 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
         printf("Neuron %d, Bias: %.4f\n", i, layer->bias[i]);
         for (int t = 0; t < TAU; t++) {
             // Apply decay to the current membrane potential
+            if (layer->neurons[i].membrane_potential > 0) {
+                layer->neurons[i].delayed_reset = layer->neurons[i].membrane_potential - layer->neurons[i].voltage_thresh;
+            }else{
+                layer->neurons[i].delayed_reset = 0;
+            }
             layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate;
             // Apply delayed reset from previous spike event
             layer->neurons[i].membrane_potential -= layer->neurons[i].delayed_reset;
-            layer->neurons[i].delayed_reset = 0;
 
             float sum = 0.0f;
             printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
@@ -343,7 +347,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             if (layer->neurons[i].membrane_potential >= layer->neurons[i].voltage_thresh) {
                 set_bit(output, i, t, 1);
                 // Set a delayed reset value so that the potential is zeroed in the next time step
-                layer->neurons[i].delayed_reset = layer->neurons[i].membrane_potential-layer->neurons[i].voltage_thresh;
+                // layer->neurons[i].delayed_reset = layer->neurons[i].membrane_potential-layer->neurons[i].voltage_thresh;
                 // printf("Neuron %d fires at Time %d\n", i, t);
             } else {
                 set_bit(output, i, t, 0);
