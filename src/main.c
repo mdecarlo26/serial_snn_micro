@@ -304,6 +304,7 @@ int get_bit(const char **buffer, int x, int y) {
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const char **input, char **output, Layer *layer, int input_size) {
     for (int i = 0; i < layer->num_neurons; i++) {
+        printf("Neuron %d, Bias: %.2f\n", i, layer->bias[i]);
         for (int t = 0; t < TAU; t++) {
             // Apply decay to the current membrane potential
             layer->neurons[i].membrane_potential *= layer->neurons[i].decay_rate;
