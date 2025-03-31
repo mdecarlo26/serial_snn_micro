@@ -2,6 +2,9 @@
 #define NETWORK_H
 
 #include "define.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     float membrane_potential;
