@@ -321,7 +321,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             //        i, t, sum, layer->neurons[i].membrane_potential);
             // For hidden/output layers, add bias only once per time step
             if (layer->layer_num > 0) {
-                printf("Neuron %d, Time %d, Bias: %.2f\n", i, t, layer->bias[i]);
+                printf("Neuron %d, Time %d, Bias: %.4f\n", i, t, layer->bias[i]);
                 sum += layer->bias[i];
             }
             // Sum the contributions of incoming spikes
