@@ -94,8 +94,8 @@ int main() {
     // Load biases from files
     float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
     float *bias_fc2 = (float *)malloc(l3 * sizeof(float));
-    load_bias("bias_fc1.txt", bias_fc1, 10);
-    load_bias("bias_fc2.txt", bias_fc2, 2);
+    load_bias("bias_fc1.txt", bias_fc1, l2);
+    load_bias("bias_fc2.txt", bias_fc2, l3);
     printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
