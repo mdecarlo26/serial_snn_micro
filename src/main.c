@@ -53,6 +53,7 @@ int get_bit(const char **buffer, int x, int y);
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
 void initialize_input_spikes(char **input, int num_neurons);
 void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks, char* labels);
+int heavyside(float x, int threshold);
 
 // Debug Print Functions
 void print_weights(float **weights, float *bias, int rows, int cols);
@@ -330,7 +331,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,0);
             new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
             layer->neurons[i].membrane_potential = new_mem;
-            set_bit(output, i, t, heaviside(layer->neurons[i].membrane_potential), layer->neurons[i].voltage_thresh); // Reset output for this time step
+            set_bit(output, i, t, heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh)); // Reset output for this time step
         }
     }
 }
