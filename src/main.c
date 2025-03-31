@@ -150,7 +150,7 @@ int main() {
     printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
     // for (int d = 0; d < NUM_SAMPLES; d++) {
-    for (int d = 0; d < 4; d++) {
+    for (int d = 0; d < 5; d++) {
         int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
@@ -196,8 +196,8 @@ int main() {
                 }
             }
         }
-        // printf("Output spikes at sample %d:\n", d);
-        // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
+        printf("Output spikes at sample %d:\n", d);
+        print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
         print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks, labels);
