@@ -312,6 +312,8 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             layer->neurons[i].delayed_reset = 0;
 
             float sum = 0.0f;
+            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
+                   i, t, sum, layer->neurons[i].membrane_potential);
             // For hidden/output layers, add bias only once per time step
             if (layer->layer_num > 0) {
                 sum += layer->bias[i];
