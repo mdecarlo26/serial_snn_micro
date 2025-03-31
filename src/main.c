@@ -96,7 +96,6 @@ int main() {
     float *bias_fc2 = (float *)malloc(l3 * sizeof(float));
     load_bias("bias_fc1.txt", bias_fc1, 10);
     load_bias("bias_fc2.txt", bias_fc2, 2);
-    printf("Bias: %f\n", bias_fc1[194]);
     printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
@@ -318,10 +317,11 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             layer->neurons[i].membrane_potential -= layer->neurons[i].delayed_reset;
 
             float sum = 0.0f;
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-                   i, t, sum, layer->neurons[i].membrane_potential);
+            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
+            //        i, t, sum, layer->neurons[i].membrane_potential);
             // For hidden/output layers, add bias only once per time step
             if (layer->layer_num > 0) {
+                printf("Neuron %d, Time %d, Bias: %.2f\n", i, t, layer->bias[i]);
                 sum += layer->bias[i];
             }
             // Sum the contributions of incoming spikes
@@ -335,8 +335,8 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
                 }
             }
             // if (sum >= 100){
-            printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
-                   i, t, sum, layer->neurons[i].membrane_potential);
+            // printf("Neuron %d, Time %d, Sum: %f, Membrane Potential: %.2f\n", 
+            //        i, t, sum, layer->neurons[i].membrane_potential);
             // }
 
             // Update membrane potential with the weighted sum of inputs
@@ -353,8 +353,8 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             } else {
                 set_bit(output, i, t, 0);
             }
-            printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
-                   i, t, layer->neurons[i].membrane_potential);
+            // printf("Updated Membrane Potential for Neuron %d at Time %d: %.2f\n", 
+            //        i, t, layer->neurons[i].membrane_potential);
         }
     }
 }
