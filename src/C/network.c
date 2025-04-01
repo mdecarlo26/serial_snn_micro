@@ -62,10 +62,8 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
         network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
         network.layers[l].bias = (float *)malloc(network.layers[l].num_neurons * sizeof(float));
         for (int i = 0; i < network.layers[l].num_neurons; i++) {
-            network.layers[l].neurons[i].membrane_potential = 0;
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-            network.layers[l].neurons[i].delayed_reset = 0;
             if (l > 0) { // Allocate weights and biases for layers after the input layer
                 network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
                 if (l == 1) {
@@ -79,6 +77,16 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
                 network.layers[l].weights[i] = NULL; // No weights for the input layer
                 network.layers[l].bias[i] = 0;         // No bias for the input layer
             }
+        }
+    }
+}
+
+
+void zero_network() {
+    for (int l = 0; l < network.num_layers; l++) {
+        for (int i = 0; i < network.layers[l].num_neurons; i++) {
+            network.layers[l].neurons[i].membrane_potential = 0;
+            network.layers[l].neurons[i].delayed_reset = 0;
         }
     }
 }
