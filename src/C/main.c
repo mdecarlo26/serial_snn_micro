@@ -128,14 +128,16 @@ int main() {
             // printf("Processing Chunk %d\n", chunk);
             // Initialize input spikes for the first layer from the loaded data
             for (int t = 0; t < TAU; t++) {
-                // for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                for (int i = network.layers[0].num_neurons-1; i >= 0; i--) {
+                for (int i = 0; i < network.layers[0].num_neurons; i++) {
+                // for (int i = network.layers[0].num_neurons-1; i >= 0; i--) {
                     set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t][i]);
                 }
             }
-
+            if (d == 0)
+            {
             printf("Input spikes at chunk %d:\n", chunk);
             print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            }
 
             // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
