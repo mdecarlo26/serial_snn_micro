@@ -15,7 +15,7 @@ int get_bit(const char **buffer, int x, int y) {
 }
 
 int heaviside(float x, int threshold) {
-    return (x > threshold) ? 1 : 0;
+    return (x >= threshold) ? 1 : 0;
 }
 
 // Function to update the entire layer based on the buffer and bias
@@ -38,7 +38,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
                     }
                 }
             }
-            printf("Neuron %d: Old Membrane Potential = %f\n", i, layer->neurons[i].membrane_potential);
+            // printf("Neuron %d: Old Membrane Potential = %f\n", i, layer->neurons[i].membrane_potential);
 
             float new_mem = 0;
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,0);
@@ -46,7 +46,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); // Reset output for this time step
-            printf("Neuron %d: Membrane Potential = %f, Output = %d\n", i, layer->neurons[i].membrane_potential, output_spike);
+            // printf("Neuron %d: Membrane Potential = %f, Output = %d\n", i, layer->neurons[i].membrane_potential, output_spike);
         }
     }
 }
