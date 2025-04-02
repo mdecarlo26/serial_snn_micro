@@ -126,7 +126,7 @@ int main() {
         for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
             int chunk_index = chunk / TAU;
             printf("Processing Chunk %d\n", chunk);
-            Initialize input spikes for the first layer from the loaded data
+            // Initialize input spikes for the first layer from the loaded data
             for (int t = 0; t < TAU; t++) {
                 for (int i = 0; i < network.layers[0].num_neurons; i++) {
                     set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t][i]);
