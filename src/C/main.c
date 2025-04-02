@@ -58,7 +58,7 @@ int main() {
     printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
-    zero_network();
+    // zero_network();
     printf("Network initialized\n");
 
     // Allocate memory for ping pong buffers
