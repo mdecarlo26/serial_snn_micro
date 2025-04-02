@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # File paths
-MODEL_OUTPUT="model_output.txt"
+MODEL_OUTPUT="./C/model_output.txt"
 LABELS="labels.txt"
 
 # Check if files exist
