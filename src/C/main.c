@@ -58,7 +58,7 @@ int main() {
     printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
-    // zero_network();
+    zero_network();
     printf("Network initialized\n");
 
     // Allocate memory for ping pong buffers
@@ -116,7 +116,7 @@ int main() {
         for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
             firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
         }
-        zero_network();
+        // zero_network();
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
         fflush(stdout);
         // printf("Processing Sample %d\n", d);
