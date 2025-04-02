@@ -1,45 +1,37 @@
 #!/bin/bash
 
-# File paths
-MODEL_OUTPUT="./C/model_output.txt"
-LABELS="labels.txt"
-
-# Check if files exist
-if [[ ! -f "$MODEL_OUTPUT" || ! -f "$LABELS" ]]; then
-    echo "Error: One or both files do not exist."
+# Check for file argument
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <input_file>"
     exit 1
 fi
 
-# Read labels into an array
-mapfile -t labels < <(awk '{print int($1)}' "$LABELS")
+input_file="$1"
 
 # Initialize counters
-total_samples=0
-correct_classifications=0
-incorrect_classifications=0
+correct=0
+incorrect=0
 
-# Read model output and compare with labels
+# Read the file line by line
 while IFS= read -r line; do
-    # Extract classification from model output
-    classification=$(echo "$line" | awk -F'=' '{print $2}' | awk '{print $1}' | tr -d '[:space:],')
+    classification=$(echo "$line" | grep -oP 'Classification = \K\d+')
+    label=$(echo "$line" | grep -oP 'Label = \K\d+')
 
-    # Compare with label
-    if [[ "$classification" -eq "${labels[total_samples]}" ]]; then
-        ((correct_classifications++))
+    if [[ "$classification" == "$label" ]]; then
+        ((correct++))
     else
-        ((incorrect_classifications++))
+        ((incorrect++))
     fi
-    
-    ((total_samples++))
-done < <(grep "Classification" "$MODEL_OUTPUT")
+done < "$input_file"
 
-# Calculate accuracy
-accuracy=$(echo "scale=2; $correct_classifications / $total_samples * 100" | bc)
+# Total predictions
+total=$((correct + incorrect))
 
-# Print summary statistics
-echo "Total samples: $total_samples"
-echo "Correct classifications: $correct_classifications"
-echo "Incorrect classifications: $incorrect_classifications"
-echo "Accuracy: $accuracy%"
-
-exit 0
+if [[ $total -gt 0 ]]; then
+    accuracy=$(echo "scale=4; $correct / $total * 100" | bc)
+    echo "Correct: $correct"
+    echo "Incorrect: $incorrect"
+    echo "Accuracy: $accuracy%"
+else
+    echo "No predictions found in file."
+fi
