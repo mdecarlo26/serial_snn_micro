@@ -34,7 +34,7 @@ int main() {
     // Example initialization
     network.num_layers = 3;
     int l1 = INPUT_SIZE;
-    int l2 = 16;
+    int l2 = 256;
     int l3 = NUM_CLASSES;
     int neurons_per_layer[] = {l1, l2, l3};
 
@@ -47,14 +47,14 @@ int main() {
     for (int i = 0; i < l3; i++) {
         weights_fc2[i] = (float *)malloc(l2 * sizeof(float));
     }
-    load_weights("../2d_weights_fc1.txt", weights_fc1, l2, l1);
-    load_weights("../2d_weights_fc2.txt", weights_fc2, l3, l2);
+    load_weights("../weights_fc1.txt", weights_fc1, l2, l1);
+    load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
     printf("Weights loaded\n");
     // Load biases from files
     float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
     float *bias_fc2 = (float *)malloc(l3 * sizeof(float));
-    load_bias("../2d_bias_fc1.txt", bias_fc1, l2);
-    load_bias("../2d_bias_fc2.txt", bias_fc2, l3);
+    load_bias("../bias_fc1.txt", bias_fc1, l2);
+    load_bias("../bias_fc2.txt", bias_fc2, l3);
     printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
@@ -76,8 +76,8 @@ int main() {
     char* labels = allocate_labels(NUM_SAMPLES);
 
     // Read data into allocated arrays
-    // if (read_spike_data("../mnist_input_spikes.csv", initial_spikes) || read_labels("../mnist_labels.csv", labels, NUM_SAMPLES)) {
-    if (read_spike_data("../input_spikes.csv", initial_spikes) || read_labels("../labels.csv", labels, NUM_SAMPLES)) {
+    if (read_spike_data("../mnist_input_spikes.csv", initial_spikes) || read_labels("../mnist_labels.csv", labels, NUM_SAMPLES)) {
+    // if (read_spike_data("../input_spikes.csv", initial_spikes) || read_labels("../labels.csv", labels, NUM_SAMPLES)) {
         free_spike_array(initial_spikes);
         free(labels);
         return 1;
