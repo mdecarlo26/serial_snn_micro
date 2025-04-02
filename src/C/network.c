@@ -27,17 +27,22 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             float sum = 0.0f;
             if (layer->layer_num > 0) {
                 sum += layer->bias[i];
-            }
-
-            for (int j = 0; j < input_size; j++) {
-                if (get_bit(input, j, t)) { // if incoming spike is present
-                    if (layer->layer_num == 0) {
-                        sum += 1.0f; // For the input layer, each spike contributes a value of 1
-                    } else {
-                        sum += layer->weights[i][j];
+                for (int j = 0; j < input_size; j++) {
+                    if (get_bit(input, j, t)) { // if incoming spike is present
+                        if (layer->layer_num == 0) {
+                            sum += 1.0f; // For the input layer, each spike contributes a value of 1
+                        } else {
+                            sum += layer->weights[i][j];
+                        }
                     }
                 }
             }
+            else{
+                if (get_bit(input, i, t)) { // if incoming spike is present
+                    sum += 1.0f; // For the input layer, each spike contributes a value of 1
+                }
+            }
+                       
             printf("Neuron %d: Old Membrane Potential = %f\n", i, layer->neurons[i].membrane_potential);
 
             float new_mem = 0;
