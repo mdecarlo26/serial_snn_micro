@@ -41,7 +41,7 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
             printf("Neuron %d: Old Membrane Potential = %f\n", i, layer->neurons[i].membrane_potential);
 
             float new_mem = 0;
-            int reset_signal = heaviside(layer->neurons[i].membrane_potential,0);
+            int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
             new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
