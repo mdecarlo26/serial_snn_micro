@@ -133,8 +133,8 @@ int main() {
                 }
             }
 
-            // printf("Input spikes at chunk %d:\n", chunk);
-            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+            printf("Input spikes at chunk %d:\n", chunk);
+            print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
             // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
