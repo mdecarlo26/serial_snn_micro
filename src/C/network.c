@@ -1,5 +1,6 @@
 #include "network.h"
 #include "define.h"
+#include "debug.h"
 #include <stdlib.h>
 
 extern Network network;

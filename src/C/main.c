@@ -133,17 +133,15 @@ int main() {
                     // set_bit(ping_pong_buffer_1, network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
                 }
             }
-            if (d == 0)
-            {
+
             printf("Input spikes at chunk %d:\n", chunk);
             print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
-            }
 
             // Process each layer sequentially
             for (int l = 0; l < network.num_layers; l++) {
                 int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
-                // printf("Simulating Layer %d\n", l);
+                printf("Simulating Layer %d\n", l);
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
 
                 // Swap the ping-pong buffers for the next layer
