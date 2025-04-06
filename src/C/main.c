@@ -866,7 +866,7 @@ int main() {
     labels[0] = label;
 
     
-    rate_encoding_3d(input_data, NUM_SAMPLES, INPUT_SIZE, TIME_WINDOW, initial_spikes) 
+    rate_encoding_3d(input_data, NUM_SAMPLES, INPUT_SIZE, TIME_WINDOW, initial_spikes);
 
     // Read data into allocated arrays
     // if (read_spike_data("../mnist_input_spikes.csv", initial_spikes) || read_labels("../mnist_labels.csv", labels, NUM_SAMPLES)) {
