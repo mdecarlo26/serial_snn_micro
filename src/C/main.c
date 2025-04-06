@@ -10,7 +10,6 @@
 #include "rate_encoding.h"
 #include "network.h"
 #include "debug.h"
-#include "dummy.h"
 
 float input_data[784] = {
 0.000000000000000000e+00,
