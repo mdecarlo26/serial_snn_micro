@@ -10,7 +10,7 @@ EXE_NAME = main
 
 # Source and object files
 SRCS = $(SRC_DIR)/$(EXE_NAME).c $(SRC_DIR)/file_operations.c $(SRC_DIR)/rate_encoding.c $(SRC_DIR)/network.c $(SRC_DIR)/debug.c $(SRC_DIR)/dummy.c 
-OBJS = $(BUILD_DIR)/$(EXE_NAME).o $(BUILD_DIR)/file_operations.o $(BUILD_DIR)/rate_encoding.o $(SRC_DIR)/network.o $(SRC_DIR)/debug.o $(SRC_DIR)/dummy.c 
+OBJS = $(BUILD_DIR)/$(EXE_NAME).o $(BUILD_DIR)/file_operations.o $(BUILD_DIR)/rate_encoding.o $(SRC_DIR)/network.o $(SRC_DIR)/debug.o $(SRC_DIR)/dummy.o 
 
 # Output executable
 TARGET = $(EXE_NAME)
