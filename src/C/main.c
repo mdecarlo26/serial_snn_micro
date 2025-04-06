@@ -824,6 +824,7 @@ char labels[NUM_SAMPLES] = {0};
 
 // Function prototypes
 void initialize_input_spikes(char **input, int num_neurons);
+void dump_classification(FILE *output_file, int sample_index, int classification, char* labels);
 
 // Memory allocation functions
 char*** allocate_spike_array();
