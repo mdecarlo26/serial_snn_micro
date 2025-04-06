@@ -141,3 +141,19 @@ void zero_network() {
         }
     }
 }
+
+int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
+    int max_firing_count = 0;
+    int classification = -1;
+    for (int i = 0; i < num_neurons; i++) {
+        int total_firing_count = 0;
+        for (int j = 0; j < num_chunks; j++) {
+            total_firing_count += firing_counts[i][j];
+        }
+        if (total_firing_count > max_firing_count) {
+            max_firing_count = total_firing_count;
+            classification = i;
+        }
+    }
+    return classification;
+}

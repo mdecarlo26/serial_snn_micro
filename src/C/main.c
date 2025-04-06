@@ -824,7 +824,6 @@ char labels[NUM_SAMPLES] = {0};
 
 // Function prototypes
 void initialize_input_spikes(char **input, int num_neurons);
-void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks, char* labels);
 
 // Memory allocation functions
 char*** allocate_spike_array();
@@ -1018,7 +1017,8 @@ int main() {
         // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
         // print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
-        classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks, labels);
+        int classification = classify_inference(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
+        dump_classification(output_file, d, classification, labels);
 
         // Free firing counts memory for this sample
         // for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
@@ -1081,25 +1081,8 @@ void free_network() {
 
 
 
-// Function to classify spike trains based on the firing frequency of the last layer
-void classify_spike_trains(int **firing_counts, int num_neurons, FILE *output_file, int sample_index, int num_chunks, char* labels) {
-    // Determine the classification based on the neuron with the highest firing frequency
-    int max_firing_count = 0;
-    int classification = -1;
-    for (int i = 0; i < num_neurons; i++) {
-        int total_firing_count = 0;
-        for (int j = 0; j < num_chunks; j++) {
-            total_firing_count += firing_counts[i][j];
-        }
-        if (total_firing_count > max_firing_count) {
-            max_firing_count = total_firing_count;
-            classification = i;
-        }
-    }
-
-    // Output the classification and the firing count to the file
-    fprintf(output_file, "Sample %d: Classification = %d, Firing Count = %d, Label = %d\n", sample_index, classification, max_firing_count, labels[sample_index]);
-    // printf("Classification: %d \t Label: %d\n", classification,labels[sample_index]);
+void dump_classification(FILE *output_file, int sample_index, int classification, char* labels) {
+    fprintf(output_file, "Sample %d: Classification = %d, Label = %d\n", sample_index, classification, labels[sample_index]);
 }
 
 // Function to print the weight matrix and biases
