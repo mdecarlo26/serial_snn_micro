@@ -847,16 +847,6 @@ int main() {
         ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
     }
 
-    // Allocate and load weights and biases with correct dimensions:
-    // float **weights_fc1 = (float **)malloc(l2 * sizeof(float *));
-    // float **weights_fc2 = (float **)malloc(l3 * sizeof(float *));
-    // for (int i = 0; i < l2; i++) {
-    //     weights_fc1[i] = (float *)malloc(l1 * sizeof(float));
-    // }
-    // for (int i = 0; i < l3; i++) {
-    //     weights_fc2[i] = (float *)malloc(l2 * sizeof(float));
-    // }
-
     static float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
     static float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
     float* weights_fc1[HIDDEN_LAYER_1];
@@ -877,8 +867,6 @@ int main() {
     load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
     printf("Weights loaded\n");
     // Load biases from files
-    // float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
-    // float *bias_fc2 = (float *)malloc(l3 * sizeof(float));
 
     load_bias("../bias_fc1.txt", bias_fc1, l2);
     load_bias("../bias_fc2.txt", bias_fc2, l3);
@@ -888,17 +876,8 @@ int main() {
     zero_network();
     printf("Network initialized\n");
 
-    // Allocate memory for ping pong buffers
-    // ping_pong_buffer_1 = (char **)malloc(MAX_NEURONS * sizeof(char *));
-    // ping_pong_buffer_2 = (char **)malloc(MAX_NEURONS * sizeof(char *));
-    // for (int i = 0; i < MAX_NEURONS; i++) {
-    //     ping_pong_buffer_1[i] = (char *)calloc(TAU, sizeof(char));
-    //     ping_pong_buffer_2[i] = (char *)calloc(TAU, sizeof(char));
-    // }
-
     // Print model overview
     print_model_overview();
-    // char*** initial_spikes = allocate_spike_array();
 
 
     // 4. Fully static memory for spike array (3D)
@@ -912,8 +891,6 @@ int main() {
         initial_spikes[i] = initial_spikes_pointers_2d[i];
     }
 
-    // if (!initial_spikes) return 1;
-    // char* labels = allocate_labels(NUM_SAMPLES);
     labels[0] = label;
 
     
@@ -957,20 +934,15 @@ int main() {
     printf("\033[1;32mStarting Sim\033[0m\n");
     int num_chunks = TIME_WINDOW / TAU;
     for (int d = 0; d < NUM_SAMPLES; d++) {
-    // for (int d = 3; d < 4; d++) {
-        // int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
-        // for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-        //     firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
+        // static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
+        // int* firing_counts[NUM_CLASSES];
+        // for (int i = 0; i < NUM_CLASSES; i++) {
+        //     firing_counts[i] = firing_counts_data[i];
+        //     // Zero the row before use (manual clear)
+        //     for (int j = 0; j < TIME_WINDOW / TAU; j++) {
+        //         firing_counts[i][j] = 0;
+        //     }
         // }
-        static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
-        int* firing_counts[NUM_CLASSES];
-        for (int i = 0; i < NUM_CLASSES; i++) {
-            firing_counts[i] = firing_counts_data[i];
-            // Zero the row before use (manual clear)
-            for (int j = 0; j < TIME_WINDOW / TAU; j++) {
-                firing_counts[i][j] = 0;
-            }
-        }
         zero_network();
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
         fflush(stdout);
@@ -978,47 +950,48 @@ int main() {
         // printf("Label: %d\n", labels[d]);
 
         // Process each chunk of TAU time steps
-        for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
-            int chunk_index = chunk / TAU;
-            // printf("Processing Chunk %d\n", chunk);
-            // Initialize input spikes for the first layer from the loaded data
-            for (int t = 0; t < TAU; t++) {
-                for (int i = 0; i < network.layers[0].num_neurons; i++) {
-                    set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t][i]);
-                    // set_bit(ping_pong_buffer_1, network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
-                }
-            }
-            // printf("Input spikes at chunk %d:\n", chunk);
-            // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+        // for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
+        //     int chunk_index = chunk / TAU;
+        //     // printf("Processing Chunk %d\n", chunk);
+        //     // Initialize input spikes for the first layer from the loaded data
+        //     for (int t = 0; t < TAU; t++) {
+        //         for (int i = 0; i < network.layers[0].num_neurons; i++) {
+        //             set_bit(ping_pong_buffer_1, i, t, initial_spikes[d][chunk + t][i]);
+        //             // set_bit(ping_pong_buffer_1, network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
+        //         }
+        //     }
+        //     // printf("Input spikes at chunk %d:\n", chunk);
+        //     // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
 
-            // Process each layer sequentially
-            for (int l = 0; l < network.num_layers; l++) {
-                int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
+        //     // Process each layer sequentially
+        //     for (int l = 0; l < network.num_layers; l++) {
+        //         int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
 
-                // printf("Simulating Layer %d\n", l);
-                update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+        //         // printf("Simulating Layer %d\n", l);
+        //         update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
 
-                // Swap the ping-pong buffers for the next layer
+        //         // Swap the ping-pong buffers for the next layer
 
-                char **temp = ping_pong_buffer_1;
-                ping_pong_buffer_1 = ping_pong_buffer_2;
-                ping_pong_buffer_2 = temp;
-            }
+        //         char **temp = ping_pong_buffer_1;
+        //         ping_pong_buffer_1 = ping_pong_buffer_2;
+        //         ping_pong_buffer_2 = temp;
+        //     }
 
-            // Accumulate firing counts for the final layer
-            for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-                for (int t = 0; t < TAU; t++) {
-                    if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
-                        firing_counts[i][chunk_index]++;
-                    }
-                }
-            }
-        }
+        //     // Accumulate firing counts for the final layer
+        //     for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+        //         for (int t = 0; t < TAU; t++) {
+        //             if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
+        //                 firing_counts[i][chunk_index]++;
+        //             }
+        //         }
+        //     }
+        // }
         // printf("Output spikes at sample %d:\n", d);
         // print_ping_pong_buffers((const char **)ping_pong_buffer_1, (const char **)ping_pong_buffer_2, network.layers[network.num_layers-1].num_neurons);
         // printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
         // print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
-        int classification = classify_inference(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
+        // int classification = classify_inference(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
+        int classification = inference(initial_spikes[d], ping_pong_buffer_1, ping_pong_buffer_2)
         dump_classification(output_file, d, classification, labels);
 
         // Free firing counts memory for this sample

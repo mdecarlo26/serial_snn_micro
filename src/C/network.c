@@ -157,3 +157,55 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
     }
     return classification;
 }
+
+int inference(const char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2){
+
+    static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
+    int* firing_counts[NUM_CLASSES];
+    for (int i = 0; i < NUM_CLASSES; i++) {
+        firing_counts[i] = firing_counts_data[i];
+        // Zero the row before use (manual clear)
+        for (int j = 0; j < TIME_WINDOW / TAU; j++) {
+            firing_counts[i][j] = 0;
+        }
+    }
+
+    for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
+        int chunk_index = chunk / TAU;
+        // printf("Processing Chunk %d\n", chunk);
+        // Initialize input spikes for the first layer from the loaded data
+        for (int t = 0; t < TAU; t++) {
+            for (int i = 0; i < network.layers[0].num_neurons; i++) {
+                set_bit(ping_pong_buffer_1, i, t, input[chunk + t][i]);
+                // set_bit(ping_pong_buffer_1, network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
+            }
+        }
+        // printf("Input spikes at chunk %d:\n", chunk);
+        // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+
+        // Process each layer sequentially
+        for (int l = 0; l < network.num_layers; l++) {
+            int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
+
+            // printf("Simulating Layer %d\n", l);
+            update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+
+            // Swap the ping-pong buffers for the next layer
+
+            char **temp = ping_pong_buffer_1;
+            ping_pong_buffer_1 = ping_pong_buffer_2;
+            ping_pong_buffer_2 = temp;
+        }
+
+        // Accumulate firing counts for the final layer
+        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+            for (int t = 0; t < TAU; t++) {
+                if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
+                    firing_counts[i][chunk_index]++;
+                }
+            }
+        }
+    }
+
+    return classify_inference(firing_counts, network.layers[network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
+}

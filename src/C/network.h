@@ -38,6 +38,6 @@ void zero_network();
 void free_network();
 
 void update_layer(const char **input, char **output, Layer *layer, int input_size);
-void inference(const char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2);
+int inference(const char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2);
 int classify_inference(int **firing_counts, int num_neurons, int num_chunks);
 #endif // NETWORK_H
