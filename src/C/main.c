@@ -866,6 +866,7 @@ int main() {
     labels[0] = label;
 
     
+    printf("Making Spikes\n");
     rate_encoding_3d(input_data, NUM_SAMPLES, INPUT_SIZE, TIME_WINDOW, initial_spikes);
     printf("\033[1;32mSpikes Made\033[0m\n");
 
