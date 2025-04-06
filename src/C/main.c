@@ -803,8 +803,23 @@ char label = 2;
 Network network;
 
 // Define the global ping pong buffers as pointers to 2D arrays
-char **ping_pong_buffer_1;
-char **ping_pong_buffer_2;
+// char **ping_pong_buffer_1;
+// char **ping_pong_buffer_2;
+
+
+// 3. Fully static memory for ping-pong buffers
+static char ping_pong_buffer_1_data[MAX_NEURONS][TAU] = {0};
+static char ping_pong_buffer_2_data[MAX_NEURONS][TAU] = {0};
+char* ping_pong_buffer_1[MAX_NEURONS];
+char* ping_pong_buffer_2[MAX_NEURONS];
+for (int i = 0; i < MAX_NEURONS; i++) {
+    ping_pong_buffer_1[i] = ping_pong_buffer_1_data[i];
+    ping_pong_buffer_2[i] = ping_pong_buffer_2_data[i];
+}
+
+
+// 6. Fully static memory for labels
+char labels[NUM_SAMPLES] = {0};
 
 // Function prototypes
 void initialize_input_spikes(char **input, int num_neurons);
@@ -837,8 +852,21 @@ int main() {
     //     weights_fc2[i] = (float *)malloc(l2 * sizeof(float));
     // }
 
-    float weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
-    float weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
+    static float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
+    static float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
+    float* weights_fc1[HIDDEN_LAYER_1];
+    float* weights_fc2[NUM_CLASSES];
+
+    for (int i = 0; i < HIDDEN_LAYER_1; i++) {
+        weights_fc1[i] = weights_fc1_data[i];
+    }
+    for (int i = 0; i < NUM_CLASSES; i++) {
+        weights_fc2[i] = weights_fc2_data[i];
+    }
+
+    // 2. Fully static memory for biases
+    float bias_fc1[HIDDEN_LAYER_1] = {0};
+    float bias_fc2[NUM_CLASSES] = {0};
 
     load_weights("../weights_fc1.txt", weights_fc1, l2, l1);
     load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
@@ -847,8 +875,6 @@ int main() {
     // float *bias_fc1 = (float *)malloc(l2 * sizeof(float));
     // float *bias_fc2 = (float *)malloc(l3 * sizeof(float));
 
-    float bias_fc1[HIDDEN_LAYER_1] = {0};
-    float bias_fc2[NUM_CLASSES] = {0};
     load_bias("../bias_fc1.txt", bias_fc1, l2);
     load_bias("../bias_fc2.txt", bias_fc2, l3);
     printf("Biases loaded\n");
@@ -865,14 +891,24 @@ int main() {
     //     ping_pong_buffer_2[i] = (char *)calloc(TAU, sizeof(char));
     // }
 
-    ping_pong_buffer_1[MAX_NEURONS][TAU] = {0}; 
-    ping_pong_buffer_2[MAX_NEURONS][TAU] = {0}; 
-
     // Print model overview
     print_model_overview();
-    char*** initial_spikes = allocate_spike_array();
+    // char*** initial_spikes = allocate_spike_array();
+
+
+    // 4. Fully static memory for spike array (3D)
+    static char initial_spikes_data[NUM_SAMPLES][TIME_WINDOW][INPUT_SIZE] = {0};
+    char* initial_spikes_pointers_2d[NUM_SAMPLES][TIME_WINDOW];
+    char** initial_spikes[NUM_SAMPLES];
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        for (int j = 0; j < TIME_WINDOW; j++) {
+            initial_spikes_pointers_2d[i][j] = initial_spikes_data[i][j];
+        }
+        initial_spikes[i] = initial_spikes_pointers_2d[i];
+    }
+
     if (!initial_spikes) return 1;
-    char* labels = allocate_labels(NUM_SAMPLES);
+    // char* labels = allocate_labels(NUM_SAMPLES);
     labels[0] = label;
 
     
@@ -917,9 +953,18 @@ int main() {
     int num_chunks = TIME_WINDOW / TAU;
     for (int d = 0; d < NUM_SAMPLES; d++) {
     // for (int d = 3; d < 4; d++) {
-        int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
-        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-            firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
+        // int **firing_counts = (int **)malloc(network.layers[network.num_layers - 1].num_neurons * sizeof(int *));
+        // for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+        //     firing_counts[i] = (int *)calloc(num_chunks, sizeof(int));
+        // }
+        static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
+        int* firing_counts[NUM_CLASSES];
+        for (int i = 0; i < NUM_CLASSES; i++) {
+            firing_counts[i] = firing_counts_data[i];
+            // Zero the row before use (manual clear)
+            for (int j = 0; j < TIME_WINDOW / TAU; j++) {
+                firing_counts[i][j] = 0;
+            }
         }
         zero_network();
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
@@ -982,28 +1027,28 @@ int main() {
     gettimeofday(&stop, NULL);
 
     // Free the allocated memory
-    for (int i = 0; i < 10; i++) {
-        free(weights_fc1[i]);
-    }
-    for (int i = 0; i < 2; i++) {
-        free(weights_fc2[i]);
-    }
-    free(weights_fc1);
-    free(weights_fc2);
+    // for (int i = 0; i < 10; i++) {
+    //     free(weights_fc1[i]);
+    // }
+    // for (int i = 0; i < 2; i++) {
+    //     free(weights_fc2[i]);
+    // }
+    // free(weights_fc1);
+    // free(weights_fc2);
 
-    printf("Freeing spike array\n");
-    free_spike_array(initial_spikes);
-    printf("Freeing labels\n");
-    free_labels(labels);
+    // printf("Freeing spike array\n");
+    // free_spike_array(initial_spikes);
+    // printf("Freeing labels\n");
+    // free_labels(labels);
 
-    for (int i = 0; i < MAX_NEURONS; i++) {
-        free(ping_pong_buffer_1[i]);
-        free(ping_pong_buffer_2[i]);
-    }
-    free(ping_pong_buffer_1);
-    free(ping_pong_buffer_2);
-    free(bias_fc1);
-    free(bias_fc2);
+    // // for (int i = 0; i < MAX_NEURONS; i++) {
+    // //     free(ping_pong_buffer_1[i]);
+    // //     free(ping_pong_buffer_2[i]);
+    // // }
+    // // free(ping_pong_buffer_1);
+    // // free(ping_pong_buffer_2);
+    // free(bias_fc1);
+    // free(bias_fc2);
 
     printf("Simulation took %lu ms\n", (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000);
     printf("Average time per sample: %ld ms\n", ((stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000) / NUM_SAMPLES);

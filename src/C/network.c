@@ -58,20 +58,59 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
 
 
 // Function to initialize weights, biases, and neuron properties
+// void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2, float *bias_fc1, float *bias_fc2) {
+//     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
+//     for (int l = 0; l < network.num_layers; l++) {
+//         printf("Initializing Layer %d\n", l);
+//         network.layers[l].layer_num = l;
+//         network.layers[l].num_neurons = neurons_per_layer[l];
+//         network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
+//         network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
+//         network.layers[l].bias = (float *)malloc(network.layers[l].num_neurons * sizeof(float));
+//         for (int i = 0; i < network.layers[l].num_neurons; i++) {
+//             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
+//             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
+//             if (l > 0) { // Allocate weights and biases for layers after the input layer
+//                 network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
+//                 if (l == 1) {
+//                     memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
+//                     network.layers[l].bias[i] = bias_fc1[i];
+//                 } else if (l == 2) {
+//                     memcpy(network.layers[l].weights[i], weights_fc2[i], network.layers[l - 1].num_neurons * sizeof(float));
+//                     network.layers[l].bias[i] = bias_fc2[i];
+//                 }
+//             } else {
+//                 network.layers[l].weights[i] = NULL; // No weights for the input layer
+//                 network.layers[l].bias[i] = 0;         // No bias for the input layer
+//             }
+//         }
+//     }
+// }
+
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2, float *bias_fc1, float *bias_fc2) {
-    network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
+    network.layers = static_layers;
+
     for (int l = 0; l < network.num_layers; l++) {
         printf("Initializing Layer %d\n", l);
         network.layers[l].layer_num = l;
         network.layers[l].num_neurons = neurons_per_layer[l];
-        network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
-        network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
-        network.layers[l].bias = (float *)malloc(network.layers[l].num_neurons * sizeof(float));
+
+        // Assign statically allocated neuron structures
+        network.layers[l].neurons = static_neurons[l];
+
+        // Assign statically allocated weight pointers and bias array
+        network.layers[l].weights = static_weights[l];
+        network.layers[l].bias = static_bias[l];
+
         for (int i = 0; i < network.layers[l].num_neurons; i++) {
             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-            if (l > 0) { // Allocate weights and biases for layers after the input layer
-                network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
+
+            if (l > 0) {
+                // Set weight pointer for this neuron to static buffer
+                network.layers[l].weights[i] = static_weight_data[l][i];
+
+                // Copy weights and bias from passed-in arguments
                 if (l == 1) {
                     memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
                     network.layers[l].bias[i] = bias_fc1[i];
@@ -80,12 +119,13 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
                     network.layers[l].bias[i] = bias_fc2[i];
                 }
             } else {
-                network.layers[l].weights[i] = NULL; // No weights for the input layer
-                network.layers[l].bias[i] = 0;         // No bias for the input layer
+                network.layers[l].weights[i] = NULL;
+                network.layers[l].bias[i] = 0;
             }
         }
     }
 }
+
 
 
 void zero_network() {
