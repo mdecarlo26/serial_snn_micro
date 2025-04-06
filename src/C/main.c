@@ -867,6 +867,7 @@ int main() {
 
     
     rate_encoding_3d(input_data, NUM_SAMPLES, INPUT_SIZE, TIME_WINDOW, initial_spikes);
+    printf("\033[1;32mSpikes Made\033[0m\n");
 
     // Read data into allocated arrays
     // if (read_spike_data("../mnist_input_spikes.csv", initial_spikes) || read_labels("../mnist_labels.csv", labels, NUM_SAMPLES)) {
