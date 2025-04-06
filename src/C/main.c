@@ -991,7 +991,7 @@ int main() {
         // printf("\033[1;33mFiring counts for sample %d:\033[0m\n", d);
         // print_firing_counts(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
         // int classification = classify_inference(firing_counts, network.layers[network.num_layers - 1].num_neurons, num_chunks);
-        int classification = inference(initial_spikes[d], ping_pong_buffer_1, ping_pong_buffer_2)
+        int classification = inference(initial_spikes[d], ping_pong_buffer_1, ping_pong_buffer_2);
         dump_classification(output_file, d, classification, labels);
 
         // Free firing counts memory for this sample

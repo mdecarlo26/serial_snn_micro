@@ -158,7 +158,7 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
     return classification;
 }
 
-int inference(const char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2){
+int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2){
 
     static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
     int* firing_counts[NUM_CLASSES];
