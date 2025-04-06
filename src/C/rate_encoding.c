@@ -32,7 +32,7 @@ void rate_encoding_3d(float *data, int dim1, int dim2, int dim3, char*** spikes)
     for (int c = 0; c < dim1; c++) {
         for (int h = 0; h < dim2; h++) {
             for (int w = 0; w < dim3; w++) {
-                prob = data[h] / 255.0; // Normalize the data to [0, 1]
+                prob = data[w] / 255.0; // Normalize the data to [0, 1]
                 spikes[c][h][w] =  bernoulli_trial(prob);
             }
         }
