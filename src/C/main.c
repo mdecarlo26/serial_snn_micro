@@ -10,6 +10,7 @@
 #include "rate_encoding.h"
 #include "network.h"
 #include "debug.h"
+#include "dummy.h"
 
 Network network;
 
@@ -29,7 +30,7 @@ char *allocate_labels(int num_samples);
 void free_labels(char *labels);
 
 int main() {
-    srand(time(NULL));  // Seed the random number generator
+    srand((unsigned int)time(NULL));
 
     // Example initialization
     network.num_layers = 3;
@@ -74,14 +75,18 @@ int main() {
     char*** initial_spikes = allocate_spike_array();
     if (!initial_spikes) return 1;
     char* labels = allocate_labels(NUM_SAMPLES);
+    labels[0] = label;
+
+    
+    rate_encoding_3d(input_data, NUM_SAMPLES, INPUT_SIZE, TIME_WINDOW, initial_spikes) 
 
     // Read data into allocated arrays
-    if (read_spike_data("../mnist_input_spikes.csv", initial_spikes) || read_labels("../mnist_labels.csv", labels, NUM_SAMPLES)) {
-    // if (read_spike_data("../input_spikes.csv", initial_spikes) || read_labels("../labels.csv", labels, NUM_SAMPLES)) {
-        free_spike_array(initial_spikes);
-        free(labels);
-        return 1;
-    }
+    // if (read_spike_data("../mnist_input_spikes.csv", initial_spikes) || read_labels("../mnist_labels.csv", labels, NUM_SAMPLES)) {
+    // // if (read_spike_data("../input_spikes.csv", initial_spikes) || read_labels("../labels.csv", labels, NUM_SAMPLES)) {
+    //     free_spike_array(initial_spikes);
+    //     free(labels);
+    //     return 1;
+    // }
 
     // Load initial spikes from CSV file
     // float **initial_spikes = (float **)malloc(NUM_SAMPLES * sizeof(float *));
@@ -89,12 +94,12 @@ int main() {
     //     initial_spikes[i] = (float *)malloc(TIME_WINDOW * sizeof(float));
     // }
     // load_csv("spikes.csv", initial_spikes, NUM_SAMPLES, TIME_WINDOW);
-    if (!validate_spike_data(initial_spikes)) {
-        printf("Invalid spike data\n");
-        free_spike_array(initial_spikes);
-        free(labels);
-        return 1;
-    }
+    // if (!validate_spike_data(initial_spikes)) {
+    //     printf("Invalid spike data\n");
+    //     free_spike_array(initial_spikes);
+    //     free(labels);
+    //     return 1;
+    // }
     // printf("%d\n", initial_spikes[0][3][0]);
 
     // Process each data point
