@@ -802,7 +802,9 @@ char label = 2;
 
 Network network;
 
-int test[10][10] = {0};
+int dummy = 10;
+
+int test[dummy][10] = {0};
 
 // Define the global ping pong buffers as pointers to 2D arrays
 char **ping_pong_buffer_1;
