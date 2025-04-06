@@ -817,10 +817,6 @@ char **ping_pong_buffer_2 = ping_pong_buffer_2_data;
 static char ping_pong_buffer_1_blocks[MAX_NEURONS][TAU] = {0};
 static char ping_pong_buffer_2_blocks[MAX_NEURONS][TAU] = {0};
 
-for (int i = 0; i < MAX_NEURONS; i++) {
-    ping_pong_buffer_1_data[i] = ping_pong_buffer_1_blocks[i];
-    ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
-}
 
 
 // 6. Fully static memory for labels
@@ -847,8 +843,8 @@ int main() {
     int l3 = NUM_CLASSES;
     int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
     for (int i = 0; i < MAX_NEURONS; i++) {
-        ping_pong_buffer_1[i] = ping_pong_buffer_1_data[i];
-        ping_pong_buffer_2[i] = ping_pong_buffer_2_data[i];
+        ping_pong_buffer_1_data[i] = ping_pong_buffer_1_blocks[i];
+        ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
     }
 
     // Allocate and load weights and biases with correct dimensions:
