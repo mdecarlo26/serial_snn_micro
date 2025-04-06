@@ -1136,7 +1136,7 @@ char*** allocate_spike_array() {
     //         spikes[i][j] = data_block + (i * TIME_WINDOW * INPUT_SIZE) + (j * INPUT_SIZE);
     //     }
     // }
-    char spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_SIZE] = {0};
+    char*** spikes = NULL;
     return spikes;
 }
 
