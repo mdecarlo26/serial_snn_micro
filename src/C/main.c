@@ -808,10 +808,19 @@ Network network;
 
 
 // 3. Fully static memory for ping-pong buffers
-static char ping_pong_buffer_1_data[MAX_NEURONS][TAU] = {0};
-static char ping_pong_buffer_2_data[MAX_NEURONS][TAU] = {0};
-char* ping_pong_buffer_1[MAX_NEURONS];
-char* ping_pong_buffer_2[MAX_NEURONS];
+char *ping_pong_buffer_1_data[MAX_NEURONS];
+char *ping_pong_buffer_2_data[MAX_NEURONS];
+
+char **ping_pong_buffer_1 = ping_pong_buffer_1_data;
+char **ping_pong_buffer_2 = ping_pong_buffer_2_data;
+
+static char ping_pong_buffer_1_blocks[MAX_NEURONS][TAU] = {0};
+static char ping_pong_buffer_2_blocks[MAX_NEURONS][TAU] = {0};
+
+for (int i = 0; i < MAX_NEURONS; i++) {
+    ping_pong_buffer_1_data[i] = ping_pong_buffer_1_blocks[i];
+    ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
+}
 
 
 // 6. Fully static memory for labels
@@ -907,7 +916,7 @@ int main() {
         initial_spikes[i] = initial_spikes_pointers_2d[i];
     }
 
-    if (!initial_spikes) return 1;
+    // if (!initial_spikes) return 1;
     // char* labels = allocate_labels(NUM_SAMPLES);
     labels[0] = label;
 
@@ -994,6 +1003,7 @@ int main() {
                 update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
 
                 // Swap the ping-pong buffers for the next layer
+
                 char **temp = ping_pong_buffer_1;
                 ping_pong_buffer_1 = ping_pong_buffer_2;
                 ping_pong_buffer_2 = temp;

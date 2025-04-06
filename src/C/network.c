@@ -4,6 +4,11 @@
 #include <stdlib.h>
 
 extern Network network;
+static Layer static_layers[MAX_LAYERS];
+static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
+static float* static_weights[MAX_LAYERS][MAX_NEURONS];
+static float  static_weight_data[MAX_LAYERS][MAX_NEURONS][MAX_NEURONS];
+static float  static_bias[MAX_LAYERS][MAX_NEURONS];
 // Function to set a value in the buffer
 void set_bit(char **buffer, int x, int y, int value) {
     buffer[x][y] = value;
