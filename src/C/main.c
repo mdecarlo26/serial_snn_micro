@@ -1021,10 +1021,10 @@ int main() {
         classify_spike_trains(firing_counts, network.layers[network.num_layers - 1].num_neurons, output_file, d, num_chunks, labels);
 
         // Free firing counts memory for this sample
-        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
-            free(firing_counts[i]);
-        }
-        free(firing_counts);
+        // for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+        //     free(firing_counts[i]);
+        // }
+        // free(firing_counts);
     }
     printf("\n");
     printf("\033[1;32mSim Finished\033[0m\n");
