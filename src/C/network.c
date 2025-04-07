@@ -9,6 +9,7 @@ static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
 static float* static_weights[MAX_LAYERS][MAX_NEURONS];
 static float  static_weight_data[MAX_LAYERS][MAX_NEURONS][MAX_NEURONS];
 static float  static_bias[MAX_LAYERS][MAX_NEURONS];
+
 // Function to set a value in the buffer
 void set_bit(char **buffer, int x, int y, int value) {
     buffer[x][y] = value;
@@ -61,37 +62,6 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
     }
 }
 
-
-// Function to initialize weights, biases, and neuron properties
-// void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2, float *bias_fc1, float *bias_fc2) {
-//     network.layers = (Layer *)malloc(network.num_layers * sizeof(Layer));
-//     for (int l = 0; l < network.num_layers; l++) {
-//         printf("Initializing Layer %d\n", l);
-//         network.layers[l].layer_num = l;
-//         network.layers[l].num_neurons = neurons_per_layer[l];
-//         network.layers[l].neurons = (Neuron *)malloc(network.layers[l].num_neurons * sizeof(Neuron));
-//         network.layers[l].weights = (float **)malloc(network.layers[l].num_neurons * sizeof(float *));
-//         network.layers[l].bias = (float *)malloc(network.layers[l].num_neurons * sizeof(float));
-//         for (int i = 0; i < network.layers[l].num_neurons; i++) {
-//             network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
-//             network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-//             if (l > 0) { // Allocate weights and biases for layers after the input layer
-//                 network.layers[l].weights[i] = (float *)malloc(network.layers[l - 1].num_neurons * sizeof(float));
-//                 if (l == 1) {
-//                     memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
-//                     network.layers[l].bias[i] = bias_fc1[i];
-//                 } else if (l == 2) {
-//                     memcpy(network.layers[l].weights[i], weights_fc2[i], network.layers[l - 1].num_neurons * sizeof(float));
-//                     network.layers[l].bias[i] = bias_fc2[i];
-//                 }
-//             } else {
-//                 network.layers[l].weights[i] = NULL; // No weights for the input layer
-//                 network.layers[l].bias[i] = 0;         // No bias for the input layer
-//             }
-//         }
-//     }
-// }
-
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2, float *bias_fc1, float *bias_fc2) {
     network.layers = static_layers;
 
@@ -131,8 +101,6 @@ void initialize_network(int neurons_per_layer[], float **weights_fc1, float **we
     }
 }
 
-
-
 void zero_network() {
     for (int l = 0; l < network.num_layers; l++) {
         for (int i = 0; i < network.layers[l].num_neurons; i++) {
@@ -159,7 +127,7 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
 }
 
 int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2){
-
+    zero_network();
     static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
     int* firing_counts[NUM_CLASSES];
     for (int i = 0; i < NUM_CLASSES; i++) {
@@ -191,7 +159,6 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
             update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
-
             char **temp = ping_pong_buffer_1;
             ping_pong_buffer_1 = ping_pong_buffer_2;
             ping_pong_buffer_2 = temp;
