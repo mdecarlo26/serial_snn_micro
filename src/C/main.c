@@ -10,7 +10,7 @@
 #include "rate_encoding.h"
 #include "network.h"
 #include "debug.h"
-#include "dummy_data.h"
+#include "dummy.h"
 
 Network network;
 
