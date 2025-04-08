@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <sys/time.h>
+// #include <time.h>
+// #include <sys/time.h>
 
 
 #include "define.h"
@@ -65,24 +65,24 @@ int main() {
     }
 
     // 2. Fully static memory for biases
-    float bias_fc1[HIDDEN_LAYER_1] = {0};
-    float bias_fc2[NUM_CLASSES] = {0};
+    // float bias_fc1[HIDDEN_LAYER_1] = {0};
+    // float bias_fc2[NUM_CLASSES] = {0};
 
     load_weights("../weights_fc1.txt", weights_fc1, l2, l1);
     load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
     printf("Weights loaded\n");
     // Load biases from files
 
-    load_bias("../bias_fc1.txt", bias_fc1, l2);
-    load_bias("../bias_fc2.txt", bias_fc2, l3);
-    printf("Biases loaded\n");
+    // load_bias("../bias_fc1.txt", bias_fc1, l2);
+    // load_bias("../bias_fc2.txt", bias_fc2, l3);
+    // printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
     zero_network();
     printf("Network initialized\n");
 
     // Print model overview
-    print_model_overview();
+    // print_model_overview();
 
 
     // 4. Fully static memory for spike array (3D)
@@ -132,8 +132,8 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    struct timeval start, stop;
-    gettimeofday(&start, NULL);
+    // struct timeval start, stop;
+    // gettimeofday(&start, NULL);
 
     printf("\033[1;32mStarting Sim\033[0m\n");
     for (int d = 0; d < NUM_SAMPLES; d++) {
@@ -147,10 +147,10 @@ int main() {
     printf("\033[1;32mSim Finished\033[0m\n");
     fclose(output_file);
 
-    gettimeofday(&stop, NULL);
+    // gettimeofday(&stop, NULL);
 
-    printf("Simulation took %lu ms\n", (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000);
-    printf("Average time per sample: %ld ms\n", ((stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000) / NUM_SAMPLES);
+    // printf("Simulation took %lu ms\n", (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000);
+    // printf("Average time per sample: %ld ms\n", ((stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000) / NUM_SAMPLES);
 
     return 0;
 }
