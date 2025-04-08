@@ -4,7 +4,6 @@
 #include <time.h>
 // #include <sys/time.h>
 
-
 #include "define.h"
 #include "file_operations.h"
 #include "rate_encoding.h"
@@ -52,8 +51,8 @@ int main() {
         ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
     }
 
-    static float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
-    static float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
+    // float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
+    // float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
     float* weights_fc1[HIDDEN_LAYER_1];
     float* weights_fc2[NUM_CLASSES];
 
@@ -68,8 +67,8 @@ int main() {
     // float bias_fc1[HIDDEN_LAYER_1] = {0};
     // float bias_fc2[NUM_CLASSES] = {0};
 
-    load_weights("../weights_fc1.txt", weights_fc1, l2, l1);
-    load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
+    // load_weights("../weights_fc1.txt", weights_fc1, l2, l1);
+    // load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
     printf("Weights loaded\n");
     // Load biases from files
 
