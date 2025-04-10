@@ -71,7 +71,7 @@ int main() {
 
     
     printf("Making Spikes\n");
-    rate_encoding_3d(input_data, NUM_SAMPLES, TIME_WINDOW, INPUT_SIZE, initial_spikes);
+    rate_encoding_3d(input_data, NUM_SAMPLES, TIME_WINDOW, INPUT_BYTES, initial_spikes);
     printf("\033[1;32mSpikes Made\033[0m\n");
 
     // Read data into allocated arrays
