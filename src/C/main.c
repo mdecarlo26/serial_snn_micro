@@ -65,15 +65,7 @@ int main() {
 
 
     // 4. Fully static memory for spike array (3D)
-    static char initial_spikes_data[NUM_SAMPLES][TIME_WINDOW][INPUT_SIZE] = {0};
-    char* initial_spikes_pointers_2d[NUM_SAMPLES][TIME_WINDOW];
-    char** initial_spikes[NUM_SAMPLES];
-    for (int i = 0; i < NUM_SAMPLES; i++) {
-        for (int j = 0; j < TIME_WINDOW; j++) {
-            initial_spikes_pointers_2d[i][j] = initial_spikes_data[i][j];
-        }
-        initial_spikes[i] = initial_spikes_pointers_2d[i];
-    }
+    static uint8_t initial_spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES] = {0};
 
     labels[0] = label;
 

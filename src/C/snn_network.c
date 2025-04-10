@@ -165,7 +165,7 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
             // printf("Simulating Layer %d\n", l);
-            update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
+            update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
             uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
@@ -184,4 +184,22 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
     }
 
     return classify_inference(firing_counts, snn_network.layers[snn_network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
+}
+
+void set_input_spike(uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
+                     int sample, int t, int neuron_idx, int value) {
+    int byte_idx = neuron_idx / 8;
+    int bit_idx  = neuron_idx % 8;
+
+    if (value)
+        buffer[sample][t][byte_idx] |= (1 << bit_idx);
+    else
+        buffer[sample][t][byte_idx] &= ~(1 << bit_idx);
+}
+
+int get_input_spike(const uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
+                    int sample, int t, int neuron_idx) {
+    int byte_idx = neuron_idx / 8;
+    int bit_idx  = neuron_idx % 8;
+    return (buffer[sample][t][byte_idx] >> bit_idx) & 1;
 }

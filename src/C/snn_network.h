@@ -46,4 +46,9 @@ int inference(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
               uint8_t ping_pong_1[MAX_NEURONS][BITMASK_BYTES],
               uint8_t ping_pong_2[MAX_NEURONS][BITMASK_BYTES]);
 int classify_inference(int **firing_counts, int num_neurons, int num_chunks);
+
+int get_input_spike(const uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
+                    int sample, int t, int neuron_idx);
+void set_input_spike(uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
+                     int sample, int t, int neuron_idx, int value);
 #endif // NETWORK_H

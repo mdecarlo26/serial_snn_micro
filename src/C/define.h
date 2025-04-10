@@ -14,6 +14,7 @@
 #define NUM_LAYERS 3
 
 #define BITMASK_BYTES ((TAU + 7) / 8)
+#define INPUT_BYTES ((INPUT_SIZE + 7) / 8)
 
 
 #endif // DEFINE_H
