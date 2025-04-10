@@ -9,25 +9,25 @@ static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
 static float* static_weights[MAX_LAYERS][MAX_NEURONS];
 static float  static_weight_data[MAX_LAYERS][MAX_NEURONS][MAX_NEURONS];
 static float  static_bias[MAX_LAYERS][MAX_NEURONS];
+extern uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES];
+extern uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES];
 
 // Function to set a value in the buffer
-void set_bit(char **buffer, int neuron_idx, int t, int value) {
+void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value) {
     int byte_idx = t / 8;
     int bit_idx = t % 8;
-    uint8_t *bitmask = (uint8_t *)buffer[neuron_idx];
     if (value)
-        bitmask[byte_idx] |= (1 << bit_idx);
+        buffer[neuron_idx][byte_idx] |= (1 << bit_idx);
     else
-        bitmask[byte_idx] &= ~(1 << bit_idx);
+        buffer[neuron_idx][byte_idx] &= ~(1 << bit_idx);
 }
 
-// Function to get a value from the buffer
-int get_bit(const char **buffer, int neuron_idx, int t) {
+int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t) {
     int byte_idx = t / 8;
     int bit_idx = t % 8;
-    const uint8_t *bitmask = (const uint8_t *)buffer[neuron_idx];
-    return (bitmask[byte_idx] >> bit_idx) & 1;
+    return (buffer[neuron_idx][byte_idx] >> bit_idx) & 1;
 }
+
 
 int heaviside(float x, int threshold) {
     return (x >= threshold) ? 1 : 0;
@@ -168,7 +168,7 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
             update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
-            char **temp = ping_pong_buffer_1;
+            uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
             ping_pong_buffer_1 = ping_pong_buffer_2;
             ping_pong_buffer_2 = temp;
         }
@@ -176,7 +176,7 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
         // Accumulate firing counts for the final layer
         for (int i = 0; i < snn_network.layers[snn_network.num_layers - 1].num_neurons; i++) {
             for (int t = 0; t < TAU; t++) {
-                if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
+                if (get_bit(ping_pong_buffer_1, i, t)) {
                     firing_counts[i][chunk_index]++;
                 }
             }

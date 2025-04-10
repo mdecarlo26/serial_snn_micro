@@ -14,18 +14,10 @@
 
 Snn_Network snn_network;
 
-static uint8_t ping_pong_buffer_1_blocks[MAX_NEURONS][BITMASK_BYTES] = {0};
-static uint8_t ping_pong_buffer_2_blocks[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 
 // 3. Fully static memory for ping-pong buffers
-char *ping_pong_buffer_1_data[MAX_NEURONS];
-char *ping_pong_buffer_2_data[MAX_NEURONS];
-
-char **ping_pong_buffer_1 = ping_pong_buffer_1_data;
-char **ping_pong_buffer_2 = ping_pong_buffer_2_data;
-
-// static char ping_pong_buffer_1_blocks[MAX_NEURONS][TAU] = {0};
-// static char ping_pong_buffer_2_blocks[MAX_NEURONS][TAU] = {0};
 
 // 6. Fully static memory for labels
 char labels[NUM_SAMPLES] = {0};
@@ -33,7 +25,6 @@ char labels[NUM_SAMPLES] = {0};
 // Function prototypes
 void initialize_input_spikes(char **input, int num_neurons);
 void dump_classification(FILE *output_file, int sample_index, int classification, char* labels);
-void init_ping_pong_buffers();
 
 // Memory allocation functions
 char*** allocate_spike_array();
@@ -48,7 +39,6 @@ int main() {
     // Example initialization
     snn_network.num_layers = NUM_LAYERS;
     int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
-    init_ping_pong_buffers();
     // for (int i = 0; i < MAX_NEURONS; i++) {
     //     ping_pong_buffer_1_data[i] = ping_pong_buffer_1_blocks[i];
     //     ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
@@ -246,12 +236,4 @@ char *allocate_labels(int num_samples) {
 
 void free_labels(char *labels) {
     free(labels);
-}
-
-
-void init_ping_pong_buffers() {
-    for (int i = 0; i < MAX_NEURONS; i++) {
-        ping_pong_buffer_1[i] = (char *)ping_pong_buffer_1_blocks[i];
-        ping_pong_buffer_2[i] = (char *)ping_pong_buffer_2_blocks[i];
-    }
 }

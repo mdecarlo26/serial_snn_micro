@@ -29,15 +29,21 @@ typedef struct {
 // Static memory for network structure
 
 
-void set_bit(char **buffer, int x, int y, int value);
-int get_bit(const char **buffer, int x, int y);
+
+void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value);
+int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
 int heaviside(float x, int threshold);
 
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2, float *bias_fc1, float *bias_fc2);
 void zero_network();
 void free_network();
 
-void update_layer(const char **input, char **output, Layer *layer, int input_size);
-int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2);
+void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
+                  uint8_t output[MAX_NEURONS][BITMASK_BYTES],
+                  Layer *layer, int input_size);
+
+int inference(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
+              uint8_t ping_pong_1[MAX_NEURONS][BITMASK_BYTES],
+              uint8_t ping_pong_2[MAX_NEURONS][BITMASK_BYTES]);
 int classify_inference(int **firing_counts, int num_neurons, int num_chunks);
 #endif // NETWORK_H
