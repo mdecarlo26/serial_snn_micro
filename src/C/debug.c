@@ -1,7 +1,7 @@
 #include "debug.h"
 #include "define.h"
 
-extern Network network; // Declare the external network variable
+extern Snn_Network snn_network; // Declare the external network variable
 
 void print_weights(float **weights, float *bias, int rows, int cols) {
     printf("Weights and Biases:\n");
@@ -17,10 +17,10 @@ void print_weights(float **weights, float *bias, int rows, int cols) {
 // Function to print the model overview
 void print_model_overview() {
     printf("\033[1;32mModel Overview:\033[0m\n");
-    for (int l = 0; l < network.num_layers; l++) {
-        printf("Layer %d: %d neurons\n", l, network.layers[l].num_neurons);
+    for (int l = 0; l < snn_network.num_layers; l++) {
+        printf("Layer %d: %d neurons\n", l, snn_network.layers[l].num_neurons);
         if (l > 0) { // Only print weights and biases for layers after the first layer
-            // print_weights(network.layers[l].weights, network.layers[l].bias, network.layers[l].num_neurons, network.layers[l - 1].num_neurons);
+            // print_weights(snn_network.layers[l].weights, snn_network.layers[l].bias, snn_network.layers[l].num_neurons, snn_network.layers[l - 1].num_neurons);
         }
     }
 }

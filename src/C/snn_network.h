@@ -1,5 +1,5 @@
-#ifndef NETWORK_H
-#define NETWORK_H
+#ifndef SNN_NETWORK_H
+#define SNN_NETWORK_H
 
 #include "define.h"
 #include <stdio.h>
@@ -24,7 +24,7 @@ typedef struct {
 typedef struct {
     Layer *layers;
     int num_layers;
-} Network;
+} Snn_Network;
 
 // Static memory for network structure
 

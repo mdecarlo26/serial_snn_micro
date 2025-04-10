@@ -2,16 +2,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdint.h>
 // #include <sys/time.h>
 
 #include "define.h"
 #include "file_operations.h"
 #include "rate_encoding.h"
-#include "network.h"
+#include "snn_network.h"
 #include "debug.h"
 #include "dummy.h"
 
-Network network;
+Snn_Network snn_network;
+
+static uint8_t ping_pong_buffer_1_blocks[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_2_blocks[MAX_NEURONS][BITMASK_BYTES] = {0};
 
 // 3. Fully static memory for ping-pong buffers
 char *ping_pong_buffer_1_data[MAX_NEURONS];
@@ -20,8 +24,8 @@ char *ping_pong_buffer_2_data[MAX_NEURONS];
 char **ping_pong_buffer_1 = ping_pong_buffer_1_data;
 char **ping_pong_buffer_2 = ping_pong_buffer_2_data;
 
-static char ping_pong_buffer_1_blocks[MAX_NEURONS][TAU] = {0};
-static char ping_pong_buffer_2_blocks[MAX_NEURONS][TAU] = {0};
+// static char ping_pong_buffer_1_blocks[MAX_NEURONS][TAU] = {0};
+// static char ping_pong_buffer_2_blocks[MAX_NEURONS][TAU] = {0};
 
 // 6. Fully static memory for labels
 char labels[NUM_SAMPLES] = {0};
@@ -29,6 +33,7 @@ char labels[NUM_SAMPLES] = {0};
 // Function prototypes
 void initialize_input_spikes(char **input, int num_neurons);
 void dump_classification(FILE *output_file, int sample_index, int classification, char* labels);
+void init_ping_pong_buffers();
 
 // Memory allocation functions
 char*** allocate_spike_array();
@@ -41,15 +46,13 @@ int main() {
     srand((unsigned int)time(NULL));
 
     // Example initialization
-    network.num_layers = NUM_LAYERS;
-    int l1 = INPUT_SIZE;
-    int l2 = HIDDEN_LAYER_1;
-    int l3 = NUM_CLASSES;
+    snn_network.num_layers = NUM_LAYERS;
     int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
-    for (int i = 0; i < MAX_NEURONS; i++) {
-        ping_pong_buffer_1_data[i] = ping_pong_buffer_1_blocks[i];
-        ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
-    }
+    init_ping_pong_buffers();
+    // for (int i = 0; i < MAX_NEURONS; i++) {
+    //     ping_pong_buffer_1_data[i] = ping_pong_buffer_1_blocks[i];
+    //     ping_pong_buffer_2_data[i] = ping_pong_buffer_2_blocks[i];
+    // }
 
     // float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
     // float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
@@ -62,19 +65,6 @@ int main() {
     for (int i = 0; i < NUM_CLASSES; i++) {
         weights_fc2[i] = weights_fc2_data[i];
     }
-
-    // 2. Fully static memory for biases
-    // float bias_fc1[HIDDEN_LAYER_1] = {0};
-    // float bias_fc2[NUM_CLASSES] = {0};
-
-    // load_weights("../weights_fc1.txt", weights_fc1, l2, l1);
-    // load_weights("../weights_fc2.txt", weights_fc2, l3, l2);
-    printf("Weights loaded\n");
-    // Load biases from files
-
-    // load_bias("../bias_fc1.txt", bias_fc1, l2);
-    // load_bias("../bias_fc2.txt", bias_fc2, l3);
-    // printf("Biases loaded\n");
 
     initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
     zero_network();
@@ -157,17 +147,17 @@ int main() {
 
 // Function to free the allocated memory
 void free_network() {
-    for (int l = 0; l < network.num_layers; l++) {
-        for (int i = 0; i < network.layers[l].num_neurons; i++) {
-            if (network.layers[l].weights[i] != NULL) {
-                free(network.layers[l].weights[i]);
+    for (int l = 0; l < snn_network.num_layers; l++) {
+        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+            if (snn_network.layers[l].weights[i] != NULL) {
+                free(snn_network.layers[l].weights[i]);
             }
         }
-        free(network.layers[l].weights);
-        free(network.layers[l].bias);
-        free(network.layers[l].neurons);
+        free(snn_network.layers[l].weights);
+        free(snn_network.layers[l].bias);
+        free(snn_network.layers[l].neurons);
     }
-    free(network.layers);
+    free(snn_network.layers);
 }
 
 
@@ -256,4 +246,12 @@ char *allocate_labels(int num_samples) {
 
 void free_labels(char *labels) {
     free(labels);
+}
+
+
+void init_ping_pong_buffers() {
+    for (int i = 0; i < MAX_NEURONS; i++) {
+        ping_pong_buffer_1[i] = (char *)ping_pong_buffer_1_blocks[i];
+        ping_pong_buffer_2[i] = (char *)ping_pong_buffer_2_blocks[i];
+    }
 }

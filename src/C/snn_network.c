@@ -1,9 +1,9 @@
-#include "network.h"
+#include "snn_network.h"
 #include "define.h"
-#include "debug.h"
 #include <stdlib.h>
+#include <stdint.h>
 
-extern Network network;
+extern Snn_Network snn_network;
 static Layer static_layers[MAX_LAYERS];
 static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
 static float* static_weights[MAX_LAYERS][MAX_NEURONS];
@@ -11,13 +11,22 @@ static float  static_weight_data[MAX_LAYERS][MAX_NEURONS][MAX_NEURONS];
 static float  static_bias[MAX_LAYERS][MAX_NEURONS];
 
 // Function to set a value in the buffer
-void set_bit(char **buffer, int x, int y, int value) {
-    buffer[x][y] = value;
+void set_bit(char **buffer, int neuron_idx, int t, int value) {
+    int byte_idx = t / 8;
+    int bit_idx = t % 8;
+    uint8_t *bitmask = (uint8_t *)buffer[neuron_idx];
+    if (value)
+        bitmask[byte_idx] |= (1 << bit_idx);
+    else
+        bitmask[byte_idx] &= ~(1 << bit_idx);
 }
 
 // Function to get a value from the buffer
-int get_bit(const char **buffer, int x, int y) {
-    return buffer[x][y];
+int get_bit(const char **buffer, int neuron_idx, int t) {
+    int byte_idx = t / 8;
+    int bit_idx = t % 8;
+    const uint8_t *bitmask = (const uint8_t *)buffer[neuron_idx];
+    return (bitmask[byte_idx] >> bit_idx) & 1;
 }
 
 int heaviside(float x, int threshold) {
@@ -63,49 +72,49 @@ void update_layer(const char **input, char **output, Layer *layer, int input_siz
 }
 
 void initialize_network(int neurons_per_layer[], float **weights_fc1, float **weights_fc2, float *bias_fc1, float *bias_fc2) {
-    network.layers = static_layers;
+    snn_network.layers = static_layers;
 
-    for (int l = 0; l < network.num_layers; l++) {
+    for (int l = 0; l < snn_network.num_layers; l++) {
         // printf("Initializing Layer %d\n", l);
-        network.layers[l].layer_num = l;
-        network.layers[l].num_neurons = neurons_per_layer[l];
+        snn_network.layers[l].layer_num = l;
+        snn_network.layers[l].num_neurons = neurons_per_layer[l];
 
         // Assign statically allocated neuron structures
-        network.layers[l].neurons = static_neurons[l];
+        snn_network.layers[l].neurons = static_neurons[l];
 
         // Assign statically allocated weight pointers and bias array
-        network.layers[l].weights = static_weights[l];
-        network.layers[l].bias = static_bias[l];
+        snn_network.layers[l].weights = static_weights[l];
+        snn_network.layers[l].bias = static_bias[l];
 
-        for (int i = 0; i < network.layers[l].num_neurons; i++) {
-            network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
-            network.layers[l].neurons[i].decay_rate = DECAY_RATE;
+        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+            snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
+            snn_network.layers[l].neurons[i].decay_rate = DECAY_RATE;
 
             if (l > 0) {
                 // Set weight pointer for this neuron to static buffer
-                network.layers[l].weights[i] = static_weight_data[l][i];
+                snn_network.layers[l].weights[i] = static_weight_data[l][i];
 
                 // Copy weights and bias from passed-in arguments
                 if (l == 1) {
-                    memcpy(network.layers[l].weights[i], weights_fc1[i], network.layers[l - 1].num_neurons * sizeof(float));
-                    network.layers[l].bias[i] = bias_fc1[i];
+                    memcpy(snn_network.layers[l].weights[i], weights_fc1[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
+                    snn_network.layers[l].bias[i] = bias_fc1[i];
                 } else if (l == 2) {
-                    memcpy(network.layers[l].weights[i], weights_fc2[i], network.layers[l - 1].num_neurons * sizeof(float));
-                    network.layers[l].bias[i] = bias_fc2[i];
+                    memcpy(snn_network.layers[l].weights[i], weights_fc2[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
+                    snn_network.layers[l].bias[i] = bias_fc2[i];
                 }
             } else {
-                network.layers[l].weights[i] = NULL;
-                network.layers[l].bias[i] = 0;
+                snn_network.layers[l].weights[i] = NULL;
+                snn_network.layers[l].bias[i] = 0;
             }
         }
     }
 }
 
 void zero_network() {
-    for (int l = 0; l < network.num_layers; l++) {
-        for (int i = 0; i < network.layers[l].num_neurons; i++) {
-            network.layers[l].neurons[i].membrane_potential = 0;
-            network.layers[l].neurons[i].delayed_reset = 0;
+    for (int l = 0; l < snn_network.num_layers; l++) {
+        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+            snn_network.layers[l].neurons[i].membrane_potential = 0;
+            snn_network.layers[l].neurons[i].delayed_reset = 0;
         }
     }
 }
@@ -143,20 +152,20 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
         // printf("Processing Chunk %d\n", chunk);
         // Initialize input spikes for the first layer from the loaded data
         for (int t = 0; t < TAU; t++) {
-            for (int i = 0; i < network.layers[0].num_neurons; i++) {
+            for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
                 set_bit(ping_pong_buffer_1, i, t, input[chunk + t][i]);
-                // set_bit(ping_pong_buffer_1, network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
+                // set_bit(ping_pong_buffer_1, snn_network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
             }
         }
         // printf("Input spikes at chunk %d:\n", chunk);
-        // print_spike_buffer((const char **)ping_pong_buffer_1, network.layers[0].num_neurons);
+        // print_spike_buffer((const char **)ping_pong_buffer_1, snn_network.layers[0].num_neurons);
 
         // Process each layer sequentially
-        for (int l = 0; l < network.num_layers; l++) {
-            int input_size = (l == 0) ? network.layers[l].num_neurons : network.layers[l - 1].num_neurons;
+        for (int l = 0; l < snn_network.num_layers; l++) {
+            int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
             // printf("Simulating Layer %d\n", l);
-            update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &network.layers[l], input_size);
+            update_layer((const char **)ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
             char **temp = ping_pong_buffer_1;
@@ -165,7 +174,7 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
         }
 
         // Accumulate firing counts for the final layer
-        for (int i = 0; i < network.layers[network.num_layers - 1].num_neurons; i++) {
+        for (int i = 0; i < snn_network.layers[snn_network.num_layers - 1].num_neurons; i++) {
             for (int t = 0; t < TAU; t++) {
                 if (get_bit((const char **)ping_pong_buffer_1, i, t)) {
                     firing_counts[i][chunk_index]++;
@@ -174,5 +183,5 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
         }
     }
 
-    return classify_inference(firing_counts, network.layers[network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
+    return classify_inference(firing_counts, snn_network.layers[snn_network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
 }

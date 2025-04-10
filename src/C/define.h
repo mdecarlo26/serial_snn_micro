@@ -13,5 +13,7 @@
 #define HIDDEN_LAYER_1 256
 #define NUM_LAYERS 3
 
+#define BITMASK_BYTES ((TAU + 7) / 8)
+
 
 #endif // DEFINE_H

@@ -1,7 +1,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include "network.h"
+#include "snn_network.h"
 
 // Debug Print Functions
 void print_weights(float **weights, float *bias, int rows, int cols);
