@@ -111,7 +111,7 @@ int main() {
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
         fflush(stdout);
 
-        int classification = inference(initial_spikes[d], ping_pong_buffer_1, ping_pong_buffer_2);
+        int classification = inference(initial_spikes, ping_pong_buffer_1, ping_pong_buffer_2, d);
         dump_classification(output_file, d, classification, labels);
     }
     printf("\n");

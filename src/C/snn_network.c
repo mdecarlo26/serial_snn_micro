@@ -135,7 +135,7 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
     return classification;
 }
 
-int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2){
+int inference(uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_SIZE], char** ping_pong_buffer_1, char** ping_pong_buffer_2, int sample_idx){
     zero_network();
     static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
     int* firing_counts[NUM_CLASSES];
@@ -151,9 +151,11 @@ int inference(char **input, char** ping_pong_buffer_1, char** ping_pong_buffer_2
         int chunk_index = chunk / TAU;
         // printf("Processing Chunk %d\n", chunk);
         // Initialize input spikes for the first layer from the loaded data
+        int in_spike = 0;
         for (int t = 0; t < TAU; t++) {
             for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
-                set_bit(ping_pong_buffer_1, i, t, input[chunk + t][i]);
+                in_spike = get_input_spike(input, sample_idx, chunk + t, i);
+                set_bit(ping_pong_buffer_1, i, t, in_spike);
                 // set_bit(ping_pong_buffer_1, snn_network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
             }
         }
