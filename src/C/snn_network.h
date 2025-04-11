@@ -34,7 +34,7 @@ void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, 
 int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
 int heaviside(float x, int threshold);
 
-void initialize_network(int neurons_per_layer[],const float **weights_fc1,const float **weights_fc2,const float *bias_fc1,const float *bias_fc2);
+void initialize_network(int neurons_per_layer[],float **weights_fc1,float **weights_fc2,const float *bias_fc1, const float *bias_fc2);
 void zero_network();
 void free_network();
 

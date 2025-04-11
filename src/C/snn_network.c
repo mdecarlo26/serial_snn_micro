@@ -73,7 +73,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 }
 
 void initialize_network(int neurons_per_layer[],
-     const float **weights_fc1,const float **weights_fc2,
+     float **weights_fc1, float **weights_fc2,
      const float *bias_fc1,const float *bias_fc2) {
     snn_network.layers = static_layers;
 
