@@ -32,12 +32,17 @@ int bernoulli_trial(float p){
 
 void rate_encoding_3d(float *data, int dim1, int dim2, int dim3, uint8_t spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES]) {
     float prob =0;
+    int spike = 0;
+    int out = 0;
     for (int c = 0; c < dim1; c++) {
         for (int h = 0; h < dim2; h++) {
             for (int w = 0; w < dim3; w++) {
                 prob = data[w] / 255.0; // Normalize the data to [0, 1]
                 // spikes[c][h][w] =  bernoulli_trial(prob);
-                set_input_spike(spikes, c, h, w, bernoulli_trial(prob)); // Set the spike in the 3D array
+                spike = bernoulli_trial(prob); // Perform Bernoulli trial
+                printf("Spike at [%d][%d][%d]: %d\n", c, h, w, spike);
+                set_input_spike(spikes, c, h, w, spike); // Set the spike in the 3D array
+                printf("Spike at [%d][%d][%d]: %d\n", c, h, w, get_input_spike(spikes, c, h, w)); // Print the spike value
             }
         }
     }
