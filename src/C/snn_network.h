@@ -42,9 +42,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                   uint8_t output[MAX_NEURONS][BITMASK_BYTES],
                   Layer *layer, int input_size);
 
-int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
-              uint8_t ping_pong_1[MAX_NEURONS][BITMASK_BYTES],
-              uint8_t ping_pong_2[MAX_NEURONS][BITMASK_BYTES],
+int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], uint8_t ping_pong_1[MAX_NEURONS][BITMASK_BYTES], uint8_t ping_pong_2[MAX_NEURONS][BITMASK_BYTES],
               int sample_idx);
 int classify_inference(int **firing_counts, int num_neurons, int num_chunks);
 
