@@ -9,7 +9,7 @@
 #include "file_operations.h"
 #include "rate_encoding.h"
 #include "snn_network.h"
-#include "debug.h"
+// #include "debug.h"
 #include "dummy.h"
 
 Snn_Network snn_network;
