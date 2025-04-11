@@ -14,8 +14,8 @@ char labels[NUM_SAMPLES] = {0};
 
 
 
-float* weights_fc1[HIDDEN_LAYER_1];
-float* weights_fc2[NUM_CLASSES];
+const float* weights_fc1[HIDDEN_LAYER_1];
+const float* weights_fc2[NUM_CLASSES];
 
 
 

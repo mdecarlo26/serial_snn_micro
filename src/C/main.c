@@ -46,8 +46,8 @@ int main() {
 
     // float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
     // float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
-    float* weights_fc1[HIDDEN_LAYER_1];
-    float* weights_fc2[NUM_CLASSES];
+    const float* weights_fc1[HIDDEN_LAYER_1];
+    const float* weights_fc2[NUM_CLASSES];
 
     for (int i = 0; i < HIDDEN_LAYER_1; i++) {
         weights_fc1[i] = weights_fc1_data[i];
