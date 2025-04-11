@@ -1,7 +1,7 @@
+#include <stdint.h>
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
-#include <stdint.h>
 
 extern Snn_Network snn_network;
 static Layer static_layers[MAX_LAYERS];
@@ -34,7 +34,8 @@ int heaviside(float x, int threshold) {
 }
 
 // Function to update the entire layer based on the buffer and bias
-void update_layer(const char **input, char **output, Layer *layer, int input_size) {
+void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
+                uint8_t output[MAX_NEURONS][BITMASK_BYTES], Layer *layer, int input_size) {
     for (int t = 0; t < TAU; t++) {
             // printf("Time step %d\n", t);
         for (int i = 0; i < layer->num_neurons; i++) {
