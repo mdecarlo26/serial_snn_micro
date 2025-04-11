@@ -30,14 +30,13 @@ int bernoulli_trial(float p){
     return (rand() / (float)RAND_MAX) < p ? 1 : 0; // bernoulli trial with probability p
 }
 
-void rate_encoding_3d(float *data, int dim1, int dim2, int dim3, uint8_t spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES]) {
+void rate_encoding_3d(const uint8_t data[INPUT_SIZE], int dim1, int dim2, int dim3, uint8_t spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES]) {
     float prob =0;
     int spike = 0;
     for (int c = 0; c < dim1; c++) {
         for (int h = 0; h < dim2; h++) {
             for (int w = 0; w < dim3; w++) {
                 prob = data[w] / 255.0; // Normalize the data to [0, 1]
-                // spikes[c][h][w] =  bernoulli_trial(prob);
                 spike = bernoulli_trial(prob); // Perform Bernoulli trial
                 set_input_spike(spikes, c, h, w, spike); // Set the spike in the 3D array
             }
