@@ -158,6 +158,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
         for (int t = 0; t < TAU; t++) {
             for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
                 in_spike = get_input_spike(input, sample_idx, chunk + t, i);
+                printf("Input spike at sample %d, time %d, neuron %d: %d\n", sample_idx, chunk + t, i, in_spike);
                 set_bit(ping_pong_buffer_1, i, t, in_spike);
                 // set_bit(ping_pong_buffer_1, snn_network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
             }
