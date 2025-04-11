@@ -2,8 +2,9 @@
 #define DUMMY_H
 
 #include "define.h"
+#include <stdint.h>
 
-extern float input_data[784];
+extern uint8_t input_data[784];
 extern char label;
 
 extern float bias_fc1[HIDDEN_LAYER_1];
