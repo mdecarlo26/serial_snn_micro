@@ -30,7 +30,7 @@ int bernoulli_trial(float p){
     return (rand() / (float)RAND_MAX) < p ? 1 : 0; // bernoulli trial with probability p
 }
 
-void rate_encoding_3d(uint8_t *data, int dim1, int dim2, int dim3, uint8_t spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES]) {
+void rate_encoding_3d(uint8_t data[INPUT_SIZE], int dim1, int dim2, int dim3, uint8_t spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES]) {
     float prob =0;
     int spike = 0;
     for (int c = 0; c < dim1; c++) {
