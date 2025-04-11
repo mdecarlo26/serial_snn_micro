@@ -40,10 +40,6 @@ void rate_encoding_3d(float *data, int dim1, int dim2, int dim3, uint8_t spikes[
                 // spikes[c][h][w] =  bernoulli_trial(prob);
                 spike = bernoulli_trial(prob); // Perform Bernoulli trial
                 set_input_spike(spikes, c, h, w, spike); // Set the spike in the 3D array
-                if (spike) {
-                    printf("Spike at [%d][%d][%d]: %d\n", c, h, w, spike);
-                    printf("Spike at [%d][%d][%d]: %d\n", c, h, w, get_input_spike(spikes, c, h, w)); // Print the spike value
-                }
             }
         }
     }
