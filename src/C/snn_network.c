@@ -136,7 +136,9 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
     return classification;
 }
 
-int inference(uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES], uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES], int sample_idx){
+int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
+     uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES],
+     uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES], int sample_idx){
     zero_network();
     static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
     int* firing_counts[NUM_CLASSES];
