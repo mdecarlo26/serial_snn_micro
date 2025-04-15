@@ -6,9 +6,9 @@
 extern Snn_Network snn_network;
 static Layer static_layers[MAX_LAYERS];
 static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
-static float* static_weights[MAX_LAYERS][MAX_NEURONS];
-static float  static_weight_data[MAX_LAYERS][MAX_NEURONS][MAX_NEURONS];
-static float  static_bias[MAX_LAYERS][MAX_NEURONS];
+// static float* static_weights[MAX_LAYERS][MAX_NEURONS];
+// static float  static_weight_data[MAX_LAYERS][MAX_NEURONS][MAX_NEURONS];
+// static float  static_bias[MAX_LAYERS][MAX_NEURONS];
 extern uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES];
 extern uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES];
 
@@ -73,7 +73,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 }
 
 void initialize_network(int neurons_per_layer[],
-     const float **weights_fc1, const float **weights_fc2,
+     const float weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const float weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
      const float *bias_fc1, const float *bias_fc2) {
     snn_network.layers = static_layers;
 
@@ -86,8 +86,7 @@ void initialize_network(int neurons_per_layer[],
         snn_network.layers[l].neurons = static_neurons[l];
 
         // Assign statically allocated weight pointers and bias array
-        snn_network.layers[l].weights = static_weights[l];
-        snn_network.layers[l].bias = static_bias[l];
+        // snn_network.layers[l].bias = static_bias[l];
 
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
             snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
@@ -95,14 +94,16 @@ void initialize_network(int neurons_per_layer[],
 
             if (l > 0) {
                 // Set weight pointer for this neuron to static buffer
-                snn_network.layers[l].weights[i] = static_weight_data[l][i];
+                // snn_network.layers[l].weights[i] = static_weight_data[l][i];
 
                 // Copy weights and bias from passed-in arguments
                 if (l == 1) {
-                    memcpy(snn_network.layers[l].weights[i], weights_fc1[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
+                    snn_network.layers[l].weights = (float **)weights_fc1;
+                    // memcpy(snn_network.layers[l].weights[i], weights_fc1[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
                     snn_network.layers[l].bias[i] = bias_fc1[i];
                 } else if (l == 2) {
-                    memcpy(snn_network.layers[l].weights[i], weights_fc2[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
+                    snn_network.layers[l].weights = (float **)weights_fc2;
+                    // memcpy(snn_network.layers[l].weights[i], weights_fc2[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
                     snn_network.layers[l].bias[i] = bias_fc2[i];
                 }
             } else {
