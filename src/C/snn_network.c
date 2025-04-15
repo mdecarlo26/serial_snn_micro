@@ -78,7 +78,7 @@ void initialize_network(int neurons_per_layer[],
     snn_network.layers = static_layers;
 
     for (int l = 0; l < snn_network.num_layers; l++) {
-        // printf("Initializing Layer %d\n", l);
+        printf("Initializing Layer %d\n", l);
         snn_network.layers[l].layer_num = l;
         snn_network.layers[l].num_neurons = neurons_per_layer[l];
 
