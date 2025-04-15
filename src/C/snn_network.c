@@ -48,7 +48,6 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 
             float sum = 0.0f;
             if (layer->layer_num > 0) {
-                printf("fails\n");
                 sum += layer->bias[i];
                 for (int j = 0; j < input_size; j++) {
                     if (get_bit(input, j, t)) { // if incoming spike is present
@@ -183,7 +182,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
-            printf("Simulating Layer %d\n", l);
+            // printf("Simulating Layer %d\n", l);
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
