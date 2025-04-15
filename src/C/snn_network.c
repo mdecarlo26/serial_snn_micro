@@ -78,7 +78,7 @@ void initialize_network(int neurons_per_layer[],
     snn_network.layers = static_layers;
 
     for (int l = 0; l < snn_network.num_layers; l++) {
-        printf("Initializing Layer %d\n", l);
+        // printf("Initializing Layer %d\n", l);
         snn_network.layers[l].layer_num = l;
         snn_network.layers[l].num_neurons = neurons_per_layer[l];
 
@@ -89,7 +89,6 @@ void initialize_network(int neurons_per_layer[],
         // snn_network.layers[l].bias = static_bias[l];
 
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-            printf("Initializing Neuron %d\n", i);
             snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             snn_network.layers[l].neurons[i].decay_rate = DECAY_RATE;
 
@@ -174,7 +173,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
-            // printf("Simulating Layer %d\n", l);
+            printf("Simulating Layer %d\n", l);
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
