@@ -89,6 +89,7 @@ void initialize_network(int neurons_per_layer[],
         // snn_network.layers[l].bias = static_bias[l];
 
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+            printf("Initializing Neuron %d\n", i);
             snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             snn_network.layers[l].neurons[i].decay_rate = DECAY_RATE;
 
