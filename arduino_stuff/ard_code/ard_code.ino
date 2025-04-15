@@ -14,11 +14,6 @@ char labels[NUM_SAMPLES] = {0};
 
 
 
-const float* weights_fc1[HIDDEN_LAYER_1];
-const float* weights_fc2[NUM_CLASSES];
-
-
-
 static uint8_t initial_spikes[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES] = {0};
 
 
@@ -30,14 +25,7 @@ void setup() {
     snn_network.num_layers = NUM_LAYERS;
     int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
 
-    for (int i = 0; i < HIDDEN_LAYER_1; i++) {
-        weights_fc1[i] = weights_fc1_data[i];
-    }
-    for (int i = 0; i < NUM_CLASSES; i++) {
-        weights_fc2[i] = weights_fc2_data[i];
-    }
-
-    initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
+    initialize_network(neurons_per_layer, weights_fc1_data, weights_fc2_data, bias_fc1, bias_fc2);
     zero_network();
 
     labels[0] = label;
