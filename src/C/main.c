@@ -46,17 +46,17 @@ int main() {
 
     // float weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE] = {0};
     // float weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1] = {0};
-    const float* weights_fc1[HIDDEN_LAYER_1];
-    const float* weights_fc2[NUM_CLASSES];
+    // const float* weights_fc1[HIDDEN_LAYER_1];
+    // const float* weights_fc2[NUM_CLASSES];
 
-    for (int i = 0; i < HIDDEN_LAYER_1; i++) {
-        weights_fc1[i] = weights_fc1_data[i];
-    }
-    for (int i = 0; i < NUM_CLASSES; i++) {
-        weights_fc2[i] = weights_fc2_data[i];
-    }
+    // for (int i = 0; i < HIDDEN_LAYER_1; i++) {
+    //     weights_fc1[i] = weights_fc1_data[i];
+    // }
+    // for (int i = 0; i < NUM_CLASSES; i++) {
+    //     weights_fc2[i] = weights_fc2_data[i];
+    // }
 
-    initialize_network(neurons_per_layer, weights_fc1, weights_fc2, bias_fc1, bias_fc2);
+    initialize_network(neurons_per_layer, weights_fc1_data, weights_fc2_data, bias_fc1, bias_fc2);
     zero_network();
     printf("Network initialized\n");
 
