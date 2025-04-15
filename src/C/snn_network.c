@@ -101,14 +101,13 @@ void initialize_network(int neurons_per_layer[],
                 if (l == 1) {
                     snn_network.layers[l].weights = (float **)weights_fc1;
                     // memcpy(snn_network.layers[l].weights[i], weights_fc1[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
-                    snn_network.layers[l].bias[i] = bias_fc1[i];
+                    snn_network.layers[l].bias = bias_fc1;
                 } else if (l == 2) {
                     snn_network.layers[l].weights = (float **)weights_fc2;
                     // memcpy(snn_network.layers[l].weights[i], weights_fc2[i], snn_network.layers[l - 1].num_neurons * sizeof(float));
-                    snn_network.layers[l].bias[i] = bias_fc2[i];
+                    snn_network.layers[l].bias = bias_fc2;
                 }
             } else {
-                printf("hi\n");
                 snn_network.layers[l].weights = NULL;
                 snn_network.layers[l].bias = NULL;
             }
