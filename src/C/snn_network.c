@@ -108,6 +108,7 @@ void initialize_network(int neurons_per_layer[],
                     snn_network.layers[l].bias[i] = bias_fc2[i];
                 }
             } else {
+                printf("hi\n");
                 snn_network.layers[l].weights[i] = NULL;
                 snn_network.layers[l].bias[i] = 0;
             }
