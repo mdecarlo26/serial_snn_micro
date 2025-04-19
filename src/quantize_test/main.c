@@ -6,48 +6,84 @@
 #include <math.h>
 
 #define NUM_SAMPLES 16
-#define Q07_SCALE      128.0f
-#define Q07_INV_SCALE  (1.0f / 128.0f)
-#define Q07_MAX_FLOAT  0.9921875f   // 127 / 128
-#define Q07_MIN_FLOAT -1.0f
-#define Q07_MAX_INT8   127
-#define Q07_MIN_INT8  -128
 
+uint16_t float32_to_float16(float value) {
+    uint32_t f32;
+    memcpy(&f32, &value, sizeof(f32));
 
-// === Quantize float32 to Q0.8 (int8_t) ===
-// Range: [-1.0, 0.99609375]
-int8_t quantize_q07(float x) {
-    // Clamp to representable Q0.7 range
-    if (x > Q07_MAX_FLOAT)  x = Q07_MAX_FLOAT;
-    if (x < Q07_MIN_FLOAT)  x = Q07_MIN_FLOAT;
+    uint32_t sign     = (f32 >> 31) & 0x1;
+    int32_t  exponent = ((f32 >> 23) & 0xFF) - 127 + 15; // re-bias
+    uint32_t mantissa = f32 & 0x7FFFFF;
 
-    // Scale and round
-    int32_t scaled = (int32_t)(x * Q07_SCALE + (x >= 0 ? 0.5f : -0.5f));
+    uint16_t result;
 
-    // Clamp to int8_t just in case
-    if (scaled > Q07_MAX_INT8)  scaled = Q07_MAX_INT8;
-    if (scaled < Q07_MIN_INT8)  scaled = Q07_MIN_INT8;
+    if (exponent <= 0) {
+        // Subnormal or zero
+        if (exponent < -10) {
+            result = (uint16_t)(sign << 15);  // Too small → 0
+        } else {
+            mantissa |= 0x800000;  // Implicit leading 1
+            int shift = 14 - exponent;
+            result = (uint16_t)((sign << 15) | (mantissa >> shift));
+        }
+    } else if (exponent >= 31) {
+        // Overflow → Inf
+        result = (uint16_t)((sign << 15) | (0x1F << 10));
+    } else {
+        // Normalized
+        result = (uint16_t)((sign << 15) | (exponent << 10) | (mantissa >> 13));
+    }
 
-    return (int8_t)scaled;
+    return result;
 }
 
-// === Dequantize Q0.8 (int8_t) to float32 ===
-// Output = q / 256.0
-float dequantize_q07(int8_t q) {
-    return ((float)q) * Q07_INV_SCALE;
-}
+// === Convert float16 to float32 ===
+float float16_to_float32(uint16_t h) {
+    uint32_t sign     = (h >> 15) & 0x1;
+    uint32_t exponent = (h >> 10) & 0x1F;
+    uint32_t mantissa = h & 0x3FF;
 
+    uint32_t f32;
+
+    if (exponent == 0) {
+        // Subnormal or zero
+        if (mantissa == 0) {
+            f32 = sign << 31;  // Zero
+        } else {
+            // Subnormal
+            exponent = 1;
+            while ((mantissa & 0x400) == 0) {
+                mantissa <<= 1;
+                exponent--;
+            }
+            mantissa &= 0x3FF;
+            exponent = exponent - 1 + (127 - 15);
+            f32 = (sign << 31) | (exponent << 23) | (mantissa << 13);
+        }
+    } else if (exponent == 0x1F) {
+        // Inf or NaN
+        f32 = (sign << 31) | (0xFF << 23) | (mantissa << 13);
+    } else {
+        // Normalized
+        exponent = exponent + (127 - 15);
+        f32 = (sign << 31) | (exponent << 23) | (mantissa << 13);
+    }
+
+    float result;
+    memcpy(&result, &f32, sizeof(result));
+    return result;
+}
 
 int main() {
 // Range: [-1.0, 0.99609375]
     float nums[NUM_SAMPLES] = {0.004, 0.006, 0.007, 0.008,  0.01, 0.012, 0.014, 0.015, 0.016, 0.017, 0.018, 0.019, 0.02, 0.021, 0.022, 0.023};
-    int8_t q[NUM_SAMPLES] = {0};
+    uint16_t q[NUM_SAMPLES] = {0};
     float d[NUM_SAMPLES] = {0};
 
     // Encode and decode the numbers
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        q[i] = quantize_q07(nums[i]);
-        d[i] = dequantize_q07(q[i]);
+        q[i] = float32_to_float16(nums[i]);
+        d[i] = float16_to_float32(q[i]);
     }
 
     // Print the results
