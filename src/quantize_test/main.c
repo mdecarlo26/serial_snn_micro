@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
+#include <math.h>
 
 uint8_t encode_q17(float x) {
     if (x > 1.984375f) x = 1.984375f;
