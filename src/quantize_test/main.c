@@ -6,30 +6,35 @@
 #include <math.h>
 
 #define NUM_SAMPLES 4
-#define Q08_INV_SCALE (1.0f / 256.0f)
+#define Q07_SCALE      128.0f
+#define Q07_INV_SCALE  (1.0f / 128.0f)
+#define Q07_MAX_FLOAT  0.9921875f   // 127 / 128
+#define Q07_MIN_FLOAT -1.0f
+#define Q07_MAX_INT8   127
+#define Q07_MIN_INT8  -128
+
 
 // === Quantize float32 to Q0.8 (int8_t) ===
 // Range: [-1.0, 0.99609375]
-int8_t quantize_q08(float x) {
-    // Clamp to Q0.8 range
-    if (x > 0.99609375f) x = 0.99609375f;
-    if (x < -1.0f)        x = -1.0f;
+int8_t quantize_q07(float x) {
+    // Clamp to representable Q0.7 range
+    if (x > Q07_MAX_FLOAT)  x = Q07_MAX_FLOAT;
+    if (x < Q07_MIN_FLOAT)  x = Q07_MIN_FLOAT;
 
     // Scale and round
-    int32_t scaled = (int32_t)(x * 256.0f + (x >= 0 ? 0.5f : -0.5f));
-    printf("original: %f, scaled: %d\n", x, scaled);
+    int32_t scaled = (int32_t)(x * Q07_SCALE + (x >= 0 ? 0.5f : -0.5f));
 
-    // Final clamp to int8_t limits
-    if (scaled > 127)  scaled = 127;
-    if (scaled < -128) scaled = -128;
+    // Clamp to int8_t just in case
+    if (scaled > Q07_MAX_INT8)  scaled = Q07_MAX_INT8;
+    if (scaled < Q07_MIN_INT8)  scaled = Q07_MIN_INT8;
 
     return (int8_t)scaled;
 }
 
 // === Dequantize Q0.8 (int8_t) to float32 ===
 // Output = q / 256.0
-float dequantize_q08(int8_t q) {
-    return ((float)q) * Q08_INV_SCALE;
+float dequantize_q07(int8_t q) {
+    return ((float)q) * Q07_INV_SCALE;
 }
 
 
@@ -41,8 +46,8 @@ int main() {
 
     // Encode and decode the numbers
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        q[i] = quantize_q08(nums[i]);
-        d[i] = dequantize_q08(q[i]);
+        q[i] = quantize_q07(nums[i]);
+        d[i] = dequantize_q07(q[i]);
     }
 
     // Print the results
