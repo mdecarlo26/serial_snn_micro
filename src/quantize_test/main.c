@@ -47,7 +47,7 @@ int main() {
     // Print the results
     printf("Original\tEncoded\tDecoded\n");
     for (int i = 0; i < NUM_SAMPLES; i++) {
-        printf("%f\t%u\t%f\n", nums[i], q[i], d[i]);
+        printf("%f\t%d\t%f\n", nums[i], q[i], d[i]);
     }
     return 0;
 }
