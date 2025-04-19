@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <math.h>
 
-#define NUM_SAMPLES 4
+#define NUM_SAMPLES 6
 #define Q07_SCALE      128.0f
 #define Q07_INV_SCALE  (1.0f / 128.0f)
 #define Q07_MAX_FLOAT  0.9921875f   // 127 / 128
@@ -40,7 +40,7 @@ float dequantize_q07(int8_t q) {
 
 int main() {
 // Range: [-1.0, 0.99609375]
-    float nums[NUM_SAMPLES] = {-0.99609375,-0.5,0.99609375,0.5,};
+    float nums[NUM_SAMPLES] = {0, 0.006, 0.007, 0.008, 0.009, 0.01};
     int8_t q[NUM_SAMPLES] = {0};
     float d[NUM_SAMPLES] = {0};
 
