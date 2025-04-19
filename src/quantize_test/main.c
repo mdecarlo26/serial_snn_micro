@@ -35,7 +35,7 @@ float dequantize_q08(int8_t q) {
 int main() {
 // Range: [-1.0, 0.99609375]
     float nums[NUM_SAMPLES] = {-1.0,-0.5,0.0,0.5,};
-    uint8_t q[NUM_SAMPLES] = {0};
+    int8_t q[NUM_SAMPLES] = {0};
     float d[NUM_SAMPLES] = {0};
 
     // Encode and decode the numbers
