@@ -5,37 +5,49 @@
 #include <stdint.h>
 #include <math.h>
 
-uint8_t encode_q17(float x) {
-    if (x > 1.984375f) x = 1.984375f;
-    if (x < -1.984375f) x = -1.984375f;
+#define NUM_SAMPLES 4
+#define Q08_INV_SCALE (1.0f / 256.0f)
 
-    uint8_t sign = (x < 0);
-    float abs_x = fabsf(x);
-    uint8_t integer = (uint8_t)abs_x;  // 0 or 1
-    uint8_t fraction = (uint8_t)((abs_x - integer) * 64.0f);  // [0,63]
+// === Quantize float32 to Q0.8 (int8_t) ===
+// Range: [-1.0, 0.99609375]
+int8_t quantize_q08(float x) {
+    // Clamp to Q0.8 range
+    if (x > 0.99609375f) x = 0.99609375f;
+    if (x < -1.0f)        x = -1.0f;
 
-    return (sign << 7) | (integer << 6) | (fraction & 0x3F);
+    // Scale and round
+    int32_t scaled = (int32_t)(x * 256.0f + (x >= 0 ? 0.5f : -0.5f));
+
+    // Final clamp to int8_t limits
+    if (scaled > 127)  scaled = 127;
+    if (scaled < -128) scaled = -128;
+
+    return (int8_t)scaled;
 }
 
-float decode_q17(uint8_t q) {
-    uint8_t sign = (q >> 7) & 0x1;
-    uint8_t integer = (q >> 6) & 0x1;
-    uint8_t fraction = q & 0x3F;
-
-    float val = integer + (fraction / 64.0f);
-    return sign ? -val : val;
+// === Dequantize Q0.8 (int8_t) to float32 ===
+// Output = q / 256.0
+float dequantize_q08(int8_t q) {
+    return ((float)q) * Q08_INV_SCALE;
 }
 
 
 int main() {
-    // Example usage
-    float input = 1.0039f;
-    uint8_t encoded = encode_q17(input);
-    float decoded = decode_q17(encoded);
+// Range: [-1.0, 0.99609375]
+    float nums[NUM_SAMPLES] = {-1.0,-0.5,0.0,0.5,};
+    uint8_t q[NUM_SAMPLES] = {0};
+    float d[NUM_SAMPLES] = {0};
 
-    printf("Original: %f\n", input);
-    printf("Encoded: %u\n", encoded);
-    printf("Decoded: %f\n", decoded);
+    // Encode and decode the numbers
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        q[i] = quantize_q08(nums[i]);
+        d[i] = dequantize_q08(q[i]);
+    }
 
+    // Print the results
+    printf("Original\tEncoded\tDecoded\n");
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        printf("%f\t%u\t%f\n", nums[i], q[i], d[i]);
+    }
     return 0;
 }
