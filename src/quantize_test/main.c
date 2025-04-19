@@ -29,7 +29,7 @@ float decode_q17(uint8_t q) {
 
 int main() {
     // Example usage
-    float input = 1.5f;
+    float input = 1.00039f;
     uint8_t encoded = encode_q17(input);
     float decoded = decode_q17(encoded);
 
