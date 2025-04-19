@@ -51,4 +51,8 @@ int get_input_spike(const uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
                     int sample, int t, int neuron_idx);
 void set_input_spike(uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
                      int sample, int t, int neuron_idx, int value);
+
+int8_t quantize_q07(float x); 
+float dequantize_q07(int8_t q);
+
 #endif // NETWORK_H

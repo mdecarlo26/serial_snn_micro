@@ -16,5 +16,11 @@
 #define BITMASK_BYTES ((TAU + 7) / 8)
 #define INPUT_BYTES ((INPUT_SIZE + 7) / 8)
 
+#define Q07_SCALE      128.0f
+#define Q07_INV_SCALE  (1.0f / 128.0f)
+#define Q07_MAX_FLOAT  0.9921875f   // 127 / 128
+#define Q07_MIN_FLOAT -1.0f
+#define Q07_MAX_INT8   127
+#define Q07_MIN_INT8  -128
 
 #endif // DEFINE_H
