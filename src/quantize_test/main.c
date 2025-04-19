@@ -17,6 +17,7 @@ int8_t quantize_q08(float x) {
 
     // Scale and round
     int32_t scaled = (int32_t)(x * 256.0f + (x >= 0 ? 0.5f : -0.5f));
+    printf("original: %f, scaled: %d\n", x, scaled);
 
     // Final clamp to int8_t limits
     if (scaled > 127)  scaled = 127;
