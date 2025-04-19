@@ -248,6 +248,6 @@ int8_t quantize_q07(float x) {
 
 // === Dequantize Q0.8 (int8_t) to float32 ===
 // Output = q / 256.0
-float dequantize_q07(int8_t q) {
+float dequantize_q07(int32_t q) {
     return ((float)q) * Q07_INV_SCALE;
 }
