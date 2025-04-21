@@ -8,11 +8,11 @@ extern Snn_Network snn_network;
 static Layer static_layers[MAX_LAYERS];
 static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
 
-static float *fc1_pointer_table[HIDDEN_LAYER_1];
-static float *fc2_pointer_table[NUM_CLASSES];
+static int8_t *fc1_pointer_table[HIDDEN_LAYER_1];
+static int8_t *fc2_pointer_table[NUM_CLASSES];
 
-static float *fc1_bias_pointer = NULL;
-static float *fc2_bias_pointer = NULL;
+static int8_t *fc1_bias_pointer = NULL;
+static int8_t *fc2_bias_pointer = NULL;
 static int weights_initialized = 0;
 
 extern uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES];
@@ -46,22 +46,23 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             // printf("Time step %d\n", t);
         for (int i = 0; i < layer->num_neurons; i++) {
 
-            float sum = 0.0f;
+            // float sum = 0.0f;
+            int32_t sum = 0;
+            int8_t c = 0;
             if (layer->layer_num > 0) {
                 sum += layer->bias[i];
                 for (int j = 0; j < input_size; j++) {
                     if (get_bit(input, j, t)) { // if incoming spike is present
-                        if (layer->layer_num == 0) {
-                            sum += 1.0f; // For the input layer, each spike contributes a value of 1
-                        } else {
-                            sum += layer->weights[i][j];
-                        }
+                        // c = quantize_q07(layer->weights[i][j]);
+                        // sum += c;
+                        sum += layer->weights[i][j];
                     }
                 }
             }
             else{
                 if (get_bit(input, i, t)) { // if incoming spike is present
-                    sum += 1.0f; // For the input layer, each spike contributes a value of 1
+                    // sum += 1.0f; // For the input layer, each spike contributes a value of 1
+                    sum += 128; // For the input layer, each spike contributes a value of 1
                 }
             }
                        
@@ -69,7 +70,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 
             float new_mem = 0;
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); // Reset output for this time step
@@ -79,20 +80,20 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 }
 
 void initialize_network(int neurons_per_layer[],
-     const float weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const float weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
-     const float *bias_fc1, const float *bias_fc2) {
+     const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
+     const int8_t *bias_fc1, const int8_t *bias_fc2) {
     snn_network.layers = static_layers;
 
     if (!weights_initialized) {
         for (int i = 0; i < HIDDEN_LAYER_1; i++) {
-            fc1_pointer_table[i] = (float *)weights_fc1[i];
+            fc1_pointer_table[i] = (int8_t *)weights_fc1[i];
         }
         for (int i = 0; i < NUM_CLASSES; i++) {
-            fc2_pointer_table[i] = (float *)weights_fc2[i];
+            fc2_pointer_table[i] = (int8_t *)weights_fc2[i];
         }
 
-        fc1_bias_pointer = (float *)bias_fc1;
-        fc2_bias_pointer = (float *)bias_fc2;
+        fc1_bias_pointer = (int8_t *)bias_fc1;
+        fc2_bias_pointer = (int8_t *)bias_fc2;
 
         weights_initialized = 1;
     }
@@ -220,4 +221,28 @@ int get_input_spike(const uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
     int byte_idx = neuron_idx / 8;
     int bit_idx  = neuron_idx % 8;
     return (buffer[sample][t][byte_idx] >> bit_idx) & 1;
+}
+
+
+// === Quantize float32 to Q0.8 (int8_t) ===
+// Range: [-1.0, 0.99609375]
+int8_t quantize_q07(float x) {
+    // Clamp to representable Q0.7 range
+    if (x > Q07_MAX_FLOAT)  x = Q07_MAX_FLOAT;
+    if (x < Q07_MIN_FLOAT)  x = Q07_MIN_FLOAT;
+
+    // Scale and round
+    int32_t scaled = (int32_t)(x * Q07_SCALE + (x >= 0 ? 0.5f : -0.5f));
+
+    // Clamp to int8_t just in case
+    if (scaled > Q07_MAX_INT8)  scaled = Q07_MAX_INT8;
+    if (scaled < Q07_MIN_INT8)  scaled = Q07_MIN_INT8;
+
+    return (int8_t)scaled;
+}
+
+// === Dequantize Q0.8 (int8_t) to float32 ===
+// Output = q / 256.0
+float dequantize_q07(int32_t q) {
+    return ((float)q) * Q07_INV_SCALE;
 }

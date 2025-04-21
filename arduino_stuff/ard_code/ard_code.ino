@@ -22,6 +22,7 @@ void setup() {
     while (!Serial) {
         ; // Wait for serial port to connect. Needed for native USB port only
     }
+    Serial.println("--Starting SNN--");
     snn_network.num_layers = NUM_LAYERS;
     int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
 
@@ -34,11 +35,21 @@ void setup() {
 }
 
 void loop() {
+    unsigned long start = millis();
     int d = 0;
     int classification = inference(initial_spikes, ping_pong_buffer_1, ping_pong_buffer_2, d);
-    Serial.print("Sample 0: Classification = ");
+    unsigned long end = millis();
+
+
+    Serial.print("Sample ");
+    Serial.print(d);
+    Serial.print(": Classification = ");
     Serial.print(classification);
     Serial.print(", Label = ");
-    Serial.println(labels[d]);
+    Serial.println((int)labels[d]);
+    Serial.print("Elapsed time (ms): ");
+    Serial.println(end - start);
     delay(1000); // Delay for 1 second before the next iteration
+
+
 }

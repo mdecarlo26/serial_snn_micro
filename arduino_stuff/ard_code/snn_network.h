@@ -15,8 +15,8 @@ typedef struct {
 
 typedef struct {
     Neuron *neurons;
-    float **weights;
-    float *bias;
+    int8_t **weights;
+    int8_t *bias;
     int num_neurons;
     int layer_num;
 } Layer;
@@ -34,8 +34,8 @@ void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, 
 int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
 int heaviside(float x, int threshold);
 
-void initialize_network(int neurons_per_layer[],const float weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
-    const float weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const float *bias_fc1, const float *bias_fc2);
+void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
+    const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const int8_t *bias_fc1, const int8_t *bias_fc2);
 void zero_network();
 void free_network();
 
@@ -51,4 +51,8 @@ int get_input_spike(const uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
                     int sample, int t, int neuron_idx);
 void set_input_spike(uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
                      int sample, int t, int neuron_idx, int value);
+
+int8_t quantize_q07(float x); 
+float dequantize_q07(int32_t q);
+
 #endif // NETWORK_H
