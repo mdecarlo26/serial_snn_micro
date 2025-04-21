@@ -47,8 +47,8 @@ void loop() {
     Serial.print(classification);
     Serial.print(", Label = ");
     Serial.println((int)labels[d]);
-    Serial.print("Elapsed time (ms): ");
-    Serial.println(end - start);
+    Serial.print("Elapsed time (s): ");
+    Serial.println((float)(end - start)/1000.0);
     delay(1000); // Delay for 1 second before the next iteration
 
 
