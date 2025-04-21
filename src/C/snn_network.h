@@ -15,8 +15,8 @@ typedef struct {
 
 typedef struct {
     Neuron *neurons;
-    float **weights;
-    float *bias;
+    int8_t **weights;
+    int8_t *bias;
     int num_neurons;
     int layer_num;
 } Layer;
@@ -34,8 +34,8 @@ void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, 
 int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
 int heaviside(float x, int threshold);
 
-void initialize_network(int neurons_per_layer[],const float weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
-    const float weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const float *bias_fc1, const float *bias_fc2);
+void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
+    const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const int8_t *bias_fc1, const int8_t *bias_fc2);
 void zero_network();
 void free_network();
 
