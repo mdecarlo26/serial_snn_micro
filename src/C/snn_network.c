@@ -15,8 +15,10 @@ static int8_t *fc1_bias_pointer = NULL;
 static int8_t *fc2_bias_pointer = NULL;
 static int weights_initialized = 0;
 
-extern uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES];
-extern uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES];
+// Static memory for ping-pong buffers
+// Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
+static uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 
 // Function to set a value in the buffer
 void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value) {
@@ -43,26 +45,27 @@ int heaviside(float x, int threshold) {
 void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 uint8_t output[MAX_NEURONS][BITMASK_BYTES], Layer *layer, int input_size) {
     for (int t = 0; t < TAU; t++) {
-            // printf("Time step %d\n", t);
         for (int i = 0; i < layer->num_neurons; i++) {
-
-            // float sum = 0.0f;
+#if (QO7_FLAG)
             int32_t sum = 0;
-            int8_t c = 0;
+#else
+            float sum = 0.0f;
+#endif
             if (layer->layer_num > 0) {
                 sum += layer->bias[i];
                 for (int j = 0; j < input_size; j++) {
-                    if (get_bit(input, j, t)) { // if incoming spike is present
-                        // c = quantize_q07(layer->weights[i][j]);
-                        // sum += c;
+                    if (get_bit(input, j, t)) { 
                         sum += layer->weights[i][j];
                     }
                 }
             }
             else{
                 if (get_bit(input, i, t)) { // if incoming spike is present
-                    // sum += 1.0f; // For the input layer, each spike contributes a value of 1
-                    sum += 128; // For the input layer, each spike contributes a value of 1
+#if (QO7_FLAG)
+                    sum += 128;
+#else
+                    sum += 1.0f;
+#endif
                 }
             }
                        
@@ -70,10 +73,17 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 
             float new_mem = 0;
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
+
+#if (LIF)
             new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+#endif 
+#if (IF)
+            new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+#endif 
+
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
-            set_bit(output, i, t, output_spike); // Reset output for this time step
+            set_bit(output, i, t, output_spike); 
             // printf("Neuron %d: Membrane Potential = %f, Output = %d, Reset: %d, Sum: %d\n", i, layer->neurons[i].membrane_potential, output_spike, reset_signal, sum);
         }
     }
