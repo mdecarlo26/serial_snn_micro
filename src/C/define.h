@@ -27,7 +27,7 @@
 #define INPUT_BYTES ((INPUT_SIZE + 7) / 8)
 
 // Define the quantization parameters for Q0.7
-#define Q07_FLAG 1
+#define Q07_FLAG       1
 #define Q07_SCALE      128.0f
 #define Q07_INV_SCALE  (1.0f / 128.0f)
 #define Q07_MAX_FLOAT  0.9921875f   // 127 / 128
@@ -35,7 +35,7 @@
 #define Q07_MAX_INT8   127
 #define Q07_MIN_INT8  -128
 
-#define LIF 0
-#define IF 1
+#define LIF 1
+#define IF  0
 
 #endif // DEFINE_H
