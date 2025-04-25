@@ -15,6 +15,8 @@ static int8_t *fc1_bias_pointer = NULL;
 static int8_t *fc2_bias_pointer = NULL;
 static int weights_initialized = 0;
 
+extern uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES];
+extern uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES];
 
 // Function to set a value in the buffer
 void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value) {
@@ -42,7 +44,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 uint8_t output[MAX_NEURONS][BITMASK_BYTES], Layer *layer, int input_size) {
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
-#if (QO7_FLAG)
+#if (Q07_FLAG)
             int32_t sum = 0;
 #else
             float sum = 0.0f;
