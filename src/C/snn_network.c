@@ -16,6 +16,8 @@ static int8_t *fc2_bias_pointer = NULL;
 static int weights_initialized = 0;
 
 // Backing storage for the two ping-pong buffers:
+// Static memory for ping-pong buffers
+// Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
 static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
 static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 
@@ -76,12 +78,19 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
 
 #if (LIF)
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+    #if (Q07_FLAG)
+            new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+    #else 
+            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+    #endif 
 #endif 
 #if (IF)
+    #if (Q07_FLAG)
             new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+    #else 
+            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+    #endif 
 #endif 
-
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
