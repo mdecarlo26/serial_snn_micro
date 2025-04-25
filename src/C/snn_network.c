@@ -17,8 +17,8 @@ static int weights_initialized = 0;
 
 // Static memory for ping-pong buffers
 // Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 
 // Function to set a value in the buffer
 void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value) {
@@ -160,6 +160,9 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
 }
 
 int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sample_idx){
+    uint8_t (*p1)[BITMASK_BYTES] = ping_pong_buffer_1;
+    uint8_t (*p2)[BITMASK_BYTES] = ping_pong_buffer_1;
+
     zero_network();
     static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
     int* firing_counts[NUM_CLASSES];
@@ -173,25 +176,31 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
 
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
+        // printf("Processing Chunk %d\n", chunk);
+        // Initialize input spikes for the first layer from the loaded data
         int in_spike = 0;
         for (int t = 0; t < TAU; t++) {
             for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
                 in_spike = get_input_spike(input, sample_idx, chunk + t, i);
+                // printf("Input spike at sample %d, time %d, neuron %d: %d\n", sample_idx, chunk + t, i, in_spike);
                 set_bit(ping_pong_buffer_1, i, t, in_spike);
+                // set_bit(ping_pong_buffer_1, snn_network.layers[0].num_neurons-1-i, t, initial_spikes[d][chunk + t][i]);
             }
         }
+        // printf("Input spikes at chunk %d:\n", chunk);
+        // print_spike_buffer((const char **)ping_pong_buffer_1, snn_network.layers[0].num_neurons);
 
         // Process each layer sequentially
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
             // printf("Simulating Layer %d\n", l);
-            update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
+            update_layer(*p1, *p2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
-            uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
-            ping_pong_buffer_1 = ping_pong_buffer_2;
-            ping_pong_buffer_2 = temp;
+            uint8_t (*temp)[BITMASK_BYTES] = p1;
+            p1 = p2;
+            p2 = temp;
         }
 
         // Accumulate firing counts for the final layer
