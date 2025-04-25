@@ -43,10 +43,13 @@ clear:
 pull:
 	git pull
 
+check:
+	cat model_output.txt
+
 # Redo target
 redo: clean clear all run
 
-update: pull redo
+update: pull redo check
 
 # Phony targets
-.PHONY: all clean redo run clear pull update
+.PHONY: all clean redo run clear pull check update
