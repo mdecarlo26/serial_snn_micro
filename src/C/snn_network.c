@@ -160,9 +160,6 @@ int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
 }
 
 int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sample_idx){
-    uint8_t (*p1)[BITMASK_BYTES] = ping_pong_buffer_1;
-    uint8_t (*p2)[BITMASK_BYTES] = ping_pong_buffer_1;
-
     zero_network();
     static int firing_counts_data[NUM_CLASSES][TIME_WINDOW / TAU] = {0};
     int* firing_counts[NUM_CLASSES];
@@ -195,12 +192,12 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
             // printf("Simulating Layer %d\n", l);
-            update_layer(*p1, *p2, &snn_network.layers[l], input_size);
+            update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap the ping-pong buffers for the next layer
-            uint8_t (*temp)[BITMASK_BYTES] = p1;
-            p1 = p2;
-            p2 = temp;
+            uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
+            ping_pong_buffer_1 = ping_pong_buffer_2;
+            ping_pong_buffer_2 = temp;
         }
 
         // Accumulate firing counts for the final layer
