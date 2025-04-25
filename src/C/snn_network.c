@@ -59,7 +59,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             }
             else{
                 if (get_bit(input, i, t)) { // if incoming spike is present
-#if (QO7_FLAG)
+#if (Q07_FLAG)
                     sum += 128;
 #else
                     sum += 1.0f;
