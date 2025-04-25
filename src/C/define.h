@@ -35,7 +35,7 @@
 #define Q07_MAX_INT8   127
 #define Q07_MIN_INT8  -128
 
-#define LIF 1
-#define IF 0
+#define LIF 0
+#define IF 1
 
 #endif // DEFINE_H
