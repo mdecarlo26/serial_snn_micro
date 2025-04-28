@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include "define.h"
 #include "file_operations.h"
@@ -67,24 +68,25 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    time_t start, end;
+    struct timeval start, end;
 
     printf("\033[1;32mStarting Sim\033[0m\n");
     for (int d = 0; d < NUM_SAMPLES; d++) {
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
         fflush(stdout);
 
-        start = time(NULL);
+        gettimeofday(&start, NULL);
 
         int classification = inference(initial_spikes, d);
 
-        end = time(NULL);
+        gettimeofday(&end, NULL);
 
         dump_classification(output_file, d, classification, labels);
     }
     printf("\n");
     printf("\033[1;32mSim Finished\033[0m\n");
-    printf("Time taken: %f seconds\n", (double)(end - start));
+    printf( "CPU run time = %0.2f s\n", (float)(stop.tv_sec - start.tv_sec\
+                + (stop.tv_usec - start.tv_usec) / (float)1000000));
     fclose(output_file);
 
     return 0;
