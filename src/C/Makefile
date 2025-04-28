@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -O3 -flto
+CFLAGS = -Wall -Wextra -O3 -march=native -mtune=native
 
 
 # Directories
