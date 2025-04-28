@@ -85,8 +85,8 @@ int main() {
     }
     printf("\n");
     printf("\033[1;32mSim Finished\033[0m\n");
-    printf( "CPU run time = %0.2f s\n", (float)(stop.tv_sec - start.tv_sec\
-                + (stop.tv_usec - start.tv_usec) / (float)1000000));
+    printf( "CPU run time = %0.2f s\n", (float)(end.tv_sec - start.tv_sec\
+                + (end.tv_usec - start.tv_usec) / (float)1000000));
     fclose(output_file);
 
     return 0;
