@@ -3,9 +3,7 @@
 
 Snn_Network snn_network;
 
-// 3. Fully static memory for ping-pong buffers
-static uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-static uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES] = {0};
+
 
 // 6. Fully static memory for labels
 char labels[NUM_SAMPLES] = {0};
@@ -37,7 +35,7 @@ void setup() {
 void loop() {
     unsigned long start = millis();
     int d = 0;
-    int classification = inference(initial_spikes, ping_pong_buffer_1, ping_pong_buffer_2, d);
+    int classification = inference(initial_spikes, d);
     unsigned long end = millis();
     counter++;
 

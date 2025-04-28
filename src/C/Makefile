@@ -1,6 +1,7 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -Wall -Wextra
+CFLAGS = -Wall -Wextra -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -mfloat-abi=hard -O3 -flto
+
 
 # Directories
 SRC_DIR = .

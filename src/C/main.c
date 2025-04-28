@@ -15,11 +15,6 @@ Snn_Network snn_network;
 
 char labels[NUM_SAMPLES] = {0};
 
-// Static memory for ping-pong buffers
-// Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-// static uint8_t ping_pong_buffer_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-// static uint8_t ping_pong_buffer_2[MAX_NEURONS][BITMASK_BYTES] = {0};
-
 // Function prototypes
 void dump_classification(FILE *output_file, int sample_index, int classification, char* labels);
 
@@ -77,7 +72,6 @@ int main() {
         printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
         fflush(stdout);
 
-        // int classification = inference(initial_spikes,ping_pong_buffer_1, ping_pong_buffer_2, d);
         int classification = inference(initial_spikes, d);
         dump_classification(output_file, d, classification, labels);
     }
