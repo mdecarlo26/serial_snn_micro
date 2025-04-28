@@ -84,7 +84,7 @@ int main() {
     }
     printf("\n");
     printf("\033[1;32mSim Finished\033[0m\n");
-    printf("Time taken: %ld seconds\n", (long)(end - start));
+    printf("Time taken: %ld seconds\n", (double)(end - start));
     fclose(output_file);
 
     return 0;
