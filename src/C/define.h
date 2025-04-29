@@ -48,6 +48,14 @@
 #define DECAY_FP7           ((int16_t)(DECAY_RATE * 128))  // ~121
 #define DECAY_SHIFT         7                         // because scale = 128 = 2^7
 
+#ifdef Q07_FLAG
+  // For fixed-point: mem and thresh are integer Q0.7 values
+  #define HEAVISIDE(mem, thresh) (((mem) >= (thresh)) ? 1 : 0)
+#else
+  // For float path: mem and thresh are floats
+  #define HEAVISIDE(mem, thresh) (((mem) >= (thresh)) ? 1 : 0)
+#endif
+
 
 #define LIF 1
 #define IF  0

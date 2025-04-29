@@ -18,8 +18,8 @@ static int weights_initialized = 0;
 // Backing storage for the two ping-pong buffers:
 // Static memory for ping-pong buffers
 // Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
+static const uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
+static const uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 
 // Pointers that we can swap:
 static uint8_t (*ping_pong_buffer_1)[BITMASK_BYTES] = ping_pong_buffer_storage_1;
@@ -40,16 +40,6 @@ int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, in
     int bit_idx = t % 8;
     return (buffer[neuron_idx][byte_idx] >> bit_idx) & 1;
 }
-
-#if (Q07_FLAG)
-int heaviside(int32_t x, int16_t threshold) {
-    return (x >= threshold) ? 1 : 0;
-}
-#else
-int heaviside(float x, float threshold) {
-    return (x >= threshold) ? 1 : 0;
-}
-#endif
 
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
@@ -89,7 +79,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 }
             }
                        
-            int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
+            int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
 
 #if (LIF)
     #if (Q07_FLAG)
@@ -106,7 +96,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
     #endif 
 #endif 
             layer->neurons[i].membrane_potential = new_mem;
-            int output_spike = heaviside(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
+            int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
         }
     }

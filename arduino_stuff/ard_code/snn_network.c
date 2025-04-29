@@ -41,10 +41,15 @@ int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, in
     return (buffer[neuron_idx][byte_idx] >> bit_idx) & 1;
 }
 
-
-int heaviside(float x, int threshold) {
+#if (Q07_FLAG)
+int heaviside(int32_t x, int16_t threshold) {
     return (x >= threshold) ? 1 : 0;
 }
+#else
+int heaviside(float x, float threshold) {
+    return (x >= threshold) ? 1 : 0;
+}
+#endif
 
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
@@ -53,35 +58,44 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
             int32_t sum = 0;
+            int32_t new_mem = 0;
 #else
             float sum = 0.0f;
+            float new_mem = 0;
 #endif
             if (layer->layer_num > 0) {
-                sum += layer->bias[i];
+#if (Q07_FLAG)
+                        sum += layer->bias[i];
+#else
+                        sum += dequantize_q07(layer->bias[i]);
+#endif
                 for (int j = 0; j < input_size; j++) {
                     if (get_bit(input, j, t)) { 
+#if (Q07_FLAG)
                         sum += layer->weights[i][j];
+#else
+                        sum += dequantize_q07(layer->weights[i][j]);
+#endif
                     }
                 }
             }
             else{
                 if (get_bit(input, i, t)) { // if incoming spike is present
 #if (Q07_FLAG)
-                    sum += 128;
+                    sum += (1 << DECAY_SHIFT);
 #else
                     sum += 1.0f;
 #endif
                 }
             }
                        
-            float new_mem = 0;
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
 
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #else 
-            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #endif 
 #endif 
 #if (IF)
@@ -134,10 +148,17 @@ void initialize_network(int neurons_per_layer[],
         }
 
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+#if (Q07_FLAG)
+            snn_network.layers[l].neurons[i].membrane_potential = 0;
+            snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH_FP7;
+            snn_network.layers[l].neurons[i].decay_rate = DECAY_FP7;
+            snn_network.layers[l].neurons[i].delayed_reset = 0;
+#else
             snn_network.layers[l].neurons[i].membrane_potential = 0.0f;
             snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
             snn_network.layers[l].neurons[i].decay_rate = DECAY_RATE;
             snn_network.layers[l].neurons[i].delayed_reset = 0.0f;
+#endif
         }
     }
 }

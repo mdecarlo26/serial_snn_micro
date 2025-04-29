@@ -7,10 +7,17 @@
 #include <string.h>
 
 typedef struct {
+#if (Q07_FLAG)
+    int32_t membrane_potential;
+    int32_t delayed_reset;
+    int16_t voltage_thresh;
+    int16_t decay_rate;
+#else
     float membrane_potential;
     float voltage_thresh;
     float decay_rate;
     float delayed_reset;
+#endif
 } Neuron;
 
 typedef struct {
@@ -26,13 +33,15 @@ typedef struct {
     int num_layers;
 } Snn_Network;
 
-// Static memory for network structure
-
-
 
 void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value);
 int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
-int heaviside(float x, int threshold);
+
+#if (Q07_FLAG)
+    int heaviside(int32_t x, int16_t threshold);
+#else
+    int heaviside(float x, float threshold);
+#endif
 
 void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
     const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const int8_t *bias_fc1, const int8_t *bias_fc2);
