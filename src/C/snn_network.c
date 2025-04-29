@@ -65,7 +65,11 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 sum += layer->bias[i];
                 for (int j = 0; j < input_size; j++) {
                     if (get_bit(input, j, t)) { 
+#if (Q07_FLAG)
                         sum += layer->weights[i][j];
+#else
+                        sum += dequantize_q07(layer->weights[i][j]);
+#endif
                     }
                 }
             }
