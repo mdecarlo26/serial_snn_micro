@@ -84,7 +84,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = (DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = (DECAY_FP7 * layer->neurons[i].membrane_potential) + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #else 
             new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #endif 
