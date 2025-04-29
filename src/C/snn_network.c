@@ -58,8 +58,10 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
             int32_t sum = 0;
+            int32_t new_mem = 0;
 #else
             float sum = 0.0f;
+            float new_mem = 0;
 #endif
             if (layer->layer_num > 0) {
                 sum += layer->bias[i];
@@ -83,7 +85,6 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 }
             }
                        
-            float new_mem = 0;
             int reset_signal = heaviside(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
 
 #if (LIF)
