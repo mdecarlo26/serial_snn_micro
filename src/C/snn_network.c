@@ -216,8 +216,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
     }
     // gettimeofday(&end, NULL);
-    // printf( "Actual inference CPU run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
-                + (end.tv_usec - start.tv_usec) / (float)1000000));
+    // printf( "Actual inference CPU run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec + (end.tv_usec - start.tv_usec) / (float)1000000));
 
     return classify_inference(firing_counts, snn_network.layers[snn_network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
 }
