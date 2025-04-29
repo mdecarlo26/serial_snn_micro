@@ -54,6 +54,11 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             float new_mem = 0;
 #endif
             if (layer->layer_num > 0) {
+#if (Q07_FLAG)
+                        sum += layer->bias[i];
+#else
+                        sum += dequantize_q07(layer->bias[i]);
+#endif
                 for (int j = 0; j < input_size; j++) {
                     if (get_bit(input, j, t)) { 
 #if (Q07_FLAG)
@@ -73,25 +78,23 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 #endif
                 }
             }
-            printf("fail here\n");
+                       
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
 
-            printf("starting update\n");          
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh + layer->bias[i];
+            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #else 
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + dequantize_q07(layer->bias[i]);
+            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #endif 
 #endif 
 #if (IF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + layer->bias[i];
+            new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
     #else 
-            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + dequantize_q07(layer->bias[i]);
+            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
     #endif 
 #endif 
-            printf("finished update\n");          
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
