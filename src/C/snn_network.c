@@ -90,10 +90,10 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + dequantize_q07(layer->bias[i]);
     #endif 
 #endif 
+            printf("heavy\n");          
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
-            printf("heavy\n");          
         }
     }
 }
