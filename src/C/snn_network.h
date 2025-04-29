@@ -33,9 +33,6 @@ typedef struct {
     int num_layers;
 } Snn_Network;
 
-// Static memory for network structure
-
-
 
 void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value);
 int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
