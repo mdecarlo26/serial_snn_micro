@@ -41,7 +41,7 @@ void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, 
 int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
 
 #if (Q07_FLAG)
-    int heaviside(int32_t x, int32_t threshold);
+    int heaviside(int32_t x, int16_t threshold);
 #else
     int heaviside(float x, int threshold);
 #endif
