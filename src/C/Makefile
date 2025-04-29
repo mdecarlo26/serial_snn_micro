@@ -38,6 +38,9 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
+run10: $(TARGET)
+	for i in {1..10}; do $(MAKE) run; done
+
 clear:
 	clear
 
@@ -53,4 +56,4 @@ redo: clean clear all run
 update: pull redo check
 
 # Phony targets
-.PHONY: all clean redo run clear pull check update
+.PHONY: all clean redo run clear pull check update run10
