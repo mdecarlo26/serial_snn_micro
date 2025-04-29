@@ -72,8 +72,8 @@ int main() {
 
     printf("\033[1;32mStarting Sim\033[0m\n");
     for (int d = 0; d < NUM_SAMPLES; d++) {
-        printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
-        fflush(stdout);
+        // printf("\r\033[KSample: \033[1;37m%d\033[0m/%d", d+1, NUM_SAMPLES);
+        // fflush(stdout);
 
         gettimeofday(&start, NULL);
 
