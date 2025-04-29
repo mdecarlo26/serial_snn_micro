@@ -2,6 +2,7 @@
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
+#include <sys/time.h>
 
 extern Snn_Network snn_network;
 
@@ -189,6 +190,9 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
     }
 
+    struct timeval start, end;
+
+    gettimeofday(&start, NULL);
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
@@ -216,6 +220,9 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             }
         }
     }
+    gettimeofday(&end, NULL);
+    printf( "Inference run time = %0.2f s\n", (float)(end.tv_sec - start.tv_sec\
+                + (end.tv_usec - start.tv_usec) / (float)1000000));
 
     return classify_inference(firing_counts, snn_network.layers[snn_network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
 }
