@@ -2,6 +2,7 @@
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
+#include <sys/time.h>
 
 extern Snn_Network snn_network;
 
@@ -54,11 +55,6 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             float new_mem = 0;
 #endif
             if (layer->layer_num > 0) {
-#if (Q07_FLAG)
-                        sum += layer->bias[i];
-#else
-                        sum += dequantize_q07(layer->bias[i]);
-#endif
                 for (int j = 0; j < input_size; j++) {
                     if (get_bit(input, j, t)) { 
 #if (Q07_FLAG)
@@ -83,16 +79,16 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh + layer->bias[i];
     #else 
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + dequantize_q07(layer->bias[i]);
     #endif 
 #endif 
 #if (IF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + layer->bias[i];
     #else 
-            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + dequantize_q07(layer->bias[i]);
     #endif 
 #endif 
             layer->neurons[i].membrane_potential = new_mem;
@@ -189,6 +185,9 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
     }
 
+    struct timeval start, end;
+
+    gettimeofday(&start, NULL);
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
@@ -216,6 +215,9 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             }
         }
     }
+    gettimeofday(&end, NULL);
+    printf( "Actual inference CPU run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
+                + (end.tv_usec - start.tv_usec) / (float)1000000));
 
     return classify_inference(firing_counts, snn_network.layers[snn_network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
 }
