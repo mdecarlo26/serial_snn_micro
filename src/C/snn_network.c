@@ -18,8 +18,8 @@ static int weights_initialized = 0;
 // Backing storage for the two ping-pong buffers:
 // Static memory for ping-pong buffers
 // Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-static const uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-static const uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 
 // Pointers that we can swap:
 static uint8_t (*ping_pong_buffer_1)[BITMASK_BYTES] = ping_pong_buffer_storage_1;
