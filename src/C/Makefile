@@ -38,9 +38,6 @@ clean:
 run: $(TARGET)
 	./$(TARGET)
 
-run10: $(TARGET)
-	for i in {seq 1 10}; do ./$(TARGET); done
-
 clear:
 	clear
 
@@ -56,4 +53,4 @@ redo: clean clear all run
 update: pull redo check
 
 # Phony targets
-.PHONY: all clean redo run clear pull check update run10
+.PHONY: all clean redo run clear pull check update
