@@ -73,8 +73,9 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
 #endif
                 }
             }
-                       
+            printf("fail here\n");
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
+            printf("heavy\n");          
 
 #if (LIF)
     #if (Q07_FLAG)
