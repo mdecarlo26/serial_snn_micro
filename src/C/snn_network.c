@@ -279,6 +279,6 @@ void compute_buffer_sparsity(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES],
             }
         }
         /* fraction of zeros = 1 – (ones / num_neurons) */
-        sparsity[t] = 1.0f - ((float)ones / (float)num_neurons);
+        sparsity[t] = ((float)ones / (float)num_neurons);
     }
 }
