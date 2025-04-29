@@ -192,7 +192,6 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
 
     struct timeval start, end;
 
-    gettimeofday(&start, NULL);
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
@@ -204,7 +203,11 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
 
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
+            gettimeofday(&start, NULL);
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
+            gettimeofday(&end, NULL);
+            printf( "Layer %d run time = %0.6f s\n", l ,(float)(end.tv_sec - start.tv_sec\
+                        + (end.tv_usec - start.tv_usec) / (float)1000000));
 
             // Swap pointers
             uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
@@ -220,9 +223,6 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             }
         }
     }
-    gettimeofday(&end, NULL);
-    printf( "Inference run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
-                + (end.tv_usec - start.tv_usec) / (float)1000000));
 
     return classify_inference(firing_counts, snn_network.layers[snn_network.num_layers - 1].num_neurons, TIME_WINDOW / TAU);
 }
