@@ -46,7 +46,7 @@ int heaviside(int32_t x, int16_t threshold) {
     return (x >= threshold) ? 1 : 0;
 }
 #else
-int heaviside(float x, int threshold) {
+int heaviside(float x, float threshold) {
     return (x >= threshold) ? 1 : 0;
 }
 #endif

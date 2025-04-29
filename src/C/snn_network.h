@@ -43,7 +43,7 @@ int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, in
 #if (Q07_FLAG)
     int heaviside(int32_t x, int16_t threshold);
 #else
-    int heaviside(float x, int threshold);
+    int heaviside(float x, float threshold);
 #endif
 
 void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
