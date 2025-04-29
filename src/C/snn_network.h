@@ -57,4 +57,7 @@ void set_input_spike(uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
 int8_t quantize_q07(float x); 
 float dequantize_q07(int32_t q);
 
+void compute_buffer_sparsity(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES],
+                             int num_neurons,
+                             float sparsity[TAU]);
 #endif // NETWORK_H

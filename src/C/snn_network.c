@@ -2,7 +2,6 @@
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
-#include <sys/time.h>
 
 extern Snn_Network snn_network;
 
@@ -45,9 +44,7 @@ int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, in
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 uint8_t output[MAX_NEURONS][BITMASK_BYTES], Layer *layer, int input_size) {
-    struct timeval start, end;
     for (int t = 0; t < TAU; t++) {
-        gettimeofday(&start, NULL);
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
             int32_t sum = 0;
@@ -102,11 +99,6 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
         }
-    gettimeofday(&end, NULL);
-    if (layer->layer_num == 1){
-    printf( "Time %d run time = %0.6f s\n", t ,(float)(end.tv_sec - start.tv_sec\
-                + (end.tv_usec - start.tv_usec) / (float)1000000));
-    }
     }
 }
 
@@ -208,7 +200,17 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
 
         for (int l = 0; l < snn_network.num_layers; l++) {
+            float layer_sparsity[TAU];
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
+
+            compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
+
+            printf("Layer %d input sparsity:", l);
+            for (int t = 0; t < TAU; t++) {
+                printf(" %.2f", layer_sparsity[t]);
+            }
+            printf("\n");
+
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap pointers
@@ -263,4 +265,20 @@ int8_t quantize_q07(float x) {
 
 float dequantize_q07(int32_t q) {
     return ((float)q) * Q07_INV_SCALE;
+}
+
+
+void compute_buffer_sparsity(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES],
+                             int num_neurons,
+                             float sparsity[TAU]) {
+    for (int t = 0; t < TAU; t++) {
+        int ones = 0;
+        for (int i = 0; i < num_neurons; i++) {
+            if (get_bit(buffer, i, t)) {
+                ones++;
+            }
+        }
+        /* fraction of zeros = 1 – (ones / num_neurons) */
+        sparsity[t] = 1.0f - ((float)ones / (float)num_neurons);
+    }
 }
