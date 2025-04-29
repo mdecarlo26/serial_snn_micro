@@ -76,6 +76,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             printf("fail here\n");
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
 
+            printf("starting update\n");          
 #if (LIF)
     #if (Q07_FLAG)
             new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh + layer->bias[i];
@@ -90,7 +91,7 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh + dequantize_q07(layer->bias[i]);
     #endif 
 #endif 
-            printf("heavy\n");          
+            printf("finished update\n");          
             layer->neurons[i].membrane_potential = new_mem;
             int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
