@@ -39,7 +39,7 @@ run: $(TARGET)
 	./$(TARGET)
 
 run10: $(TARGET)
-	for i in {1..10}; do ./$(TARGET); done
+	for i in {1...10}; do ./$(TARGET); done
 
 clear:
 	clear
