@@ -45,7 +45,9 @@ int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, in
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
                 uint8_t output[MAX_NEURONS][BITMASK_BYTES], Layer *layer, int input_size) {
+    struct timeval start, end;
     for (int t = 0; t < TAU; t++) {
+        gettimeofday(&start, NULL);
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
             int32_t sum = 0;
@@ -100,6 +102,11 @@ void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
             int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
             set_bit(output, i, t, output_spike); 
         }
+    gettimeofday(&end, NULL);
+    if (layer->layer_num == 1){
+    printf( "Time %d run time = %0.6f s\n", t ,(float)(end.tv_sec - start.tv_sec\
+                + (end.tv_usec - start.tv_usec) / (float)1000000));
+    }
     }
 }
 
@@ -190,7 +197,6 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
     }
 
-    struct timeval start, end;
 
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
@@ -203,11 +209,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
 
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
-            gettimeofday(&start, NULL);
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
-            gettimeofday(&end, NULL);
-            printf( "Layer %d run time = %0.6f s\n", l ,(float)(end.tv_sec - start.tv_sec\
-                        + (end.tv_usec - start.tv_usec) / (float)1000000));
 
             // Swap pointers
             uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
