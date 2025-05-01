@@ -5,7 +5,7 @@
 
 int main() {
 
-    uint8_t num = 8;
+    uint8_t num = 0;
 
     int ret = __builtin_ctz(num);
     printf("The number of trailing zeros in %u is: %d\n", num, ret);
