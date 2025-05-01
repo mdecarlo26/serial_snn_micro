@@ -25,13 +25,13 @@ namespace {
 }
 
 void setup() {
-  Serial.begin(115200);
-  while (!Serial) { delay(10); }
+  // Serial.begin(115200);
+  // while (!Serial) { delay(10); }
 
   // 1. Load the model
   model = ::tflite::GetModel(model_tflite);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
-    Serial.println("Model schema version mismatch!");
+    // Serial.println("Model schema version mismatch!");
     while(true);
   }
 
@@ -41,14 +41,13 @@ void setup() {
   interpreter = &static_interpreter;
 
   // 3. Allocate memory for tensors
-  interpreter->AllocateTensors();
-  Serial.print("Input is ");
-Serial.println(input_tensor->type == kTfLiteFloat32 ? "FLOAT32" :
-               input_tensor->type == kTfLiteUInt8  ? "UINT8"  :
-               input_tensor->type == kTfLiteInt8   ? "INT8"   :
-                                                     "??");
+//   Serial.print("Input is ");
+// Serial.println(input_tensor->type == kTfLiteFloat32 ? "FLOAT32" :
+//                input_tensor->type == kTfLiteUInt8  ? "UINT8"  :
+//                input_tensor->type == kTfLiteInt8   ? "INT8"   :
+//                                                      "??");
   if (interpreter->AllocateTensors() != kTfLiteOk) {
-    Serial.println("AllocateTensors() failed!");
+    // Serial.println("AllocateTensors() failed!");
     while(true);
   }
 
@@ -56,7 +55,7 @@ Serial.println(input_tensor->type == kTfLiteFloat32 ? "FLOAT32" :
   input_tensor  = interpreter->input(0);
   output_tensor = interpreter->output(0);
 
-  Serial.println("TFLM interpreter ready!");
+  // Serial.println("TFLM interpreter ready!");
 }
 
 void loop() {
@@ -77,7 +76,7 @@ void loop() {
   // Print output bytes
   int label_idx = 0;
   int max_tmp = 0;
-  Serial.print("Output (uint8): ");
+  // Serial.print("Output (uint8): ");
   for (int i = 0; i < output_tensor->bytes; i++) {
     if (output_tensor->data.int8[i] > max_tmp){
       label_idx = i;
@@ -85,11 +84,11 @@ void loop() {
     }
     
   }
-  Serial.print(label_idx);
-    Serial.print(' ');
-  Serial.println();
-  Serial.print("Inference time: ");
-  Serial.print(end - start);
-  Serial.println(" ms");
+  // Serial.print(label_idx);
+  //   Serial.print(' ');
+  // Serial.println();
+  // Serial.print("Inference time: ");
+  // Serial.print(end - start);
+  // Serial.println(" ms");
   delay(1000);
 }
