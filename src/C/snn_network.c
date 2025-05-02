@@ -192,7 +192,6 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
     }
 
     printf("Sparsity is the percentage of neurons that are firing in the layer\n");
-        printf("Chunk %d\n", 1);
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
@@ -201,6 +200,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
                 set_bit(ping_pong_buffer_1, i, t, in_spike);
             }
         }
+        printf("Chunk %d\n", 1);
         for (int l = 0; l < snn_network.num_layers; l++) {
             float layer_sparsity[TAU];
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
