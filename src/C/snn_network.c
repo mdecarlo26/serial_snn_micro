@@ -51,57 +51,54 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
-            int32_t sum = 0;
-            int32_t new_mem = 0;
+            int32_t sum = layer->bias[i];
 #else
-            float sum = 0.0f;
-            float new_mem = 0;
+            float sum = dequantize_q07(layer->bias[i]);
 #endif
-            if (layer->layer_num > 0) {
-#if (Q07_FLAG)
-                        sum += layer->bias[i];
-#else
-                        sum += dequantize_q07(layer->bias[i]);
-#endif
-                for (int j = 0; j < input_size; j++) {
-                    if (get_bit(input, j, t)) { 
+
+            int num_bytes = (input_size + 7) / 8;
+            for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
+                uint8_t byte = input[t][byte_idx];
+                int base_idx = byte_idx * 8;
+
+                while (byte) {
+                    int bit = __builtin_ctz(byte);
+                    int j = base_idx + bit;
+                    if (j < input_size) {
 #if (Q07_FLAG)
                         sum += layer->weights[i][j];
 #else
                         sum += dequantize_q07(layer->weights[i][j]);
 #endif
                     }
+                    byte &= byte - 1;
                 }
             }
-            else{
-                if (get_bit(input, i, t)) { // if incoming spike is present
-#if (Q07_FLAG)
-                    sum += (1 << DECAY_SHIFT);
-#else
-                    sum += 1.0f;
-#endif
-                }
-            }
-                       
-            int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
+
+            int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
+                                        layer->neurons[i].voltage_thresh);
 
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
-    #else 
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-    #endif 
-#endif 
-#if (IF)
+            int32_t new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
+                            + sum - reset_signal * layer->neurons[i].voltage_thresh;
+    #else
+            float new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential
+                            + sum - reset_signal * layer->neurons[i].voltage_thresh;
+    #endif
+#elif (IF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
-    #else 
-            new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-    #endif 
-#endif 
+            int32_t new_mem = layer->neurons[i].membrane_potential + sum
+                            - reset_signal * layer->neurons[i].voltage_thresh;
+    #else
+            float new_mem = layer->neurons[i].membrane_potential + sum
+                            - reset_signal * layer->neurons[i].voltage_thresh;
+    #endif
+#endif
+
             layer->neurons[i].membrane_potential = new_mem;
-            int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
-            set_bit(output, i, t, output_spike); 
+            if (reset_signal)
+                set_bit(output, i, t, 1);
         }
     }
 }
@@ -283,6 +280,6 @@ void compute_buffer_sparsity(const uint8_t buffer[TAU][INPUT_BYTES],
                 active_spike_count++;
             }
         }
-        sparsity[t] = 1.0f - ((float)active_spike_count / num_neurons);
+        sparsity[t] = ((float)active_spike_count / num_neurons);
     }
 }
