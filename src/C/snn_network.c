@@ -74,6 +74,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                     byte &= byte - 1;
                 }
             }
+            printf("Time step %d: ", t);
 
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                         layer->neurons[i].voltage_thresh);
@@ -100,7 +101,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             if (reset_signal)
                 set_bit(output, i, t, 1);
         }
-        printf("Time step %d: ", t);
     }
 }
 
