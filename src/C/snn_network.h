@@ -34,16 +34,16 @@ typedef struct {
 } Snn_Network;
 
 
-void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value);
-int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t);
+void set_bit(uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t, int value);
+int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t);
 
 void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
     const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const int8_t *bias_fc1, const int8_t *bias_fc2);
 void zero_network();
 void free_network();
 
-void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
-                  uint8_t output[MAX_NEURONS][BITMASK_BYTES],
+void update_layer(const uint8_t input[TAU][INPUT_BYTES],
+                  uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size);
 
 int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sample_idx);
@@ -57,7 +57,7 @@ void set_input_spike(uint8_t buffer[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES],
 int8_t quantize_q07(float x); 
 float dequantize_q07(int32_t q);
 
-void compute_buffer_sparsity(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES],
+void compute_buffer_sparsity(const uint8_t buffer[TAU][INPUT_BYTES],
                              int num_neurons,
                              float sparsity[TAU]);
 #endif // NETWORK_H

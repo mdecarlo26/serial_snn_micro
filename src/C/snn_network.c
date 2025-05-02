@@ -18,32 +18,36 @@ static int weights_initialized = 0;
 // Backing storage for the two ping-pong buffers:
 // Static memory for ping-pong buffers
 // Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
+// static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
+// static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
+static uint8_t ping_pong_buffer_storage_1[TAU][INPUT_BYTES] = {0};
+static uint8_t ping_pong_buffer_storage_2[TAU][INPUT_BYTES] = {0};
 
 // Pointers that we can swap:
-static uint8_t (*ping_pong_buffer_1)[BITMASK_BYTES] = ping_pong_buffer_storage_1;
-static uint8_t (*ping_pong_buffer_2)[BITMASK_BYTES] = ping_pong_buffer_storage_2;
+// static uint8_t (*ping_pong_buffer_1)[BITMASK_BYTES] = ping_pong_buffer_storage_1;
+// static uint8_t (*ping_pong_buffer_2)[BITMASK_BYTES] = ping_pong_buffer_storage_2;
+static uint8_t (*ping_pong_buffer_1)[INPUT_BYTES] = ping_pong_buffer_storage_1;
+static uint8_t (*ping_pong_buffer_2)[INPUT_BYTES] = ping_pong_buffer_storage_2;
 
 // Function to set a value in the buffer
-void set_bit(uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t, int value) {
-    int byte_idx = t / 8;
-    int bit_idx = t % 8;
+void set_bit(uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t, int value) {
+    int byte_idx = neuron_idx / 8;
+    int bit_idx = neuron_idx % 8;
     if (value)
-        buffer[neuron_idx][byte_idx] |= (1 << bit_idx);
+        buffer[t][byte_idx] |= (1 << bit_idx);
     else
-        buffer[neuron_idx][byte_idx] &= ~(1 << bit_idx);
+        buffer[t][byte_idx] &= ~(1 << bit_idx);
 }
 
-int get_bit(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES], int neuron_idx, int t) {
-    int byte_idx = t / 8;
-    int bit_idx = t % 8;
-    return (buffer[neuron_idx][byte_idx] >> bit_idx) & 1;
+int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
+    int byte_idx = neuron_idx / 8;
+    int bit_idx = neuron_idx % 8;
+    return (buffer[t][byte_idx] >> bit_idx) & 1;
 }
 
 // Function to update the entire layer based on the buffer and bias
-void update_layer(const uint8_t input[MAX_NEURONS][BITMASK_BYTES],
-                uint8_t output[MAX_NEURONS][BITMASK_BYTES], Layer *layer, int input_size) {
+void update_layer(const uint8_t input[TAU][INPUT_BYTES],
+                uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
@@ -267,18 +271,18 @@ float dequantize_q07(int32_t q) {
     return ((float)q) * Q07_INV_SCALE;
 }
 
-
-void compute_buffer_sparsity(const uint8_t buffer[MAX_NEURONS][BITMASK_BYTES],
+void compute_buffer_sparsity(const uint8_t buffer[TAU][INPUT_BYTES],
                              int num_neurons,
                              float sparsity[TAU]) {
     for (int t = 0; t < TAU; t++) {
-        int ones = 0;
-        for (int i = 0; i < num_neurons; i++) {
-            if (get_bit(buffer, i, t)) {
-                ones++;
+        int active_spike_count = 0;
+        for (int byte = 0; byte < (num_neurons + 7) / 8; byte++) {
+            uint8_t val = buffer[t][byte];
+            while (val) {
+                val &= (val - 1);  // Clear the least significant set bit
+                active_spike_count++;
             }
         }
-        /* fraction of zeros = 1 – (ones / num_neurons) */
-        sparsity[t] = ((float)ones / (float)num_neurons);
+        sparsity[t] = 1.0f - ((float)active_spike_count / num_neurons);
     }
 }
