@@ -218,7 +218,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
             // Swap pointers
-            uint8_t (*temp)[BITMASK_BYTES] = ping_pong_buffer_1;
+            uint8_t (*temp)[INPUT_BYTES] = ping_pong_buffer_1;
             ping_pong_buffer_1 = ping_pong_buffer_2;
             ping_pong_buffer_2 = temp;
         }
