@@ -205,13 +205,13 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             float layer_sparsity[TAU];
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
-            compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
+            // compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
 
-            printf("Layer %d input sparsity:", l);
-            for (int t = 0; t < TAU; t++) {
-                printf(" %.2f", layer_sparsity[t]);
-            }
-            printf("\n");
+            // printf("Layer %d input sparsity:", l);
+            // for (int t = 0; t < TAU; t++) {
+            //     printf(" %.2f", layer_sparsity[t]);
+            // }
+            // printf("\n");
 
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
