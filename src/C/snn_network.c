@@ -55,6 +55,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #else
             float sum = dequantize_q07(layer->bias[i]);
 #endif
+            printf("Time step %d: ", t);
 
             int num_bytes = (input_size + 7) / 8;
             for (int byte_idx = 0; byte_idx < INPUT_BYTES; byte_idx++) {
@@ -74,7 +75,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                     byte &= byte - 1;
                 }
             }
-            printf("Time step %d: ", t);
 
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                         layer->neurons[i].voltage_thresh);
