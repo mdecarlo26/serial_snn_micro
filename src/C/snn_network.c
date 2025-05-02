@@ -46,147 +46,147 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 }
 
 // Function to update the entire layer based on the buffer and bias
-// void update_layer(const uint8_t input[TAU][INPUT_BYTES],
-//                   uint8_t output[TAU][INPUT_BYTES],
-//                   Layer *layer, int input_size) {
-
-//     for (int t = 0; t < TAU; t++) {
-//         for (int i = 0; i < layer->num_neurons; i++) {
-
-// #if (Q07_FLAG)
-//             int32_t sum = 0;
-//             int32_t new_mem = 0;
-// #else
-//             float sum = 0.0f;
-//             float new_mem = 0.0f;
-// #endif
-
-//             if (layer->layer_num > 0) {
-//                 // Hidden or output layer: sum over presynaptic spikes
-// #if (Q07_FLAG)
-//                 sum += layer->bias[i];
-// #else
-//                 sum += dequantize_q07(layer->bias[i]);
-// #endif
-//                 int num_bytes = (input_size + 7) / 8;
-//                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
-//                     uint8_t byte = input[t][byte_idx];
-//                     int base_idx = byte_idx * 8;
-
-//                     while (byte) {
-//                         int bit = __builtin_ctz(byte);
-//                         int j = base_idx + bit;
-//                         if (j < input_size) {
-// #if (Q07_FLAG)
-//                             sum += layer->weights[i][j];
-// #else
-//                             sum += dequantize_q07(layer->weights[i][j]);
-// #endif
-//                         }
-//                         byte &= byte - 1;  // Clear least significant set bit
-//                     }
-//                 }
-
-//             } else {
-//                 // Input layer: spike from self (i-th input neuron only)
-//                 if (get_bit(input, i, t)) {
-// #if (Q07_FLAG)
-//                     sum += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
-// #else
-//                     sum += 1.0f;
-// #endif
-//                 }
-//             }
-
-//             // Determine if neuron spikes
-//             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
-//                                          layer->neurons[i].voltage_thresh);
-
-// #if (LIF)
-//     #if (Q07_FLAG)
-//             new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
-//                       + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//     #else
-//             new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential
-//                       + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//     #endif
-// #elif (IF)
-//     #if (Q07_FLAG)
-//             new_mem = layer->neurons[i].membrane_potential + sum
-//                       - reset_signal * layer->neurons[i].voltage_thresh;
-//     #else
-//             new_mem = layer->neurons[i].membrane_potential + sum
-//                       - reset_signal * layer->neurons[i].voltage_thresh;
-//     #endif
-// #endif
-
-//             layer->neurons[i].membrane_potential = new_mem;
-
-//             if (reset_signal) {
-//                 set_bit(output, i, t, 1);  // Store spike
-//             }
-//         }
-//     }
-// }
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
-                 uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
-     for (int t = 0; t < TAU; t++) {
-         for (int i = 0; i < layer->num_neurons; i++) {
- #if (Q07_FLAG)
-             int32_t sum = 0;
-             int32_t new_mem = 0;
- #else
-             float sum = 0.0f;
-             float new_mem = 0;
- #endif
-             if (layer->layer_num > 0) {
- #if (Q07_FLAG)
-                         sum += layer->bias[i];
- #else
-                         sum += dequantize_q07(layer->bias[i]);
- #endif
-                 for (int j = 0; j < input_size; j++) {
-                     if (get_bit(input, j, t)) { 
- #if (Q07_FLAG)
-                         sum += layer->weights[i][j];
- #else
-                         sum += dequantize_q07(layer->weights[i][j]);
- #endif
-                     }
-                 }
-             }
-             else{
-                 if (get_bit(input, i, t)) { // if incoming spike is present
- #if (Q07_FLAG)
-                     sum += (1 << DECAY_SHIFT);
- #else
-                     sum += 1.0f;
- #endif
-                 }
-             }
+                  uint8_t output[TAU][INPUT_BYTES],
+                  Layer *layer, int input_size) {
+
+    for (int t = 0; t < TAU; t++) {
+        for (int i = 0; i < layer->num_neurons; i++) {
+
+#if (Q07_FLAG)
+            int32_t sum = 0;
+            int32_t new_mem = 0;
+#else
+            float sum = 0.0f;
+            float new_mem = 0.0f;
+#endif
+
+            if (layer->layer_num > 0) {
+                // Hidden or output layer: sum over presynaptic spikes
+#if (Q07_FLAG)
+                sum += layer->bias[i];
+#else
+                sum += dequantize_q07(layer->bias[i]);
+#endif
+                int num_bytes = (input_size + 7) / 8;
+                for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
+                    uint8_t byte = input[t][byte_idx];
+                    int base_idx = byte_idx * 8;
+
+                    while (byte) {
+                        int bit = __builtin_ctz(byte);
+                        int j = base_idx + bit;
+                        if (j < input_size) {
+#if (Q07_FLAG)
+                            sum += layer->weights[i][j];
+#else
+                            sum += dequantize_q07(layer->weights[i][j]);
+#endif
+                        }
+                        byte &= byte - 1;  // Clear least significant set bit
+                    }
+                }
+
+            } else {
+                // Input layer: spike from self (i-th input neuron only)
+                if (get_bit(input, i, t)) {
+#if (Q07_FLAG)
+                    sum += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
+#else
+                    sum += 1.0f;
+#endif
+                }
+            }
+
+            // Determine if neuron spikes
+            int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
+                                         layer->neurons[i].voltage_thresh);
+
+#if (LIF)
+    #if (Q07_FLAG)
+            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
+                      + sum - reset_signal * layer->neurons[i].voltage_thresh;
+    #else
+            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential
+                      + sum - reset_signal * layer->neurons[i].voltage_thresh;
+    #endif
+#elif (IF)
+    #if (Q07_FLAG)
+            new_mem = layer->neurons[i].membrane_potential + sum
+                      - reset_signal * layer->neurons[i].voltage_thresh;
+    #else
+            new_mem = layer->neurons[i].membrane_potential + sum
+                      - reset_signal * layer->neurons[i].voltage_thresh;
+    #endif
+#endif
+
+            layer->neurons[i].membrane_potential = new_mem;
+
+            if (reset_signal) {
+                set_bit(output, i, t, 1);  // Store spike
+            }
+        }
+    }
+}
+// void update_layer(const uint8_t input[TAU][INPUT_BYTES],
+//                  uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
+//      for (int t = 0; t < TAU; t++) {
+//          for (int i = 0; i < layer->num_neurons; i++) {
+//  #if (Q07_FLAG)
+//              int32_t sum = 0;
+//              int32_t new_mem = 0;
+//  #else
+//              float sum = 0.0f;
+//              float new_mem = 0;
+//  #endif
+//              if (layer->layer_num > 0) {
+//  #if (Q07_FLAG)
+//                          sum += layer->bias[i];
+//  #else
+//                          sum += dequantize_q07(layer->bias[i]);
+//  #endif
+//                  for (int j = 0; j < input_size; j++) {
+//                      if (get_bit(input, j, t)) { 
+//  #if (Q07_FLAG)
+//                          sum += layer->weights[i][j];
+//  #else
+//                          sum += dequantize_q07(layer->weights[i][j]);
+//  #endif
+//                      }
+//                  }
+//              }
+//              else{
+//                  if (get_bit(input, i, t)) { // if incoming spike is present
+//  #if (Q07_FLAG)
+//                      sum += (1 << DECAY_SHIFT);
+//  #else
+//                      sum += 1.0f;
+//  #endif
+//                  }
+//              }
  
-             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
+//              int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
  
- #if (LIF)
-     #if (Q07_FLAG)
-             new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
-     #else 
-             new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-     #endif 
- #endif 
- #if (IF)
-     #if (Q07_FLAG)
-             new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
-     #else 
-             new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-     #endif 
- #endif 
-             layer->neurons[i].membrane_potential = new_mem;
-             int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
-             set_bit(output, i, t, output_spike); 
-         }
-     }
- }
+//  #if (LIF)
+//      #if (Q07_FLAG)
+//              new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
+//      #else 
+//              new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+//      #endif 
+//  #endif 
+//  #if (IF)
+//      #if (Q07_FLAG)
+//              new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
+//      #else 
+//              new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
+//      #endif 
+//  #endif 
+//              layer->neurons[i].membrane_potential = new_mem;
+//              int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
+//              set_bit(output, i, t, output_spike); 
+//          }
+//      }
+//  }
  
 
 
