@@ -36,7 +36,7 @@ void set_bit(uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t, int value)
     if (value)
         buffer[t][byte_idx] |= (1 << (8-bit_idx));
     else
-        buffer[t][byte_idx] &= ~(1 << (8-bit_idx)));
+        buffer[t][byte_idx] &= ~(1 << (8-bit_idx));
 }
 
 int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
