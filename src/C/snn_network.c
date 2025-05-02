@@ -50,12 +50,12 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
+            printf("Time step %d: ", t);
 #if (Q07_FLAG)
             int32_t sum = layer->bias[i];
 #else
             float sum = dequantize_q07(layer->bias[i]);
 #endif
-            printf("Time step %d: ", t);
 
             int num_bytes = (input_size + 7) / 8;
             for (int byte_idx = 0; byte_idx < INPUT_BYTES; byte_idx++) {
