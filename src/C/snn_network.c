@@ -48,6 +48,8 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
+    printf("Layer %d\n", layer->layer_num);
+    printf("Number of neurons: %d\n", layer->num_neurons);
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
             printf("Time step %d: ", t);
@@ -212,7 +214,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             // }
             // printf("\n");
 
-        printf("Chunk %d\n", 1);
+        printf("Chunk %d\n", chunk);
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
         printf("Fail\n");
 
