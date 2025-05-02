@@ -49,10 +49,10 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
     printf("Layer %d\n", layer->layer_num);
-    for (int t = 0; t < TAU; t++) {
     printf("Number of neurons: %d\n", layer->num_neurons);
+    for (int t = 0; t < TAU; t++) {
+        printf("Time step %d: ", t);
         for (int i = 0; i < layer->num_neurons; i++) {
-            printf("Time step %d: ", t);
 #if (Q07_FLAG)
             int32_t sum = layer->bias[i];
 #else
