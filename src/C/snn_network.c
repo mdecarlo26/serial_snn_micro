@@ -52,6 +52,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     printf("Number of neurons: %d\n", layer->num_neurons);
     for (int t = 0; t < TAU; t++) {
         printf("Time step %d: ", t);
+        fflush(stdout);
         for (int i = 0; i < layer->num_neurons; i++) {
 #if (Q07_FLAG)
             int32_t sum = layer->bias[i];
