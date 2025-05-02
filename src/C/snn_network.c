@@ -34,15 +34,15 @@ void set_bit(uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t, int value)
     int byte_idx = neuron_idx / 8;
     int bit_idx = neuron_idx % 8;
     if (value)
-        buffer[t][byte_idx] |= (1 << bit_idx);
+        buffer[t][byte_idx] |= (1 << (8-bit_idx));
     else
-        buffer[t][byte_idx] &= ~(1 << bit_idx);
+        buffer[t][byte_idx] &= ~(1 << (8-bit_idx)));
 }
 
 int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
     int byte_idx = neuron_idx / 8;
     int bit_idx = neuron_idx % 8;
-    return (buffer[t][byte_idx] >> bit_idx) & 1;
+    return (buffer[t][byte_idx] >> (8-bit_idx)) & 1;
 }
 
 // Function to update the entire layer based on the buffer and bias
@@ -57,7 +57,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #endif
 
             int num_bytes = (input_size + 7) / 8;
-            for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
+            for (int byte_idx = 0; byte_idx < INPUT_BYTES; byte_idx++) {
                 uint8_t byte = input[t][byte_idx];
                 int base_idx = byte_idx * 8;
 
