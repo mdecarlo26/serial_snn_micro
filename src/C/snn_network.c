@@ -49,6 +49,7 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
+    int num_bytes = (input_size + 7) / 8;
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
 
@@ -67,7 +68,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #else
                 sum += dequantize_q07(layer->bias[i]);
 #endif
-                int num_bytes = (input_size + 7) / 8;
                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
                     uint8_t byte = input[t][byte_idx];
                     int base_idx = byte_idx * 8;
