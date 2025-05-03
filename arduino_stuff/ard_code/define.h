@@ -19,8 +19,8 @@
 #define NUM_LAYERS 3
 
 // Temporal parameters
-#define TIME_WINDOW 3 // Temporal steps in spike train
-#define TAU 3
+#define TIME_WINDOW 4 // Temporal steps in spike train
+#define TAU 4
 
 // Masking parameters
 #define BITMASK_BYTES ((TAU + 7) / 8)
@@ -56,6 +56,11 @@
   #define HEAVISIDE(mem, thresh) (((mem) >= (thresh)) ? 1 : 0)
 #endif
 
+#define GET_BIT(buffer, idx) ((buffer[(idx) >> 3] >> ((idx) & 7)) & 1)
+#define SET_BIT(buffer, idx, value) \
+    ((value) ? ((buffer)[(idx) >> 3] |= (1 << ((idx) & 7))) \
+             : ((buffer)[(idx) >> 3] &= ~(1 << ((idx) & 7))))
+#define CLEAR_BIT(buffer, idx) (buffer[(idx) >> 3] &= ~(1 << ((idx) & 7)))
 
 #define LIF 1
 #define IF  0

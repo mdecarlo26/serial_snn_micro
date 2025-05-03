@@ -49,7 +49,7 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
-
+    int num_bytes = (input_size + 7) / 8;
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
 
@@ -68,7 +68,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #else
                 sum += dequantize_q07(layer->bias[i]);
 #endif
-                int num_bytes = (input_size + 7) / 8;
                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
                     uint8_t byte = input[t][byte_idx];
                     int base_idx = byte_idx * 8;
@@ -89,7 +88,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             } else {
                 // Input layer: spike from self (i-th input neuron only)
-                if (get_bit(input, i, t)) {
+                // if (get_bit(input, i, t)) {
+                if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
                     sum += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
 #else
@@ -123,72 +123,12 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             layer->neurons[i].membrane_potential = new_mem;
 
             if (reset_signal) {
-                set_bit(output, i, t, 1);  // Store spike
+                SET_BIT(output[t], i, 1);  // Store spike
+                // set_bit(output, i, t, 1);  // Store spike
             }
         }
     }
 }
-// void update_layer(const uint8_t input[TAU][INPUT_BYTES],
-//                  uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
-//      for (int t = 0; t < TAU; t++) {
-//          for (int i = 0; i < layer->num_neurons; i++) {
-//  #if (Q07_FLAG)
-//              int32_t sum = 0;
-//              int32_t new_mem = 0;
-//  #else
-//              float sum = 0.0f;
-//              float new_mem = 0;
-//  #endif
-//              if (layer->layer_num > 0) {
-//  #if (Q07_FLAG)
-//                          sum += layer->bias[i];
-//  #else
-//                          sum += dequantize_q07(layer->bias[i]);
-//  #endif
-//                  for (int j = 0; j < input_size; j++) {
-//                      if (get_bit(input, j, t)) { 
-//  #if (Q07_FLAG)
-//                          sum += layer->weights[i][j];
-//  #else
-//                          sum += dequantize_q07(layer->weights[i][j]);
-//  #endif
-//                      }
-//                  }
-//              }
-//              else{
-//                  if (get_bit(input, i, t)) { // if incoming spike is present
-//  #if (Q07_FLAG)
-//                      sum += (1 << DECAY_SHIFT);
-//  #else
-//                      sum += 1.0f;
-//  #endif
-//                  }
-//              }
- 
-//              int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
- 
-//  #if (LIF)
-//      #if (Q07_FLAG)
-//              new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//      #else 
-//              new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//      #endif 
-//  #endif 
-//  #if (IF)
-//      #if (Q07_FLAG)
-//              new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
-//      #else 
-//              new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//      #endif 
-//  #endif 
-//              layer->neurons[i].membrane_potential = new_mem;
-//              int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
-//              set_bit(output, i, t, output_spike); 
-//          }
-//      }
-//  }
- 
-
 
 void initialize_network(int neurons_per_layer[],
      const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
@@ -277,26 +217,27 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
     }
 
-    printf("Sparsity is the percentage of neurons that are firing in the layer\n");
+    // printf("Sparsity is the percentage of neurons that are firing in the layer\n");
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
             for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
                 int in_spike = get_input_spike(input, sample_idx, chunk + t, i);
-                set_bit(ping_pong_buffer_1, i, t, in_spike);
+                // set_bit(ping_pong_buffer_1, i, t, in_spike);
+                SET_BIT(ping_pong_buffer_1[t], i, in_spike);
             }
         }
         for (int l = 0; l < snn_network.num_layers; l++) {
-            float layer_sparsity[TAU];
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
-            compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
+            // float layer_sparsity[TAU];
+            // compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
 
-            printf("Layer %d input sparsity:", l);
-            for (int t = 0; t < TAU; t++) {
-                printf(" %.2f", layer_sparsity[t]);
-            }
-            printf("\n");
+            // printf("Layer %d input sparsity:", l);
+            // for (int t = 0; t < TAU; t++) {
+            //     printf(" %.2f", layer_sparsity[t]);
+            // }
+            // printf("\n");
 
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 
@@ -308,7 +249,8 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
 
         for (int i = 0; i < snn_network.layers[snn_network.num_layers - 1].num_neurons; i++) {
             for (int t = 0; t < TAU; t++) {
-                if (get_bit(ping_pong_buffer_1, i, t)) {
+                // if (get_bit(ping_pong_buffer_1, i, t)) {
+                if (GET_BIT(ping_pong_buffer_1[t], i)) {
                     firing_counts[i][chunk_index]++;
                 }
             }
