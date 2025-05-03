@@ -88,7 +88,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             } else {
                 // Input layer: spike from self (i-th input neuron only)
-                if (get_bit(input, i, t)) {
+                // if (get_bit(input, i, t)) {
+                if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
                     sum += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
 #else
@@ -122,7 +123,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             layer->neurons[i].membrane_potential = new_mem;
 
             if (reset_signal) {
-                set_bit(output, i, t, 1);  // Store spike
+                SET_BIT(output[t], i, 1);  // Store spike
+                // set_bit(output, i, t, 1);  // Store spike
             }
         }
     }
@@ -221,7 +223,8 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         for (int t = 0; t < TAU; t++) {
             for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
                 int in_spike = get_input_spike(input, sample_idx, chunk + t, i);
-                set_bit(ping_pong_buffer_1, i, t, in_spike);
+                // set_bit(ping_pong_buffer_1, i, t, in_spike);
+                SET_BIT(ping_pong_buffer_1[t], i, in_spike);
             }
         }
         for (int l = 0; l < snn_network.num_layers; l++) {
@@ -246,7 +249,8 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
 
         for (int i = 0; i < snn_network.layers[snn_network.num_layers - 1].num_neurons; i++) {
             for (int t = 0; t < TAU; t++) {
-                if (get_bit(ping_pong_buffer_1, i, t)) {
+                // if (get_bit(ping_pong_buffer_1, i, t)) {
+                if (GET_BIT(ping_pong_buffer_1[t], i)) {
                     firing_counts[i][chunk_index]++;
                 }
             }
