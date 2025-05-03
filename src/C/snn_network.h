@@ -42,7 +42,7 @@ void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_
 void zero_network();
 void free_network();
 
-static inline void update_layer(const uint8_t input[TAU][INPUT_BYTES],
+void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size);
 
