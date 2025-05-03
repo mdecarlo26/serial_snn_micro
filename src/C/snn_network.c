@@ -46,10 +46,9 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 }
 
 // Function to update the entire layer based on the buffer and bias
-void update_layer(const uint8_t input[TAU][INPUT_BYTES],
-                  uint8_t output[TAU][INPUT_BYTES],
-                  Layer *layer, int input_size) {
-// #pragma GCC unroll 10
+void update_layer(const uint8_t input[TAU][INPUT_BYTES] __restrict,
+                  uint8_t output[TAU][INPUT_BYTES] __restrict,
+                  Layer * __restrict layer, int input_size) {
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
 
