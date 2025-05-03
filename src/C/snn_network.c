@@ -49,7 +49,7 @@ int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
-#pragma GCC unroll 10
+// #pragma GCC unroll 10
     for (int t = 0; t < TAU; t++) {
         for (int i = 0; i < layer->num_neurons; i++) {
 
