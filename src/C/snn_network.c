@@ -128,67 +128,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
         }
     }
 }
-// void update_layer(const uint8_t input[TAU][INPUT_BYTES],
-//                  uint8_t output[TAU][INPUT_BYTES], Layer *layer, int input_size) {
-//      for (int t = 0; t < TAU; t++) {
-//          for (int i = 0; i < layer->num_neurons; i++) {
-//  #if (Q07_FLAG)
-//              int32_t sum = 0;
-//              int32_t new_mem = 0;
-//  #else
-//              float sum = 0.0f;
-//              float new_mem = 0;
-//  #endif
-//              if (layer->layer_num > 0) {
-//  #if (Q07_FLAG)
-//                          sum += layer->bias[i];
-//  #else
-//                          sum += dequantize_q07(layer->bias[i]);
-//  #endif
-//                  for (int j = 0; j < input_size; j++) {
-//                      if (get_bit(input, j, t)) { 
-//  #if (Q07_FLAG)
-//                          sum += layer->weights[i][j];
-//  #else
-//                          sum += dequantize_q07(layer->weights[i][j]);
-//  #endif
-//                      }
-//                  }
-//              }
-//              else{
-//                  if (get_bit(input, i, t)) { // if incoming spike is present
-//  #if (Q07_FLAG)
-//                      sum += (1 << DECAY_SHIFT);
-//  #else
-//                      sum += 1.0f;
-//  #endif
-//                  }
-//              }
- 
-//              int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,layer->neurons[i].voltage_thresh);
- 
-//  #if (LIF)
-//      #if (Q07_FLAG)
-//              new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT) + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//      #else 
-//              new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//      #endif 
-//  #endif 
-//  #if (IF)
-//      #if (Q07_FLAG)
-//              new_mem = layer->neurons[i].membrane_potential + dequantize_q07(sum) - reset_signal * layer->neurons[i].voltage_thresh;
-//      #else 
-//              new_mem = layer->neurons[i].membrane_potential + sum - reset_signal * layer->neurons[i].voltage_thresh;
-//      #endif 
-//  #endif 
-//              layer->neurons[i].membrane_potential = new_mem;
-//              int output_spike = HEAVISIDE(layer->neurons[i].membrane_potential, layer->neurons[i].voltage_thresh);
-//              set_bit(output, i, t, output_spike); 
-//          }
-//      }
-//  }
- 
-
 
 void initialize_network(int neurons_per_layer[],
      const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
@@ -277,7 +216,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
     }
 
-    printf("Sparsity is the percentage of neurons that are firing in the layer\n");
+    // printf("Sparsity is the percentage of neurons that are firing in the layer\n");
     for (int chunk = 0; chunk < TIME_WINDOW; chunk += TAU) {
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
@@ -290,13 +229,13 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             float layer_sparsity[TAU];
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
-            compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
+            // compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
 
-            printf("Layer %d input sparsity:", l);
-            for (int t = 0; t < TAU; t++) {
-                printf(" %.2f", layer_sparsity[t]);
-            }
-            printf("\n");
+            // printf("Layer %d input sparsity:", l);
+            // for (int t = 0; t < TAU; t++) {
+            //     printf(" %.2f", layer_sparsity[t]);
+            // }
+            // printf("\n");
 
             update_layer(ping_pong_buffer_1, ping_pong_buffer_2, &snn_network.layers[l], input_size);
 

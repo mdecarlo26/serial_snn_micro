@@ -25,8 +25,8 @@ namespace {
 }
 
 void setup() {
-  // Serial.begin(115200);
-  // while (!Serial) { delay(10); }
+  Serial.begin(115200);
+  while (!Serial) { delay(10); }
 
   // 1. Load the model
   model = ::tflite::GetModel(model_tflite);
@@ -84,11 +84,11 @@ void loop() {
     }
     
   }
-  // Serial.print(label_idx);
-  //   Serial.print(' ');
-  // Serial.println();
-  // Serial.print("Inference time: ");
-  // Serial.print(end - start);
-  // Serial.println(" ms");
+  Serial.print(label_idx);
+    Serial.print(' ');
+  Serial.println();
+  Serial.print("Inference time: ");
+  Serial.print(end - start);
+  Serial.println(" ms");
   delay(1000);
 }
