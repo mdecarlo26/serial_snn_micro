@@ -18,32 +18,12 @@ static int weights_initialized = 0;
 // Backing storage for the two ping-pong buffers:
 // Static memory for ping-pong buffers
 // Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-// static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-// static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 static uint8_t ping_pong_buffer_storage_1[TAU][INPUT_BYTES] = {0};
 static uint8_t ping_pong_buffer_storage_2[TAU][INPUT_BYTES] = {0};
 
 // Pointers that we can swap:
-// static uint8_t (*ping_pong_buffer_1)[BITMASK_BYTES] = ping_pong_buffer_storage_1;
-// static uint8_t (*ping_pong_buffer_2)[BITMASK_BYTES] = ping_pong_buffer_storage_2;
 static uint8_t (*ping_pong_buffer_1)[INPUT_BYTES] = ping_pong_buffer_storage_1;
 static uint8_t (*ping_pong_buffer_2)[INPUT_BYTES] = ping_pong_buffer_storage_2;
-
-// Function to set a value in the buffer
-void set_bit(uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t, int value) {
-    int byte_idx = neuron_idx / 8;
-    int bit_idx = neuron_idx % 8;
-    if (value)
-        buffer[t][byte_idx] |= (1 << (8-bit_idx));
-    else
-        buffer[t][byte_idx] &= ~(1 << (8-bit_idx));
-}
-
-int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
-    int byte_idx = neuron_idx / 8;
-    int bit_idx = neuron_idx % 8;
-    return (buffer[t][byte_idx] >> (8-bit_idx)) & 1;
-}
 
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
@@ -122,10 +102,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             layer->neurons[i].membrane_potential = new_mem;
 
-            // if (reset_signal) {
-            //     SET_BIT(output[t], i, 1);  // Store spike
-            //     // set_bit(output, i, t, 1);  // Store spike
-            // }
             SET_BIT(output[t], i, reset_signal);  // Store reset signal
         }
     }
