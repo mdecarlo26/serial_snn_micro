@@ -48,7 +48,7 @@ int main() {
     // Add the two Q31 arrays
     int32_t result[INPUT_SIZE] = {0};
         gettimeofday(&start, NULL);
-    add_q31(srcA, srcB, result, blockSize);
+    q7_add_to_q31(srcA, srcB, result, blockSize);
         gettimeofday(&end, NULL);
 
     // Print the result
