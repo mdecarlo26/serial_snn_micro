@@ -66,28 +66,41 @@ static inline void add_q31(
 }
 
 
+#define INPUT_SIZE 128
+
 int main() {
 
     // Example usage of q7_to_q31 and add_q31 functions
-    int8_t srcA[8] = {1, 2, 3, 4, 5, 6, 7, 8};
-    int8_t srcB[8] = {8, 7, 6, 5, 4, 3, 2, 1};
-    int32_t dstA[8] = {0};
-    int32_t dstB[8] = {0};
-    size_t blockSize = 8;
+    int8_t srcA[INPUT_SIZE] = {1, 2, 3, 4, 5, 6, 7, 8};
+    int8_t srcB[INPUT_SIZE] = {8, 7, 6, 5, 4, 3, 2, 1};
+    int32_t dstA[INPUT_SIZE] = {0};
+    int32_t dstB[INPUT_SIZE] = {0};
+    size_t blockSize = INPUT_SIZE;
 
     // Convert srcA and srcB to Q31 format
     q7_to_q31(srcA, dstA, blockSize);
     q7_to_q31(srcB, dstB, blockSize);
 
     // Add the two Q31 arrays
-    int32_t result[8] = {0};
+    int32_t result[INPUT_SIZE] = {0};
     add_q31(dstA, dstB, result, blockSize);
 
     // Print the result
+    printf("Q31 addition result:\n");
     for (size_t i = 0; i < blockSize; i++) {
         printf("result[%zu] = %d\n", i, result[i]);
     }
 
+
+    // Add them tradionally
+    int32_t result_2[INPUT_SIZE] = {0};
+    for (size_t i = 0; i < blockSize; i++) {
+        result_2[i] = ((int32_t)srcA[i] << 24) + ((int32_t)srcB[i] << 24);
+    }
+    printf("\nTraditional addition:\n");
+    for (size_t i = 0; i < blockSize; i++) {
+        printf("result[%zu] = %d\n", i, result[i]);
+    }
 
     return 0;
 
