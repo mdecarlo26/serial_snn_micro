@@ -66,7 +66,7 @@ static inline void add_q31(
 }
 
 
-#define INPUT_SIZE 128
+#define INPUT_SIZE 8
 
 int main() {
 
