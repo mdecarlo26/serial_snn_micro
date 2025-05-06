@@ -14,6 +14,17 @@ static inline void q7_to_q31(
     int32_t      * __restrict dst,
     size_t        blockSize
 ) __attribute__((always_inline));
+
+static inline void add_q31(
+    const int32_t * __restrict srcA,
+    const int32_t * __restrict srcB,
+    int32_t       * __restrict dst,
+    size_t          blockSize
+) __attribute__((always_inline));
+
+
+
+
 static inline void q7_to_q31(
     const int8_t * __restrict src,
     int32_t      * __restrict dst,
@@ -40,12 +51,6 @@ static inline void add_q31(
     const int32_t * __restrict srcB,
     int32_t       * __restrict dst,
     size_t          blockSize
-) __attribute__((always_inline));
-static inline void add_q31(
-    const int32_t * __restrict srcA,
-    const int32_t * __restrict srcB,
-    int32_t       * __restrict dst,
-    size_t          blockSize
 ) {
     size_t i = 0;
     // unroll 4 at a time
@@ -63,10 +68,26 @@ static inline void add_q31(
 
 int main() {
 
-    uint8_t num = 128;
+    // Example usage of q7_to_q31 and add_q31 functions
+    int8_t srcA[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+    int8_t srcB[8] = {8, 7, 6, 5, 4, 3, 2, 1};
+    int32_t dstA[8] = {0};
+    int32_t dstB[8] = {0};
+    size_t blockSize = 8;
 
-    int ret = __builtin_ctz(num);
-    printf("The number of trailing zeros in %u is: %d\n", num, ret);
+    // Convert srcA and srcB to Q31 format
+    q7_to_q31(srcA, dstA, blockSize);
+    q7_to_q31(srcB, dstB, blockSize);
+
+    // Add the two Q31 arrays
+    int32_t result[8] = {0};
+    add_q31(dstA, dstB, result, blockSize);
+
+    // Print the result
+    for (size_t i = 0; i < blockSize; i++) {
+        printf("result[%zu] = %d\n", i, result[i]);
+    }
+
 
     return 0;
 
