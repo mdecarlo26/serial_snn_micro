@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 
 #include <stdint.h>
@@ -81,26 +82,37 @@ int main() {
     q7_to_q31(srcA, dstA, blockSize);
     q7_to_q31(srcB, dstB, blockSize);
 
+    
+    struct timeval start, end;
+
     // Add the two Q31 arrays
     int32_t result[INPUT_SIZE] = {0};
+        gettimeofday(&start, NULL);
     add_q31(dstA, dstB, result, blockSize);
+        gettimeofday(&end, NULL);
 
     // Print the result
     printf("Q31 addition result:\n");
     for (size_t i = 0; i < blockSize; i++) {
         printf("result[%zu] = %d\n", i, result[i]);
     }
+    printf( "CPU run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
+                + (end.tv_usec - start.tv_usec) / (float)1000000));
 
 
     // Add them tradionally
     int32_t result_2[INPUT_SIZE] = {0};
+        gettimeofday(&start, NULL);
     for (size_t i = 0; i < blockSize; i++) {
         result_2[i] = ((int32_t)srcA[i] << 24) + ((int32_t)srcB[i] << 24);
     }
+        gettimeofday(&end, NULL);
     printf("\nTraditional addition:\n");
     for (size_t i = 0; i < blockSize; i++) {
         printf("result[%zu] = %d\n", i, result[i]);
     }
+    printf( "CPU run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
+                + (end.tv_usec - start.tv_usec) / (float)1000000));
 
     return 0;
 
