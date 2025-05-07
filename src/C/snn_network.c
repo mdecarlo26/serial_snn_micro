@@ -2,14 +2,15 @@
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
+#include "dsp_helper.h"
 
 extern Snn_Network snn_network;
 
 static Layer static_layers[MAX_LAYERS];
 static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
 
-static int8_t *fc1_pointer_table[HIDDEN_LAYER_1];
-static int8_t *fc2_pointer_table[NUM_CLASSES];
+static int8_t *fc1_pointer_table[INPUT_SIZE];
+static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
 
 static int8_t *fc1_bias_pointer = NULL;
 static int8_t *fc2_bias_pointer = NULL;
@@ -30,23 +31,33 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
     int num_bytes = (input_size + 7) / 8;
-    for (int t = 0; t < TAU; t++) {
-        for (int i = 0; i < layer->num_neurons; i++) {
+    int num_bytes = (input_size + 7) / 8;
+    int N = layer->num_neurons;
 
+    // scratch buffers for column and sums
+
+    for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
-            int32_t sum = 0;
+            static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
+            memset(sums, 0, N * sizeof(int32_t));
             int32_t new_mem = 0;
 #else
-            float sum = 0.0f;
+            static float sums[MAX_NEURONS]  __attribute__((aligned(4)));
+            memset(sums, 0, N * sizeof(float));
             float new_mem = 0.0f;
 #endif
-
-            if (layer->layer_num > 0) {
+            if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
-                sum += layer->bias[i];
+                vectorize_q31_add_to_q31(
+                    layer->bias,
+                    sums,
+                    input_size
+                );
 #else
-                sum += dequantize_q07(layer->bias[i]);
+                for (int j=0 ; j < input_size; j++) {
+                    sums[j] = dequantize_q07(layer->bias[j]);
+                }
 #endif
                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
                     uint8_t byte = input[t][byte_idx];
@@ -57,9 +68,16 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                         int j = base_idx + bit;
                         if (j < input_size) {
 #if (Q07_FLAG)
-                            sum += layer->weights[i][j];
+                            vectorize_q7_add_to_q31(
+                                layer->weights[j],
+                                sums,
+                                N
+                            );
+                            // sum += layer->weights[i][j];
 #else
-                            sum += dequantize_q07(layer->weights[i][j]);
+                        for (int i=0 ; i < input_size; i++) {
+                            sums[i] = dequantize_q07(layer->weights[i][j]);
+                        }
 #endif
                         }
                         byte &= byte - 1;  // Clear least significant set bit
@@ -68,55 +86,60 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             } else {
                 // Input layer: spike from self (i-th input neuron only)
-                // if (get_bit(input, i, t)) {
+                for (int i = 0; i < N; i++) {
                 if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
-                    sum += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
-#else
-                    sum += 1.0f;
+                    sums[i] += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
+#else               
+                    sums[i] += 1.0f;
 #endif
+                }
                 }
             }
 
-            // Determine if neuron spikes
+            for (int i = 0; i < N; i++) {
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                          layer->neurons[i].voltage_thresh);
+            int32_t new_mem;
 
 #if (LIF)
     #if (Q07_FLAG)
             new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
-                      + sum - reset_signal * layer->neurons[i].voltage_thresh;
+                      + sums[i]
+                      - reset_signal * layer->neurons[i].voltage_thresh;
     #else
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential
-                      + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            new_mem = (int32_t)(layer->neurons[i].decay_rate * (float)layer->neurons[i].membrane_potential)
+                      + sums[i]
+                      - reset_signal * layer->neurons[i].voltage_thresh;
     #endif
 #elif (IF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential + sum
+            new_mem = layer->neurons[i].membrane_potential
+                      + sums[i]
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #else
-            new_mem = layer->neurons[i].membrane_potential + sum
+            new_mem = (int32_t)((float)layer->neurons[i].membrane_potential + (float)sums[i])
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #endif
 #endif
 
             layer->neurons[i].membrane_potential = new_mem;
-
-            SET_BIT(output[t], i, reset_signal);  // Store reset signal
+            SET_BIT(output[t], i, reset_signal);
         }
+
     }
 }
 
 void initialize_network(int neurons_per_layer[],
-     const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
+     const int8_t weights_fc1[INPUT_SIZE][HIDDEN_LAYER_1], const int8_t weights_fc2[HIDDEN_LAYER_1][NUM_CLASSES],
      const int8_t *bias_fc1, const int8_t *bias_fc2) {
     snn_network.layers = static_layers;
 
     if (!weights_initialized) {
-        for (int i = 0; i < HIDDEN_LAYER_1; i++) {
+        for (int i = 0; i < INPUT_SIZE; i++) {
             fc1_pointer_table[i] = (int8_t *)weights_fc1[i];
         }
-        for (int i = 0; i < NUM_CLASSES; i++) {
+        for (int i = 0; i < HIDDEN_LAYER_1; i++) {
             fc2_pointer_table[i] = (int8_t *)weights_fc2[i];
         }
 

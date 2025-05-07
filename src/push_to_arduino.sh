@@ -5,7 +5,7 @@ SRC_DIR="./C"
 DEST_DIR="../arduino_stuff/ard_code"
 
 # Array of filenames to copy
-files=("snn_network.c" "snn_network.h" "rate_encoding.h" "rate_encoding.c" "dummy.c" "dummy.h" "define.h")
+files=("snn_network.c" "snn_network.h" "rate_encoding.h" "rate_encoding.c" "dummy.c" "dummy.h" "define.h" "dsp_helper.h" "dsp_helper.c")
 
 # Copy each file from source to destination
 for file in "${files[@]}"; do

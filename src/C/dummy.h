@@ -10,7 +10,7 @@ extern const char label;
 extern const int8_t bias_fc1[HIDDEN_LAYER_1];
 extern const int8_t bias_fc2[NUM_CLASSES];
 
-extern const int8_t weights_fc1_data[HIDDEN_LAYER_1][INPUT_SIZE];
-extern const int8_t weights_fc2_data[NUM_CLASSES][HIDDEN_LAYER_1];
+extern const int8_t weights_fc1_data[INPUT_SIZE][HIDDEN_LAYER_1];
+extern const int8_t weights_fc2_data[HIDDEN_LAYER_1][NUM_CLASSES];
 
 #endif // DUMMY_H

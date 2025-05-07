@@ -33,8 +33,8 @@ typedef struct {
     int num_layers;
 } Snn_Network;
 
-void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE],
-    const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],const int8_t *bias_fc1, const int8_t *bias_fc2);
+void initialize_network(int neurons_per_layer[],const int8_t weights_fc1[INPUT_SIZE][HIDDEN_LAYER_1],
+    const int8_t weights_fc2[HIDDEN_LAYER_1][NUM_CLASSES],const int8_t *bias_fc1, const int8_t *bias_fc2);
 void zero_network();
 void free_network();
 
