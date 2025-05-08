@@ -37,6 +37,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
     // scratch buffers for column and sums
     struct timeval start, end;
+    printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, layer->num_neurons, input_size);
     for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
             static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
