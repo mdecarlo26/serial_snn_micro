@@ -68,7 +68,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                             // print weight row for neuron j
                             printf("Neuron %d: ", j);
                             for (int k = 0; k < layer->num_neurons; k++) {
-                                printf("%d ", layer->weights[k][j]);
+                                printf("%d ", layer->weights[j][k]);
                             }
                             printf("\n");
                             exit(EXIT_SUCCESS);
