@@ -44,6 +44,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             memset(sums, 0, N * sizeof(float));
             float new_mem = 0.0f;
 #endif
+        printf("Time step %d: ", t);
             if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
@@ -223,6 +224,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
                 SET_BIT(ping_pong_buffer_1[t], i, in_spike);
             }
         }
+        printf("Chunk %d input spikes:", chunk_index);
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
