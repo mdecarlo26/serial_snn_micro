@@ -176,11 +176,6 @@ void initialize_network(int neurons_per_layer[],
                 snn_network.layers[l].decay_rates[i] = DECAY_RATE;
             }
 #endif
-        printf("volt: %d, decay: %d\n", (int16_t)VOLTAGE_THRESH_FP7, DECAY_FP7);
-        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-            printf("Layer %d, Neuron %d: Decay = %d, Voltage Thresh = %d\n",
-                   l, i, snn_network.layers[l].decay_rates[i], snn_network.layers[l].voltage_thresholds[i]);
-        }
     }
 }
 
