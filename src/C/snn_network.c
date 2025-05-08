@@ -38,11 +38,10 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
             static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
-            memset(sums, 0, N * sizeof(int32_t));
+            memset(sums, 0, layer->layer_num * sizeof(int32_t));
 #else
             static float sums[MAX_NEURONS]  __attribute__((aligned(4)));
-            memset(sums, 0, N * sizeof(float));
-            float new_mem = 0.0f;
+            memset(sums, 0, layer->layer_numN * sizeof(float));
 #endif
             if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
@@ -95,7 +94,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 // This is a bit of a hack, but it works for the input layer
                 // and is a bit faster than the alternative of using a separate
                 // function to handle the input layer.
-                for (int i = 0; i < N; i++) {
+                for (int i = 0; i < layer->num_neurons; i++) {
                 if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
                     sums[i] += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
@@ -106,7 +105,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 }
             }
 
-            for (int i = 0; i < N; i++) {
+            for (int i = 0; i < layer->num_neurons; i++) {
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                          layer->neurons[i].voltage_thresh);
 #if (LIF)
