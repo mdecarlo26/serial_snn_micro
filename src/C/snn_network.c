@@ -226,6 +226,7 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
             }
         }
         printf("Chunk %d input spikes:", chunk_index);
+        fflush(stdout);
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
