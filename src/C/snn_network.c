@@ -65,6 +65,14 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                         int bit = __builtin_ctz(byte);
                         int j = base_idx + bit;
                         if (j < input_size) {
+                            // print weight row for neuron j
+                            printf("Neuron %d: ", j);
+                            for (int k = 0; k < layer->num_neurons; k++) {
+                                printf("%d ", layer->weights[k][j]);
+                            }
+                            printf("\n");
+                            exit();
+
 #if (Q07_FLAG)
                             vectorize_q7_add_to_q31(
                                 layer->weights[j],
