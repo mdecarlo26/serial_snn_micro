@@ -31,7 +31,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
     int num_bytes = (input_size + 7) / 8;
-    int N = layer->num_neurons;
+    int N = layer->layer_num;
     printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, N, input_size);
 
     // scratch buffers for column and sums
