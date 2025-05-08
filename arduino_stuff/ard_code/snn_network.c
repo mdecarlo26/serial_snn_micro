@@ -122,10 +122,11 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             layer->neurons[i].membrane_potential = new_mem;
 
-            if (reset_signal) {
-                SET_BIT(output[t], i, 1);  // Store spike
-                // set_bit(output, i, t, 1);  // Store spike
-            }
+            // if (reset_signal) {
+            //     SET_BIT(output[t], i, 1);  // Store spike
+            //     // set_bit(output, i, t, 1);  // Store spike
+            // }
+            SET_BIT(output[t], i, reset_signal);  // Store reset signal
         }
     }
 }

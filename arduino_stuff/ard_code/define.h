@@ -19,8 +19,8 @@
 #define NUM_LAYERS 3
 
 // Temporal parameters
-#define TIME_WINDOW 4 // Temporal steps in spike train
-#define TAU 4
+#define TIME_WINDOW 20 // Temporal steps in spike train
+#define TAU 10
 
 // Masking parameters
 #define BITMASK_BYTES ((TAU + 7) / 8)
