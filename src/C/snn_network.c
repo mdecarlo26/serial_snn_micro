@@ -34,8 +34,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     int N = layer->num_neurons;
 
     // scratch buffers for column and sums
-    printf("Layer %d: ", layer->layer_num);
-    fflush(stdout);
     for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
             static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
@@ -46,6 +44,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             float new_mem = 0.0f;
 #endif
         printf("Time step %d: ", t);
+    fflush(stdout);
             if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
