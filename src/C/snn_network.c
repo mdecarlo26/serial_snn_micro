@@ -1,8 +1,8 @@
 #include <stdint.h>
+#include "dsp_helper.h"
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
-#include "dsp_helper.h"
 
 extern Snn_Network snn_network;
 
