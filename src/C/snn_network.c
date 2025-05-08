@@ -71,7 +71,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                                 printf("%d ", layer->weights[k][j]);
                             }
                             printf("\n");
-                            exit();
+                            exit(EXIT_SUCCESS);
 
 #if (Q07_FLAG)
                             vectorize_q7_add_to_q31(
