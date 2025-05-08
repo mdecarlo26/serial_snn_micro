@@ -99,25 +99,23 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             for (int i = 0; i < N; i++) {
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                          layer->neurons[i].voltage_thresh);
-            int32_t new_mem;
-
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
+            int32_t new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
                       + sums[i]
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #else
-            new_mem = (int32_t)(layer->neurons[i].decay_rate * (float)layer->neurons[i].membrane_potential)
+            float new_mem = (int32_t)(layer->neurons[i].decay_rate * (float)layer->neurons[i].membrane_potential)
                       + sums[i]
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #endif
 #elif (IF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential
+            int32_t new_mem = layer->neurons[i].membrane_potential
                       + sums[i]
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #else
-            new_mem = (int32_t)((float)layer->neurons[i].membrane_potential + (float)sums[i])
+            float new_mem = (int32_t)((float)layer->neurons[i].membrane_potential + (float)sums[i])
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #endif
 #endif
