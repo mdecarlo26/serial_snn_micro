@@ -32,7 +32,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
     int num_bytes = (input_size + 7) / 8;
     int N = layer->layer_num;
-    printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, N, input_size);
+    printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, layer->num_neurons, input_size);
 
     // scratch buffers for column and sums
     for (int t = 0; t < TAU; t++) {
@@ -87,8 +87,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 // This is a bit of a hack, but it works for the input layer
                 // and is a bit faster than the alternative of using a separate
                 // function to handle the input layer.
-                printf("Input layer: spike from self (i-th input neuron only)\n");
-                fflush(stdout);
                 for (int i = 0; i < N; i++) {
                 if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
