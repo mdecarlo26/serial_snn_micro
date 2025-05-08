@@ -110,7 +110,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
         gettimeofday(&end, NULL);
-    printf( "SUM run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
+    printf( "SUM run time = %0.10f s\n", (float)(end.tv_sec - start.tv_sec\
                 + (end.tv_usec - start.tv_usec) / (float)1000000));
         gettimeofday(&start, NULL);
             for (int i = 0; i < layer->num_neurons; i++) {
@@ -142,7 +142,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
         }
 
         gettimeofday(&end, NULL);
-    printf( "UPDATE run time = %0.6f s\n", (float)(end.tv_sec - start.tv_sec\
+    printf( "UPDATE run time = %0.10f s\n", (float)(end.tv_sec - start.tv_sec\
                 + (end.tv_usec - start.tv_usec) / (float)1000000));
     }
 }
