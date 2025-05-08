@@ -50,7 +50,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 vectorize_q7_add_to_q31(
                     layer->bias,
                     sums,
-                    input_size
+                    layer->num_neurons
                 );
 #else
                 for (int j=0 ; j < input_size; j++) {
@@ -66,18 +66,18 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                         int j = base_idx + bit;
                         if (j < input_size) {
                             // print weight row for neuron j
-                            printf("Neuron %d: ", j);
-                            for (int k = 0; k < layer->num_neurons; k++) {
-                                printf("%d ", layer->weights[j][k]);
-                            }
-                            printf("\n");
-                            exit(EXIT_SUCCESS);
+                            // printf("Neuron %d: ", j);
+                            // for (int k = 0; k < layer->num_neurons; k++) {
+                            //     printf("%d ", layer->weights[j][k]);
+                            // }
+                            // printf("\n");
+                            // exit(EXIT_SUCCESS);
 
 #if (Q07_FLAG)
                             vectorize_q7_add_to_q31(
                                 layer->weights[j],
                                 sums,
-                                N
+                                layer->num_neurons
                             );
                             // sum += layer->weights[i][j];
 #else
