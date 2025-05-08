@@ -64,21 +64,12 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                         int bit = __builtin_ctz(byte);
                         int j = base_idx + bit;
                         if (j < input_size) {
-                            // print weight row for neuron j
-                            // printf("Neuron %d: ", j);
-                            // for (int k = 0; k < layer->num_neurons; k++) {
-                            //     printf("%d ", layer->weights[j][k]);
-                            // }
-                            // printf("\n");
-                            // exit(EXIT_SUCCESS);
-
 #if (Q07_FLAG)
                             vectorize_q7_add_to_q31(
                                 layer->weights[j],
                                 sums,
                                 layer->num_neurons
                             );
-                            // sum += layer->weights[i][j];
 #else
                         for (int i=0 ; i < input_size; i++) {
                             sums[i] = dequantize_q07(layer->weights[i][j]);
@@ -106,7 +97,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
             for (int i = 0; i < layer->num_neurons; i++) {
-            int reset_signal = HEAVISIDE(layer->membrane_potentials[i],
+            layer->delayed_resets[i]  = HEAVISIDE(layer->membrane_potentials[i],
                                          layer->voltage_thresholds[i]);
 #if (LIF)
     #if (Q07_FLAG)
@@ -130,9 +121,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #endif
 
             layer->membrane_potentials[i] = new_mem;
-            SET_BIT(output[t], i, reset_signal);
+            SET_BIT(output[t], i, layer->delayed_resets[i]);
         }
-
     }
 }
 
