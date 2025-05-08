@@ -163,8 +163,12 @@ void initialize_network(int neurons_per_layer[],
 #if (Q07_FLAG)
             memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
             memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
-            memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
-            memset(snn_network.layers[l].decay_rates, DECAY_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
+            for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+                snn_network.layers[l].voltage_thresholds[i] = VOLTAGE_THRESH_FP7;
+                snn_network.layers[l].decay_rates[i] = DECAY_FP7;
+            }
+            // memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
+            // memset(snn_network.layers[l].decay_rates, DECAY_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
 #else
             memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
             memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
