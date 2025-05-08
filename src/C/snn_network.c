@@ -43,8 +43,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             memset(sums, 0, N * sizeof(float));
             float new_mem = 0.0f;
 #endif
-        printf("Time step %d: ", t);
-    fflush(stdout);
             if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
@@ -58,6 +56,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                     sums[j] = dequantize_q07(layer->bias[j]);
                 }
 #endif
+        printf("Time step %d: ", t);
+    fflush(stdout);
                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
                     uint8_t byte = input[t][byte_idx];
                     int base_idx = byte_idx * 8;
