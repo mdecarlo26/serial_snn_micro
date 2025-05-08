@@ -34,7 +34,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     int N = layer->num_neurons;
 
     // scratch buffers for column and sums
-
+    printf("Layer %d: ", layer->layer_num);
+    fflush(stdout);
     for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
             static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
@@ -219,14 +220,11 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         int chunk_index = chunk / TAU;
         for (int t = 0; t < TAU; t++) {
             for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
-                printf("Sample %d, Chunk %d, Time %d, Neuron %d: \n", sample_idx, chunk_index, t, i);
                 int in_spike = get_input_spike(input, sample_idx, chunk + t, i);
                 // set_bit(ping_pong_buffer_1, i, t, in_spike);
                 SET_BIT(ping_pong_buffer_1[t], i, in_spike);
             }
         }
-        printf("Chunk %d input spikes:", chunk_index);
-        fflush(stdout);
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
 
