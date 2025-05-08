@@ -96,33 +96,72 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 }
             }
 
-            for (int i = 0; i < layer->num_neurons; i++) {
-            layer->delayed_resets[i]  = HEAVISIDE(layer->membrane_potentials[i],
-                                         layer->voltage_thresholds[i]);
-#if (LIF)
-    #if (Q07_FLAG)
-            int32_t new_mem = ((DECAY_FP7 * layer->membrane_potentials[i]) >> DECAY_SHIFT)
-                      + sums[i]
-                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-    #else
-            float new_mem = (int32_t)(layer->decay_rates[i] * layer->membrane_potentials[i])
-                      + sums[i]
-                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-    #endif
-#elif (IF)
-    #if (Q07_FLAG)
-            int32_t new_mem = layer->membrane_potentials[i]
-                      + sums[i]
-                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-    #else
-            float new_mem = (int32_t)((float)layer->membrane_potentials[i] + (float)sums[i])
-                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-    #endif
-#endif
 
-            layer->membrane_potentials[i] = new_mem;
-            SET_BIT(output[t], i, layer->delayed_resets[i]);
-        }
+            // A) decay:  mem_arr = (DECAY_FP7 * mem_arr) >> DECAY_SHIFT
+            vector_scale_q31(
+                layer->membrane_potentials,
+                DECAY_FP7,
+                DECAY_SHIFT,
+                layer->membrane_potentials,
+                layer->num_neurons
+            );
+// B) add your summed inputs:  mem_arr += sums[]
+            vectorize_q31_add_to_q31(
+                sums,
+                layer->membrane_potentials,
+                layer->num_neurons
+            );
+
+// C) compute reset mask:  mask[i] = mem_arr[i] >= thresh_arr[i]
+            vector_compare_ge_q31(
+                layer->membrane_potentials,
+                layer->voltage_thresholds,
+                layer->delayed_resets,
+                layer->num_neurons
+            );
+
+// D) subtract threshold where reset:  mem_arr[i] -= thresh_arr[i] if mask[i]
+            vector_sub_where_q31(
+                layer->delayed_resets,
+                layer->voltage_thresholds,
+                layer->membrane_potentials,
+                layer->num_neurons
+            );
+
+// E) write new membrane back and pack spikes
+            vector_pack_bits(
+                layer->delayed_resets,
+                output[t],
+                layer->num_neurons   
+            );
+
+//             for (int i = 0; i < layer->num_neurons; i++) {
+//             layer->delayed_resets[i]  = HEAVISIDE(layer->membrane_potentials[i],
+//                                          layer->voltage_thresholds[i]);
+// #if (LIF)
+//     #if (Q07_FLAG)
+//             int32_t new_mem = ((DECAY_FP7 * layer->membrane_potentials[i]) >> DECAY_SHIFT)
+//                       + sums[i]
+//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
+//     #else
+//             float new_mem = (int32_t)(layer->decay_rates[i] * layer->membrane_potentials[i])
+//                       + sums[i]
+//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
+//     #endif
+// #elif (IF)
+//     #if (Q07_FLAG)
+//             int32_t new_mem = layer->membrane_potentials[i]
+//                       + sums[i]
+//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
+//     #else
+//             float new_mem = (int32_t)((float)layer->membrane_potentials[i] + (float)sums[i])
+//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
+//     #endif
+// #endif
+
+//             layer->membrane_potentials[i] = new_mem;
+//             SET_BIT(output[t], i, layer->delayed_resets[i]);
+//         }
     }
 }
 
