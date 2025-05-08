@@ -56,8 +56,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                     sums[j] = dequantize_q07(layer->bias[j]);
                 }
 #endif
-        printf("Time step %d: ", t);
-    fflush(stdout);
                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
                     uint8_t byte = input[t][byte_idx];
                     int base_idx = byte_idx * 8;
@@ -85,6 +83,10 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             } else {
                 // Input layer: spike from self (i-th input neuron only)
+                // This is a bit of a hack, but it works for the input layer
+                // and is a bit faster than the alternative of using a separate
+                // function to handle the input layer.
+                printf("Input layer: spike from self (i-th input neuron only)\n");
                 for (int i = 0; i < N; i++) {
                 if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
