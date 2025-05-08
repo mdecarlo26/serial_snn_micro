@@ -176,7 +176,6 @@ void initialize_network(int neurons_per_layer[],
 #if (Q07_FLAG)
             snn_network.layers[l].neurons[i].membrane_potential = 0;
             snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH_FP7;
-            printf("v thresh: %d\n", snn_network.layers[l].neurons[i].voltage_thresh);
             snn_network.layers[l].neurons[i].decay_rate = DECAY_FP7;
             snn_network.layers[l].neurons[i].delayed_reset = 0;
 #else
