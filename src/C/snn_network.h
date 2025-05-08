@@ -8,20 +8,17 @@
 
 typedef struct {
 #if (Q07_FLAG)
-    int32_t membrane_potential;
-    int32_t delayed_reset;
-    int16_t voltage_thresh;
-    int16_t decay_rate;
+    int32_t  membrane_potentials[MAX_NEURONS];
+    int32_t  delayed_resets     [MAX_NEURONS];
+    int16_t  voltage_thresholds [MAX_NEURONS];
+    int16_t  decay_rates_fp7    [MAX_NEURONS];
 #else
-    float membrane_potential;
-    float voltage_thresh;
-    float decay_rate;
-    float delayed_reset;
+    float    membrane_potentials[MAX_NEURONS];
+    float    delayed_resets     [MAX_NEURONS];
+    float    voltage_thresholds [MAX_NEURONS];
+    float    decay_rates        [MAX_NEURONS];
 #endif
-} Neuron;
 
-typedef struct {
-    Neuron *neurons;
     int8_t **weights;
     int8_t *bias;
     int num_neurons;

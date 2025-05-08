@@ -6,8 +6,7 @@
 
 extern Snn_Network snn_network;
 
-static Layer static_layers[MAX_LAYERS];
-static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
+static Layer static_layers[NUM_LAYERS];
 
 static int8_t *fc1_pointer_table[INPUT_SIZE];
 static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
@@ -159,7 +158,7 @@ void initialize_network(int neurons_per_layer[],
     for (int l = 0; l < snn_network.num_layers; l++) {
         snn_network.layers[l].layer_num = l;
         snn_network.layers[l].num_neurons = neurons_per_layer[l];
-        snn_network.layers[l].neurons = static_neurons[l];
+
 
         if (l == 1) {
             snn_network.layers[l].weights = fc1_pointer_table;
@@ -174,15 +173,15 @@ void initialize_network(int neurons_per_layer[],
 
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
 #if (Q07_FLAG)
-            snn_network.layers[l].neurons[i].membrane_potential = 0;
-            snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH_FP7;
-            snn_network.layers[l].neurons[i].decay_rate = DECAY_FP7;
-            snn_network.layers[l].neurons[i].delayed_reset = 0;
+            snn_network.layers[l].membrane_potential[i] = 0;
+            snn_network.layers[l].voltage_thresh[i] = VOLTAGE_THRESH_FP7;
+            snn_network.layers[l].decay_rate[i] = DECAY_FP7;
+            snn_network.layers[l].delayed_reset[i] = 0;
 #else
-            snn_network.layers[l].neurons[i].membrane_potential = 0.0f;
-            snn_network.layers[l].neurons[i].voltage_thresh = VOLTAGE_THRESH;
-            snn_network.layers[l].neurons[i].decay_rate = DECAY_RATE;
-            snn_network.layers[l].neurons[i].delayed_reset = 0.0f;
+            snn_network.layers[l].membrane_potential[i] = 0.0;
+            snn_network.layers[l].voltage_thresh[i] = VOLTAGE_THRESH;
+            snn_network.layers[l].decay_rate[i] = DECAY_RATE;
+            snn_network.layers[l].delayed_reset[i] = 0.0;
 #endif
         }
     }
@@ -191,8 +190,8 @@ void initialize_network(int neurons_per_layer[],
 void zero_network() {
     for (int l = 0; l < snn_network.num_layers; l++) {
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-            snn_network.layers[l].neurons[i].membrane_potential = 0;
-            snn_network.layers[l].neurons[i].delayed_reset = 0;
+            snn_network.layers[l].membrane_potential[i] = 0;
+            snn_network.layers[l].delayed_reset[i] = 0;
         }
     }
 }
