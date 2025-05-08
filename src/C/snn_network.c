@@ -3,7 +3,6 @@
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
-#include <sys/time.h>
 
 extern Snn_Network snn_network;
 
@@ -36,8 +35,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     // printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, layer->num_neurons, input_size);
 
     // scratch buffers for column and sums
-    struct timeval start, end;
-    printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, layer->num_neurons, input_size);
     for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
             static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
@@ -47,7 +44,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             memset(sums, 0, layer->layer_numN * sizeof(float));
 #endif
 
-        gettimeofday(&start, NULL);
             if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
@@ -110,10 +106,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 }
             }
 
-        gettimeofday(&end, NULL);
-    printf( "SUM run time = %0.10f s\n", (float)(end.tv_sec - start.tv_sec\
-                + (end.tv_usec - start.tv_usec) / (float)1000000));
-        gettimeofday(&start, NULL);
             for (int i = 0; i < layer->num_neurons; i++) {
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                          layer->neurons[i].voltage_thresh);
@@ -142,9 +134,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             SET_BIT(output[t], i, reset_signal);
         }
 
-        gettimeofday(&end, NULL);
-    printf( "UPDATE run time = %0.10f s\n", (float)(end.tv_sec - start.tv_sec\
-                + (end.tv_usec - start.tv_usec) / (float)1000000));
     }
 }
 
