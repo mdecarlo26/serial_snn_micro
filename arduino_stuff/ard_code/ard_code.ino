@@ -30,26 +30,40 @@ void setup() {
     labels[0] = label;
 
     rate_encoding_3d(input_data, NUM_SAMPLES, TIME_WINDOW, INPUT_SIZE, initial_spikes);
+
+    for (int i = 0; i < snn_network.layers[0].num_neurons; i++) {
+        Serial.print("Neuron ");
+        Serial.print(i);
+        Serial.print(": ");
+        Serial.print("Membrane Potential = ");
+        Serial.print(snn_network.layers[0].membrane_potentials[i]);
+        Serial.print(", Delayed Reset = ");
+        Serial.print(snn_network.layers[0].delayed_resets[i]);
+        Serial.print(", Voltage Threshold = ");
+        Serial.print(snn_network.layers[0].voltage_thresholds[i]);
+        Serial.print(", Decay Rate = ");
+        Serial.println(snn_network.layers[0].decay_rates[i]);
+    }
 }
 
 void loop() {
-    unsigned long start = millis();
-    int d = 0;
-    int classification = inference(initial_spikes, d);
-    unsigned long end = millis();
-    counter++;
+    // unsigned long start = millis();
+    // int d = 0;
+    // int classification = inference(initial_spikes, d);
+    // unsigned long end = millis();
+    // counter++;
 
-    Serial.print("Iteration Num ");
-    Serial.println(counter);
-    Serial.print("Sample ");
-    Serial.print(d);
-    Serial.print(": Classification = ");
-    Serial.print(classification);
-    Serial.print(", Label = ");
-    Serial.println((int)labels[d]);
-    Serial.print("Elapsed time (ms): ");
-    Serial.println((float)(end - start));
-    delay(1000); // Delay for 1 second before the next iteration
+    // Serial.print("Iteration Num ");
+    // Serial.println(counter);
+    // Serial.print("Sample ");
+    // Serial.print(d);
+    // Serial.print(": Classification = ");
+    // Serial.print(classification);
+    // Serial.print(", Label = ");
+    // Serial.println((int)labels[d]);
+    // Serial.print("Elapsed time (ms): ");
+    // Serial.println((float)(end - start));
+    // delay(1000); // Delay for 1 second before the next iteration
 
 
 }

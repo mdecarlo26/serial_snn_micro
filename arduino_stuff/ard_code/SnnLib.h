@@ -16,6 +16,7 @@ extern "C" {
 #include "dummy.h"
 #include "snn_network.h"
 #include "rate_encoding.h"
+#include "dsp_helper.h"
 
 #ifdef __cplusplus
 }
