@@ -37,10 +37,10 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     for (int t = 0; t < TAU; t++) {
 #if (Q07_FLAG)
             static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
-            memset(sums, 0, layer->layer_num * sizeof(int32_t));
+            memset(sums, 0, layer->num_neurons * sizeof(int32_t));
 #else
             static float sums[MAX_NEURONS]  __attribute__((aligned(4)));
-            memset(sums, 0, layer->layer_numN * sizeof(float));
+            memset(sums, 0, layer->num_neurons * sizeof(float));
 #endif
 
             if (N > 0) {
