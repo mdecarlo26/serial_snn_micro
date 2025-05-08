@@ -97,7 +97,15 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
 
-            // A) decay:  mem_arr = (DECAY_FP7 * mem_arr) >> DECAY_SHIFT
+/*
+TODO
+Add support for IF
+Add support for vectorized float
+Add compiler directives for IF and LIF with vectorization
+Add compiler directives for float with vectorization
+*/
+
+// decay:  mem_arr = (DECAY_FP7 * mem_arr) >> DECAY_SHIFT
             vector_scale_q31(
                 layer->membrane_potentials,
                 DECAY_FP7,
@@ -105,14 +113,14 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 layer->membrane_potentials,
                 layer->num_neurons
             );
-// B) add your summed inputs:  mem_arr += sums[]
+// add summed inputs:  mem_arr += sums[]
             vectorize_q31_add_to_q31(
                 sums,
                 layer->membrane_potentials,
                 layer->num_neurons
             );
 
-// C) compute reset mask:  mask[i] = mem_arr[i] >= thresh_arr[i]
+// compute reset mask:  mask[i] = mem_arr[i] >= thresh_arr[i]
             vector_compare_ge_q31(
                 layer->membrane_potentials,
                 layer->voltage_thresholds,
@@ -120,7 +128,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 layer->num_neurons
             );
 
-// D) subtract threshold where reset:  mem_arr[i] -= thresh_arr[i] if mask[i]
+// subtract threshold where reset:  mem_arr[i] -= thresh_arr[i] if mask[i]
             vector_sub_where_q31(
                 layer->delayed_resets,
                 layer->voltage_thresholds,
@@ -128,7 +136,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 layer->num_neurons
             );
 
-// E) write new membrane back and pack spikes
+// pack spikes
             vector_pack_bits(
                 layer->delayed_resets,
                 output[t],
