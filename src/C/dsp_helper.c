@@ -38,7 +38,7 @@ static inline void vectorize_q31_add_to_q31(
     }
 }
 
-static inline void vectorize_q31_add_to_q31(
+static inline void vectorize_float_add_to_float(
     const float * __restrict srcA,
     float       * __restrict dst,
     size_t          blockSize
