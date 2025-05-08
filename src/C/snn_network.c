@@ -101,7 +101,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                                          layer->voltage_thresholds[i]);
 #if (LIF)
     #if (Q07_FLAG)
-            int32_t new_mem = ((layer->decay_rates[i] * layer->membrane_potentials[i]) >> DECAY_SHIFT)
+            int32_t new_mem = ((DECAY_FP7 * layer->membrane_potentials[i]) >> DECAY_SHIFT)
                       + sums[i]
                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
     #else
