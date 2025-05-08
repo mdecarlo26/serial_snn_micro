@@ -163,8 +163,6 @@ void initialize_network(int neurons_per_layer[],
 #if (Q07_FLAG)
             memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
             memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
-            memset(snn_network.layers[l].voltage_thresholds, 0, snn_network.layers[l].num_neurons * sizeof(int16_t));
-            memset(snn_network.layers[l].decay_rates, 0, snn_network.layers[l].num_neurons * sizeof(int16_t));
             memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
             memset(snn_network.layers[l].decay_rates, DECAY_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
 #else
@@ -173,7 +171,7 @@ void initialize_network(int neurons_per_layer[],
             memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH, snn_network.layers[l].num_neurons * sizeof(float));
             memset(snn_network.layers[l].decay_rates, DECAY_RATE, snn_network.layers[l].num_neurons * sizeof(float));
 #endif
-        printf("volt: %d, decay: %d\n", VOLTAGE_THRESH_FP7, DECAY_FP7);
+        printf("volt: %d, decay: %d\n", (int16_t)VOLTAGE_THRESH_FP7, DECAY_FP7);
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
             printf("Layer %d, Neuron %d: Decay = %d, Voltage Thresh = %d\n",
                    l, i, snn_network.layers[l].decay_rates[i], snn_network.layers[l].voltage_thresholds[i]);
