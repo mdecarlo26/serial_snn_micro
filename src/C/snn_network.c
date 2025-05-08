@@ -31,7 +31,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
     int num_bytes = (input_size + 7) / 8;
-    int num_bytes = (input_size + 7) / 8;
     int N = layer->num_neurons;
 
     // scratch buffers for column and sums
@@ -49,7 +48,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
-                vectorize_q31_add_to_q31(
+                vectorize_q7_add_to_q31(
                     layer->bias,
                     sums,
                     input_size
