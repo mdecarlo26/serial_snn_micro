@@ -11,7 +11,7 @@ typedef struct {
     int32_t  membrane_potentials[MAX_NEURONS];
     int32_t  delayed_resets     [MAX_NEURONS];
     int16_t  voltage_thresholds [MAX_NEURONS];
-    int16_t  decay_rates_fp7    [MAX_NEURONS];
+    int16_t  decay_rates        [MAX_NEURONS];
 #else
     float    membrane_potentials[MAX_NEURONS];
     float    delayed_resets     [MAX_NEURONS];

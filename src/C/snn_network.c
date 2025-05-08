@@ -106,30 +106,30 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
             for (int i = 0; i < layer->num_neurons; i++) {
-            int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
-                                         layer->neurons[i].voltage_thresh);
+            int reset_signal = HEAVISIDE(layer->membrane_potentials[i],
+                                         layer->voltage_thresholds[i]);
 #if (LIF)
     #if (Q07_FLAG)
-            int32_t new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
+            int32_t new_mem = ((layer->decay_rates[i] * layer->membrane_potentials[i]) >> DECAY_SHIFT)
                       + sums[i]
-                      - reset_signal * layer->neurons[i].voltage_thresh;
+                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
     #else
-            float new_mem = (int32_t)(layer->neurons[i].decay_rate * (float)layer->neurons[i].membrane_potential)
+            float new_mem = (int32_t)(layer->decay_rates[i] * layer->membrane_potentials[i])
                       + sums[i]
-                      - reset_signal * layer->neurons[i].voltage_thresh;
+                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
     #endif
 #elif (IF)
     #if (Q07_FLAG)
-            int32_t new_mem = layer->neurons[i].membrane_potential
+            int32_t new_mem = layer->membrane_potentials[i]
                       + sums[i]
-                      - reset_signal * layer->neurons[i].voltage_thresh;
+                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
     #else
-            float new_mem = (int32_t)((float)layer->neurons[i].membrane_potential + (float)sums[i])
-                      - reset_signal * layer->neurons[i].voltage_thresh;
+            float new_mem = (int32_t)((float)layer->membrane_potentials[i] + (float)sums[i])
+                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
     #endif
 #endif
 
-            layer->neurons[i].membrane_potential = new_mem;
+            layer->membrane_potentials[i] = new_mem;
             SET_BIT(output[t], i, reset_signal);
         }
 
@@ -170,29 +170,29 @@ void initialize_network(int neurons_per_layer[],
             snn_network.layers[l].weights = NULL;
             snn_network.layers[l].bias = NULL;
         }
-
-        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
 #if (Q07_FLAG)
-            snn_network.layers[l].membrane_potential[i] = 0;
-            snn_network.layers[l].voltage_thresh[i] = VOLTAGE_THRESH_FP7;
-            snn_network.layers[l].decay_rate[i] = DECAY_FP7;
-            snn_network.layers[l].delayed_reset[i] = 0;
+            memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+            memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+            memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
+            memset(snn_network.layers[l].decay_rates, DECAY_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
 #else
-            snn_network.layers[l].membrane_potential[i] = 0.0;
-            snn_network.layers[l].voltage_thresh[i] = VOLTAGE_THRESH;
-            snn_network.layers[l].decay_rate[i] = DECAY_RATE;
-            snn_network.layers[l].delayed_reset[i] = 0.0;
+            memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+            memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+            memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH, snn_network.layers[l].num_neurons * sizeof(float));
+            memset(snn_network.layers[l].decay_rates, DECAY_RATE, snn_network.layers[l].num_neurons * sizeof(float));
 #endif
-        }
     }
 }
 
 void zero_network() {
     for (int l = 0; l < snn_network.num_layers; l++) {
-        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-            snn_network.layers[l].membrane_potential[i] = 0;
-            snn_network.layers[l].delayed_reset[i] = 0;
-        }
+#if (Q07_FLAG)
+        memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+        memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+#else
+        memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+        memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+#endif
     }
 }
 
