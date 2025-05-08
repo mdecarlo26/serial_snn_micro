@@ -87,6 +87,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                 // and is a bit faster than the alternative of using a separate
                 // function to handle the input layer.
                 printf("Input layer: spike from self (i-th input neuron only)\n");
+                fflush(stdout);
                 for (int i = 0; i < N; i++) {
                 if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
