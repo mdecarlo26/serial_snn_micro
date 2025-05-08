@@ -171,10 +171,10 @@ void initialize_network(int neurons_per_layer[],
             memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH, snn_network.layers[l].num_neurons * sizeof(float));
             memset(snn_network.layers[l].decay_rates, DECAY_RATE, snn_network.layers[l].num_neurons * sizeof(float));
 #endif
-        printf("volt: %d\n", VOLTAGE_THRESH_FP7);
+        printf("volt: %d, decay: %d\n", VOLTAGE_THRESH_FP7, DECAY_FP7);
         for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-            printf("Layer %d, Neuron %d: Membrane Potential = %d, Voltage Thresh = %d\n",
-                   l, i, snn_network.layers[l].membrane_potentials[i], snn_network.layers[l].voltage_thresholds[i]);
+            printf("Layer %d, Neuron %d: Decay = %d, Voltage Thresh = %d\n",
+                   l, i, snn_network.layers[l].decay_rates[i], snn_network.layers[l].voltage_thresholds[i]);
         }
     }
 }
