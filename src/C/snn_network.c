@@ -183,6 +183,10 @@ void zero_network() {
         memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
         memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
 #endif
+        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+            printf("Layer %d Neuron %d: Membrane potential = %d, Delayed reset = %d\n",
+                   l, i, snn_network.layers[l].membrane_potentials[i], snn_network.layers[l].delayed_resets[i]);
+            }
     }
 }
 
