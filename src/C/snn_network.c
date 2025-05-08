@@ -97,14 +97,13 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
             for (int i = 0; i < layer->num_neurons; i++) {
-                // printf("Layer %d, Neuron %d: Membrane potential = %d, Voltage Thresh: %d\n", layer->layer_num, i, layer->membrane_potentials[i], layer->voltage_thresholds[i]);
-            int reset_signal = HEAVISIDE(layer->membrane_potentials[i],
+            layer->delayed_resets[i]  = HEAVISIDE(layer->membrane_potentials[i],
                                          layer->voltage_thresholds[i]);
 #if (LIF)
     #if (Q07_FLAG)
             int32_t new_mem = ((DECAY_FP7 * layer->membrane_potentials[i]) >> DECAY_SHIFT)
                       + sums[i]
-                      - reset_signal * layer->voltage_thresholds[i];
+                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
     #else
             float new_mem = (int32_t)(layer->decay_rates[i] * layer->membrane_potentials[i])
                       + sums[i]
@@ -122,11 +121,8 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #endif
 
             layer->membrane_potentials[i] = new_mem;
-            SET_BIT(output[t], i, reset_signal);
+            SET_BIT(output[t], i, layer->delayed_resets[i]);
         }
-    }
-    for (int i = 0; i < layer->num_neurons; i++) {
-        printf("Layer %d, Neuron %d: Membrane potential = %d\n", layer->layer_num, i, layer->membrane_potentials[i]);
     }
 }
 
@@ -169,17 +165,31 @@ void initialize_network(int neurons_per_layer[],
             memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
             memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
             memset(snn_network.layers[l].decay_rates, DECAY_FP7, snn_network.layers[l].num_neurons * sizeof(int16_t));
-            for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-                printf("Layer %d, Neuron %d: Membrane potential = %d, Voltage Thresh: %d\n", l, i, snn_network.layers[l].membrane_potentials[i], snn_network.layers[l].voltage_thresholds[i]);
-            }
 #else
             memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
             memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
             memset(snn_network.layers[l].voltage_thresholds, VOLTAGE_THRESH, snn_network.layers[l].num_neurons * sizeof(float));
             memset(snn_network.layers[l].decay_rates, DECAY_RATE, snn_network.layers[l].num_neurons * sizeof(float));
 #endif
+        for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+            printf("Layer %d, Neuron %d: Membrane Potential = %d, Voltage Thresh = %d\n",
+                   l, i, snn_network.layers[l].membrane_potentials[i], snn_network.layers[l].voltage_thresholds[i]);
+        }
     }
 }
+
+void zero_network() {
+    for (int l = 0; l < snn_network.num_layers; l++) {
+#if (Q07_FLAG)
+        memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+        memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+#else
+        memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+        memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+#endif
+    }
+}
+
 int classify_inference(int **firing_counts, int num_neurons, int num_chunks){
     int max_firing_count = 0;
     int classification = -1;
