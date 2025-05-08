@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "dsp_helper.h"
 #include "snn_network.h"
 #include "define.h"
 #include <stdlib.h>
@@ -8,8 +9,8 @@ extern Snn_Network snn_network;
 static Layer static_layers[MAX_LAYERS];
 static Neuron static_neurons[MAX_LAYERS][MAX_NEURONS];
 
-static int8_t *fc1_pointer_table[HIDDEN_LAYER_1];
-static int8_t *fc2_pointer_table[NUM_CLASSES];
+static int8_t *fc1_pointer_table[INPUT_SIZE];
+static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
 
 static int8_t *fc1_bias_pointer = NULL;
 static int8_t *fc2_bias_pointer = NULL;
@@ -18,55 +19,42 @@ static int weights_initialized = 0;
 // Backing storage for the two ping-pong buffers:
 // Static memory for ping-pong buffers
 // Each neuron has BITMASK_BYTES bytes, and there are MAX_NEURONS neurons
-// static uint8_t ping_pong_buffer_storage_1[MAX_NEURONS][BITMASK_BYTES] = {0};
-// static uint8_t ping_pong_buffer_storage_2[MAX_NEURONS][BITMASK_BYTES] = {0};
 static uint8_t ping_pong_buffer_storage_1[TAU][INPUT_BYTES] = {0};
 static uint8_t ping_pong_buffer_storage_2[TAU][INPUT_BYTES] = {0};
 
 // Pointers that we can swap:
-// static uint8_t (*ping_pong_buffer_1)[BITMASK_BYTES] = ping_pong_buffer_storage_1;
-// static uint8_t (*ping_pong_buffer_2)[BITMASK_BYTES] = ping_pong_buffer_storage_2;
 static uint8_t (*ping_pong_buffer_1)[INPUT_BYTES] = ping_pong_buffer_storage_1;
 static uint8_t (*ping_pong_buffer_2)[INPUT_BYTES] = ping_pong_buffer_storage_2;
-
-// Function to set a value in the buffer
-void set_bit(uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t, int value) {
-    int byte_idx = neuron_idx / 8;
-    int bit_idx = neuron_idx % 8;
-    if (value)
-        buffer[t][byte_idx] |= (1 << (8-bit_idx));
-    else
-        buffer[t][byte_idx] &= ~(1 << (8-bit_idx));
-}
-
-int get_bit(const uint8_t buffer[TAU][INPUT_BYTES], int neuron_idx, int t) {
-    int byte_idx = neuron_idx / 8;
-    int bit_idx = neuron_idx % 8;
-    return (buffer[t][byte_idx] >> (8-bit_idx)) & 1;
-}
 
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   uint8_t output[TAU][INPUT_BYTES],
                   Layer *layer, int input_size) {
     int num_bytes = (input_size + 7) / 8;
+    int N = layer->layer_num;
+    // printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, layer->num_neurons, input_size);
+
+    // scratch buffers for column and sums
     for (int t = 0; t < TAU; t++) {
-        for (int i = 0; i < layer->num_neurons; i++) {
-
 #if (Q07_FLAG)
-            int32_t sum = 0;
-            int32_t new_mem = 0;
+            static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
+            memset(sums, 0, layer->layer_num * sizeof(int32_t));
 #else
-            float sum = 0.0f;
-            float new_mem = 0.0f;
+            static float sums[MAX_NEURONS]  __attribute__((aligned(4)));
+            memset(sums, 0, layer->layer_numN * sizeof(float));
 #endif
-
-            if (layer->layer_num > 0) {
+            if (N > 0) {
                 // Hidden or output layer: sum over presynaptic spikes
 #if (Q07_FLAG)
-                sum += layer->bias[i];
+                vectorize_q7_add_to_q31(
+                    layer->bias,
+                    sums,
+                    layer->num_neurons
+                );
 #else
-                sum += dequantize_q07(layer->bias[i]);
+                for (int j=0 ; j < input_size; j++) {
+                    sums[j] = dequantize_q07(layer->bias[j]);
+                }
 #endif
                 for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
                     uint8_t byte = input[t][byte_idx];
@@ -76,10 +64,25 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                         int bit = __builtin_ctz(byte);
                         int j = base_idx + bit;
                         if (j < input_size) {
+                            // print weight row for neuron j
+                            // printf("Neuron %d: ", j);
+                            // for (int k = 0; k < layer->num_neurons; k++) {
+                            //     printf("%d ", layer->weights[j][k]);
+                            // }
+                            // printf("\n");
+                            // exit(EXIT_SUCCESS);
+
 #if (Q07_FLAG)
-                            sum += layer->weights[i][j];
+                            vectorize_q7_add_to_q31(
+                                layer->weights[j],
+                                sums,
+                                layer->num_neurons
+                            );
+                            // sum += layer->weights[i][j];
 #else
-                            sum += dequantize_q07(layer->weights[i][j]);
+                        for (int i=0 ; i < input_size; i++) {
+                            sums[i] = dequantize_q07(layer->weights[i][j]);
+                        }
 #endif
                         }
                         byte &= byte - 1;  // Clear least significant set bit
@@ -88,58 +91,61 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 
             } else {
                 // Input layer: spike from self (i-th input neuron only)
-                // if (get_bit(input, i, t)) {
+                // This is a bit of a hack, but it works for the input layer
+                // and is a bit faster than the alternative of using a separate
+                // function to handle the input layer.
+                for (int i = 0; i < layer->num_neurons; i++) {
                 if (GET_BIT(input[t], i)) {
 #if (Q07_FLAG)
-                    sum += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
-#else
-                    sum += 1.0f;
+                    sums[i] += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
+#else               
+                    sums[i] += 1.0f;
 #endif
+                }
                 }
             }
 
-            // Determine if neuron spikes
+            for (int i = 0; i < layer->num_neurons; i++) {
             int reset_signal = HEAVISIDE(layer->neurons[i].membrane_potential,
                                          layer->neurons[i].voltage_thresh);
-
 #if (LIF)
     #if (Q07_FLAG)
-            new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
-                      + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            int32_t new_mem = ((DECAY_FP7 * layer->neurons[i].membrane_potential) >> DECAY_SHIFT)
+                      + sums[i]
+                      - reset_signal * layer->neurons[i].voltage_thresh;
     #else
-            new_mem = layer->neurons[i].decay_rate * layer->neurons[i].membrane_potential
-                      + sum - reset_signal * layer->neurons[i].voltage_thresh;
+            float new_mem = (int32_t)(layer->neurons[i].decay_rate * (float)layer->neurons[i].membrane_potential)
+                      + sums[i]
+                      - reset_signal * layer->neurons[i].voltage_thresh;
     #endif
 #elif (IF)
     #if (Q07_FLAG)
-            new_mem = layer->neurons[i].membrane_potential + sum
+            int32_t new_mem = layer->neurons[i].membrane_potential
+                      + sums[i]
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #else
-            new_mem = layer->neurons[i].membrane_potential + sum
+            float new_mem = (int32_t)((float)layer->neurons[i].membrane_potential + (float)sums[i])
                       - reset_signal * layer->neurons[i].voltage_thresh;
     #endif
 #endif
 
             layer->neurons[i].membrane_potential = new_mem;
-
-            if (reset_signal) {
-                SET_BIT(output[t], i, 1);  // Store spike
-                // set_bit(output, i, t, 1);  // Store spike
-            }
+            SET_BIT(output[t], i, reset_signal);
         }
+
     }
 }
 
 void initialize_network(int neurons_per_layer[],
-     const int8_t weights_fc1[HIDDEN_LAYER_1][INPUT_SIZE], const int8_t weights_fc2[NUM_CLASSES][HIDDEN_LAYER_1],
+     const int8_t weights_fc1[INPUT_SIZE][HIDDEN_LAYER_1], const int8_t weights_fc2[HIDDEN_LAYER_1][NUM_CLASSES],
      const int8_t *bias_fc1, const int8_t *bias_fc2) {
     snn_network.layers = static_layers;
 
     if (!weights_initialized) {
-        for (int i = 0; i < HIDDEN_LAYER_1; i++) {
+        for (int i = 0; i < INPUT_SIZE; i++) {
             fc1_pointer_table[i] = (int8_t *)weights_fc1[i];
         }
-        for (int i = 0; i < NUM_CLASSES; i++) {
+        for (int i = 0; i < HIDDEN_LAYER_1; i++) {
             fc2_pointer_table[i] = (int8_t *)weights_fc2[i];
         }
 
