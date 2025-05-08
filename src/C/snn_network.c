@@ -97,6 +97,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
             for (int i = 0; i < layer->num_neurons; i++) {
+                printf("Layer %d, Neuron %d: Membrane potential = %d, Voltage Thresh: %d\n", layer->layer_num, i, layer->membrane_potentials[i], layer->voltage_thresholds[i]);
             int reset_signal = HEAVISIDE(layer->membrane_potentials[i],
                                          layer->voltage_thresholds[i]);
 #if (LIF)
@@ -125,7 +126,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
         }
     }
     for (int i = 0; i < layer->num_neurons; i++) {
-        printf("Layer %d, Neuron %d: Membrane potential = %d\n", layer->layer_num, i, layer->membrane_potentials[i]);
+        // printf("Layer %d, Neuron %d: Membrane potential = %d\n", layer->layer_num, i, layer->membrane_potentials[i]);
     }
 }
 
