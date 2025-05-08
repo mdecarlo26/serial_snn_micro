@@ -97,13 +97,13 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
             }
 
             for (int i = 0; i < layer->num_neurons; i++) {
-            layer->delayed_resets[i]  = HEAVISIDE(layer->membrane_potentials[i],
+            int reset_signal = HEAVISIDE(layer->membrane_potentials[i],
                                          layer->voltage_thresholds[i]);
 #if (LIF)
     #if (Q07_FLAG)
             int32_t new_mem = ((DECAY_FP7 * layer->membrane_potentials[i]) >> DECAY_SHIFT)
                       + sums[i]
-                      - layer->delayed_resets[i] * layer->voltage_thresholds[i];
+                      - reset_signal * layer->voltage_thresholds[i];
     #else
             float new_mem = (int32_t)(layer->decay_rates[i] * layer->membrane_potentials[i])
                       + sums[i]
@@ -121,7 +121,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
 #endif
 
             layer->membrane_potentials[i] = new_mem;
-            SET_BIT(output[t], i, layer->delayed_resets[i]);
+            SET_BIT(output[t], i, reset_signal);
         }
     }
 }
