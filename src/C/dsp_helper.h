@@ -23,24 +23,18 @@ void vectorize_float_add_to_float(
 );
 
 void vector_pack_bits(
-    const int16_t * __restrict mask,
+    const int32_t * __restrict mask,
     uint8_t       * __restrict bitbuf,
     size_t          blockSize
 );
 
 void vector_sub_where_q31(
-    const int16_t * __restrict mask,
-    const int32_t * __restrict thresh,
+    const int32_t * __restrict mask,
+    const int16_t * __restrict thresh,
     int32_t       * __restrict dst,
     size_t          blockSize
 );
 
-void vector_sub_where_q31(
-    const int16_t * __restrict mask,
-    const int32_t * __restrict thresh,
-    int32_t       * __restrict dst,
-    size_t          blockSize
-);
 
 void vector_scale_q31(
     const int32_t * __restrict src,
@@ -52,8 +46,8 @@ void vector_scale_q31(
 
 void vector_compare_ge_q31(
     const int32_t * __restrict src,
-    const int32_t * __restrict thresh,
-    int16_t       * __restrict mask,
+    const int16_t * __restrict thresh,
+    int32_t       * __restrict mask,
     size_t          blockSize
 );
 
