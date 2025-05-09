@@ -80,8 +80,8 @@ inline void vector_scale_q31(
 /// Compare src >= thresh elementwise, write 0/1 into mask[]
 inline void vector_compare_ge_q31(
     const int32_t * __restrict src,
-    const int32_t * __restrict thresh,
-    int16_t       * __restrict mask,
+    const int16_t * __restrict thresh,
+    int32_t       * __restrict mask,
     size_t          blockSize
 ) {
     size_t i=0;
@@ -98,8 +98,8 @@ inline void vector_compare_ge_q31(
 
 /// Subtract thresh[i] from dst[i] only where mask[i]==1
 inline void vector_sub_where_q31(
-    const int16_t * __restrict mask,
-    const int32_t * __restrict thresh,
+    const int32_t * __restrict mask,
+    const int16_t * __restrict thresh,
     int32_t       * __restrict dst,
     size_t          blockSize
 ) {
@@ -117,7 +117,7 @@ inline void vector_sub_where_q31(
 
 /// Pack a 0/1 mask[] back into a bit-buffer
 inline void vector_pack_bits(
-    const int16_t * __restrict mask,
+    const int32_t * __restrict mask,
     uint8_t       * __restrict bitbuf,
     size_t          blockSize
 ) {
