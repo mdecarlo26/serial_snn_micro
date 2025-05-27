@@ -37,14 +37,14 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
     for (int t = 0; t < TAU; t++) {
         // Aligned scratch for sums
     #if (Q07_FLAG)
-        static int32_t sums[MAX_NEURONS] __attribute__((aligned(4)));
+        static int32_t sums[MAX_NEURONS]; __attribute__((aligned(4)));
     #else
-        static float   sums[MAX_NEURONS] __attribute__((aligned(4)));
+        static float   sums[MAX_NEURONS]; __attribute__((aligned(4)));
     #endif
 
         // Zero out sums
         memset(sums, 0, layer->num_neurons * sizeof(sums[0]));
-
+        printf("Layer type: %d, num_neurons: %d\n", layer->type, layer->num_neurons);
         if (layer->type == LAYER_CONV) {
             // --- sparse-driven conv add into sums ---
             conv_sparse_q7_add(
