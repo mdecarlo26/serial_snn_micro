@@ -27,7 +27,7 @@
 #define INPUT_SIZE 784 // 28x28 flattened images
 #define NUM_CLASSES 10 
 #define HIDDEN_LAYER_1 256
-#define NUM_LAYERS 3
+#define NUM_LAYERS 2
 
 // Max neurons and layers
 #define MAX_LAYERS 2
