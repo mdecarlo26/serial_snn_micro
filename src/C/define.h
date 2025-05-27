@@ -1,9 +1,37 @@
 #ifndef DEFINE_H
 #define DEFINE_H
 
+// Macros for max and min operations
+#define MAX2(a, b) ((a) > (b) ? (a) : (b))
+#define MAX3(a, b, c) MAX2(a, MAX2(b, c))
+#define MAX4(a, b, c, d) MAX2(MAX2(a, b), MAX2(c, d))
+#define MIN2(a, b) ((a) < (b) ? (a) : (b))
+#define MIN3(a, b, c) MIN2(a, MIN2(b, c))
+#define MIN4(a, b, c, d) MIN2(MIN2(a, b), MIN2(c, d))
+
+// Convolution Size Macro
+#define CONV_OUT_DIM_SIZE(in_dim, kernel_size, stride, padding) \
+  ((in_dim - kernel_size + 2 * padding) / stride + 1)
+
+// Convolution parameters
+#define CONV1_FILTERS      4
+#define CONV1_KERNEL       3
+#define CONV1_KERNEL_FLATTEN (CONV1_KERNEL * CONV1_KERNEL)
+#define CONV1_H_IN         28
+#define CONV1_W_IN         28
+#define CONV1_H_OUT        CONV_OUT_DIM_SIZE(CONV1_H_IN, CONV1_KERNEL, 1, 0)
+#define CONV1_W_OUT        CONV_OUT_DIM_SIZE(CONV1_W_IN, CONV1_KERNEL, 1, 0)
+#define CONV1_NEURONS      (CONV1_FILTERS * CONV1_H_OUT * CONV1_W_OUT)
+
+// Network parameters
+#define INPUT_SIZE 784 // 28x28 flattened images
+#define NUM_CLASSES 10 
+#define HIDDEN_LAYER_1 256
+#define NUM_LAYERS 3
+
 // Max neurons and layers
-#define MAX_LAYERS 3
-#define MAX_NEURONS 784
+#define MAX_LAYERS 2
+#define MAX_NEURONS MAX2(CONV1_NEURONS, NUM_CLASSES)
 
 // Network parameters
 #define VOLTAGE_THRESH 1.0f
@@ -12,19 +40,13 @@
 // Data parameters
 #define NUM_SAMPLES 1
 
-// Network parameters
-#define INPUT_SIZE 784 // 28x28 flattened images
-#define NUM_CLASSES 10 
-#define HIDDEN_LAYER_1 256
-#define NUM_LAYERS 3
-
 // Temporal parameters
 #define TIME_WINDOW 20 // Temporal steps in spike train
 #define TAU 10
 
 // Masking parameters
 #define BITMASK_BYTES ((TAU + 7) / 8)
-#define INPUT_BYTES ((INPUT_SIZE + 7) / 8)
+#define INPUT_BYTES ((MAX_NEURONS + 7) / 8)
 
 // Define the quantization parameters for Q0.7
 #define Q07_FLAG       1

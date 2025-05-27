@@ -27,75 +27,72 @@ static uint8_t (*ping_pong_buffer_2)[INPUT_BYTES] = ping_pong_buffer_storage_2;
 
 // Function to update the entire layer based on the buffer and bias
 void update_layer(const uint8_t input[TAU][INPUT_BYTES],
-                  uint8_t output[TAU][INPUT_BYTES],
-                  Layer *layer, int input_size) {
+                  uint8_t       output[TAU][INPUT_BYTES],
+                  Layer        *layer,
+                  int            input_size)
+{
     int num_bytes = (input_size + 7) / 8;
-    int N = layer->layer_num;
-    // printf("Layer %d: num_neurons = %d, input_size = %d\n", layer->layer_num, layer->num_neurons, input_size);
 
-    // scratch buffers for column and sums
     for (int t = 0; t < TAU; t++) {
-#if (Q07_FLAG)
-            static int32_t sums[MAX_NEURONS]  __attribute__((aligned(4)));
-            memset(sums, 0, layer->num_neurons * sizeof(int32_t));
-#else
-            static float sums[MAX_NEURONS]  __attribute__((aligned(4)));
-            memset(sums, 0, layer->num_neurons * sizeof(float));
-#endif
+        // Aligned scratch for sums
+    #if (Q07_FLAG)
+        static int32_t sums[MAX_NEURONS] __attribute__((aligned(4)));
+    #else
+        static float   sums[MAX_NEURONS] __attribute__((aligned(4)));
+    #endif
 
-            if (N > 0) {
-                // Hidden or output layer: sum over presynaptic spikes
-#if (Q07_FLAG)
-                vectorize_q7_add_to_q31(
-                    layer->bias,
-                    sums,
-                    layer->num_neurons
-                );
-#else
-                for (int j=0 ; j < input_size; j++) {
-                    sums[j] = dequantize_q07(layer->bias[j]);
-                }
-#endif
-                for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
-                    uint8_t byte = input[t][byte_idx];
-                    int base_idx = byte_idx * 8;
+        // Zero out sums
+        memset(sums, 0, layer->num_neurons * sizeof(sums[0]));
 
-                    while (byte) {
-                        int bit = __builtin_ctz(byte);
-                        int j = base_idx + bit;
-                        if (j < input_size) {
-#if (Q07_FLAG)
-                            vectorize_q7_add_to_q31(
-                                layer->weights[j],
-                                sums,
-                                layer->num_neurons
-                            );
-#else
-                        for (int i=0 ; i < input_size; i++) {
-                            sums[i] = dequantize_q07(layer->weights[i][j]);
-                        }
-#endif
-                        }
-                        byte &= byte - 1;  // Clear least significant set bit
+        if (layer->type == LAYER_CONV) {
+            // --- sparse-driven conv add into sums ---
+            conv_sparse_q7_add(
+                input[t],                        // bit-packed 28×28
+                layer->conv_weights_col,        // [9][4] pre-transposed weights
+                layer->conv_bias,               // [4]
+                sums                             // [4×676]
+            );
+        }
+        else if (layer->type == LAYER_FC) {
+            // --- fully-connected sum over presynaptic spikes ---
+        #if (Q07_FLAG)
+            // bias broadcast
+            vectorize_q7_add_to_q31(
+                layer->bias,                    // [num_neurons]
+                sums,
+                layer->num_neurons
+            );
+        #else
+            for (int j = 0; j < input_size; j++)
+                sums[j] = dequantize_q07(layer->bias[j]);
+        #endif
+
+            // weight adds
+            for (int byte_idx = 0; byte_idx < num_bytes; byte_idx++) {
+                uint8_t byte = input[t][byte_idx];
+                int     base = byte_idx * 8;
+
+                while (byte) {
+                    int bit = __builtin_ctz(byte);
+                    int j   = base + bit;
+                    byte   &= byte - 1;
+
+                    if (j < input_size) {
+                    #if (Q07_FLAG)
+                        vectorize_q7_add_to_q31(
+                            layer->weights[j],       // [num_neurons]
+                            sums,
+                            layer->num_neurons
+                        );
+                    #else
+                        for (int i = 0; i < layer->num_neurons; i++)
+                            sums[i] += dequantize_q07(layer->weights[j][i]);
+                    #endif
                     }
                 }
-
-            } else {
-                // Input layer: spike from self (i-th input neuron only)
-                // This is a bit of a hack, but it works for the input layer
-                // and is a bit faster than the alternative of using a separate
-                // function to handle the input layer.
-                for (int i = 0; i < layer->num_neurons; i++) {
-                if (GET_BIT(input[t], i)) {
-#if (Q07_FLAG)
-                    sums[i] += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
-#else               
-                    sums[i] += 1.0f;
-#endif
-                }
-                }
             }
-
+        }
+        // (Note: input layer simply leaves sums==0, then LIF will inject +1 per spike if needed)
 
 /*
 TODO
@@ -104,124 +101,173 @@ Add support for vectorized float
 Add compiler directives for IF and LIF with vectorization
 Add compiler directives for float with vectorization
 */
+    LIF_STEP:
+        // decay: V = (DECAY_FP7 * V) >> DECAY_SHIFT
+        vector_scale_q31(
+            layer->membrane_potentials,
+            layer->decay_rates[0],          // or DECAY_FP7
+            DECAY_SHIFT,
+            layer->membrane_potentials,
+            layer->num_neurons
+        );
 
-// decay:  mem_arr = (DECAY_FP7 * mem_arr) >> DECAY_SHIFT
-            vector_scale_q31(
-                layer->membrane_potentials,
-                DECAY_FP7,
-                DECAY_SHIFT,
-                layer->membrane_potentials,
-                layer->num_neurons
-            );
-// add summed inputs:  mem_arr += sums[]
-            vectorize_q31_add_to_q31(
-                sums,
-                layer->membrane_potentials,
-                layer->num_neurons
-            );
+        // add inputs: V += sums
+        vectorize_q31_add_to_q31(
+            sums,
+            layer->membrane_potentials,
+            layer->num_neurons
+        );
 
-// compute reset mask:  mask[i] = mem_arr[i] >= thresh_arr[i]
-            vector_compare_ge_q31(
-                layer->membrane_potentials,
-                layer->voltage_thresholds,
-                layer->delayed_resets,
-                layer->num_neurons
-            );
+        // threshold: mask = V >= thresh
+        vector_compare_ge_q31(
+            layer->membrane_potentials,
+            layer->voltage_thresholds,
+            layer->delayed_resets,
+            layer->num_neurons
+        );
 
-// subtract threshold where reset:  mem_arr[i] -= thresh_arr[i] if mask[i]
-            vector_sub_where_q31(
-                layer->delayed_resets,
-                layer->voltage_thresholds,
-                layer->membrane_potentials,
-                layer->num_neurons
-            );
+        // reset: V[mask] -= thresh
+        vector_sub_where_q31(
+            layer->delayed_resets,
+            layer->voltage_thresholds,
+            layer->membrane_potentials,
+            layer->num_neurons
+        );
 
-// pack spikes
-            vector_pack_bits(
-                layer->delayed_resets,
-                output[t],
-                layer->num_neurons   
-            );
-
-//             for (int i = 0; i < layer->num_neurons; i++) {
-//             layer->delayed_resets[i]  = HEAVISIDE(layer->membrane_potentials[i],
-//                                          layer->voltage_thresholds[i]);
-// #if (LIF)
-//     #if (Q07_FLAG)
-//             int32_t new_mem = ((DECAY_FP7 * layer->membrane_potentials[i]) >> DECAY_SHIFT)
-//                       + sums[i]
-//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-//     #else
-//             float new_mem = (int32_t)(layer->decay_rates[i] * layer->membrane_potentials[i])
-//                       + sums[i]
-//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-//     #endif
-// #elif (IF)
-//     #if (Q07_FLAG)
-//             int32_t new_mem = layer->membrane_potentials[i]
-//                       + sums[i]
-//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-//     #else
-//             float new_mem = (int32_t)((float)layer->membrane_potentials[i] + (float)sums[i])
-//                       - layer->delayed_resets[i] * layer->voltage_thresholds[i];
-//     #endif
-// #endif
-
-//             layer->membrane_potentials[i] = new_mem;
-//             SET_BIT(output[t], i, layer->delayed_resets[i]);
-//         }
+        // pack spikes out
+        vector_pack_bits(
+            layer->delayed_resets,
+            output[t],
+            layer->num_neurons
+        );
     }
 }
 
+// void initialize_network(int neurons_per_layer[],
+//      const int8_t weights_fc1[INPUT_SIZE][HIDDEN_LAYER_1], const int8_t weights_fc2[HIDDEN_LAYER_1][NUM_CLASSES],
+//      const int8_t *bias_fc1, const int8_t *bias_fc2) {
+//     snn_network.layers = static_layers;
+
+//     if (!weights_initialized) {
+//         for (int i = 0; i < INPUT_SIZE; i++) {
+//             fc1_pointer_table[i] = (int8_t *)weights_fc1[i];
+//         }
+//         for (int i = 0; i < HIDDEN_LAYER_1; i++) {
+//             fc2_pointer_table[i] = (int8_t *)weights_fc2[i];
+//         }
+
+//         fc1_bias_pointer = (int8_t *)bias_fc1;
+//         fc2_bias_pointer = (int8_t *)bias_fc2;
+
+//         weights_initialized = 1;
+//     }
+
+//     for (int l = 0; l < snn_network.num_layers; l++) {
+//         snn_network.layers[l].layer_num = l;
+//         snn_network.layers[l].num_neurons = neurons_per_layer[l];
+
+
+//         if (l == 1) {
+//             snn_network.layers[l].weights = fc1_pointer_table;
+//             snn_network.layers[l].bias = fc1_bias_pointer;
+//         } else if (l == 2) {
+//             snn_network.layers[l].weights = fc2_pointer_table;
+//             snn_network.layers[l].bias = fc2_bias_pointer;
+//         } else {
+//             snn_network.layers[l].weights = NULL;
+//             snn_network.layers[l].bias = NULL;
+//         }
+// #if (Q07_FLAG)
+//             memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+//             memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
+//             // Have to loop throught and not memset since memset doesnt work with non-zero values less than an integer size
+//             for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+//                 snn_network.layers[l].voltage_thresholds[i] = VOLTAGE_THRESH_FP7;
+//                 snn_network.layers[l].decay_rates[i] = DECAY_FP7;
+//             }
+// #else
+//             memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+//             memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
+//             for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
+//                 snn_network.layers[l].voltage_thresholds[i] = VOLTAGE_THRESH;
+//                 snn_network.layers[l].decay_rates[i] = DECAY_RATE;
+//             }
+// #endif
+//     }
+// }
+
 void initialize_network(int neurons_per_layer[],
-     const int8_t weights_fc1[INPUT_SIZE][HIDDEN_LAYER_1], const int8_t weights_fc2[HIDDEN_LAYER_1][NUM_CLASSES],
-     const int8_t *bias_fc1, const int8_t *bias_fc2) {
+    // new conv layer weights & bias:
+    const int8_t conv1_weights_col[CONV1_KERNEL*CONV1_KERNEL][CONV1_FILTERS],
+    const int8_t conv1_bias[CONV1_FILTERS],
+    // final FC layer (from conv → output):
+    const int8_t weights_fc2_data[CONV1_NEURONS][NUM_CLASSES],
+    const int8_t bias_fc2[NUM_CLASSES])
+{
+    // Hook up our static layers array
     snn_network.layers = static_layers;
 
+    // One-time pointer‐table init for FC2
     if (!weights_initialized) {
-        for (int i = 0; i < INPUT_SIZE; i++) {
-            fc1_pointer_table[i] = (int8_t *)weights_fc1[i];
+        // Build pointer table for FC2 (conv1 is used directly)
+        for (int i = 0; i < CONV1_NEURONS; i++) {
+            fc2_pointer_table[i] = (int8_t *)weights_fc2_data[i];
         }
-        for (int i = 0; i < HIDDEN_LAYER_1; i++) {
-            fc2_pointer_table[i] = (int8_t *)weights_fc2[i];
-        }
-
-        fc1_bias_pointer = (int8_t *)bias_fc1;
         fc2_bias_pointer = (int8_t *)bias_fc2;
-
         weights_initialized = 1;
     }
 
+    // Now configure each layer
     for (int l = 0; l < snn_network.num_layers; l++) {
-        snn_network.layers[l].layer_num = l;
-        snn_network.layers[l].num_neurons = neurons_per_layer[l];
+        Layer *layer = &snn_network.layers[l];
+        layer->layer_num    = l;
+        layer->num_neurons  = neurons_per_layer[l];
 
-
-        if (l == 1) {
-            snn_network.layers[l].weights = fc1_pointer_table;
-            snn_network.layers[l].bias = fc1_bias_pointer;
-        } else if (l == 2) {
-            snn_network.layers[l].weights = fc2_pointer_table;
-            snn_network.layers[l].bias = fc2_bias_pointer;
-        } else {
-            snn_network.layers[l].weights = NULL;
-            snn_network.layers[l].bias = NULL;
+        if (l == 0) {
+            // Input layer
+            layer->type             = LAYER_INPUT;
+            layer->weights          = NULL;
+            layer->bias             = NULL;
+            layer->conv_weights_col = NULL;
+            layer->conv_bias        = NULL;
         }
+        else if (l == 1) {
+            // Conv layer
+            layer->type             = LAYER_CONV;
+            layer->conv_weights_col = conv1_weights_col;
+            layer->conv_bias        = conv1_bias;
+            layer->weights          = NULL;
+            layer->bias             = NULL;
+        }
+        else {
+            // Output FC layer
+            layer->type             = LAYER_FC;
+            layer->weights          = fc2_pointer_table;
+            layer->bias             = fc2_bias_pointer;
+            layer->conv_weights_col = NULL;
+            layer->conv_bias        = NULL;
+        }
+
 #if (Q07_FLAG)
-            memset(snn_network.layers[l].membrane_potentials, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
-            memset(snn_network.layers[l].delayed_resets, 0, snn_network.layers[l].num_neurons * sizeof(int32_t));
-            // Have to loop throught and not memset since memset doesnt work with non-zero values less than an integer size
-            for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-                snn_network.layers[l].voltage_thresholds[i] = VOLTAGE_THRESH_FP7;
-                snn_network.layers[l].decay_rates[i] = DECAY_FP7;
-            }
+        // Initialize all Q0.7 state
+        memset(layer->membrane_potentials, 0,
+               layer->num_neurons * sizeof(int32_t));
+        memset(layer->delayed_resets, 0,
+               layer->num_neurons * sizeof(int32_t));
+        for (int i = 0; i < layer->num_neurons; i++) {
+            layer->voltage_thresholds[i] = VOLTAGE_THRESH_FP7;
+            layer->decay_rates[i]        = DECAY_FP7;
+        }
 #else
-            memset(snn_network.layers[l].membrane_potentials, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
-            memset(snn_network.layers[l].delayed_resets, 0.0, snn_network.layers[l].num_neurons * sizeof(float));
-            for (int i = 0; i < snn_network.layers[l].num_neurons; i++) {
-                snn_network.layers[l].voltage_thresholds[i] = VOLTAGE_THRESH;
-                snn_network.layers[l].decay_rates[i] = DECAY_RATE;
-            }
+        // (float‐mode if you ever need it)
+        memset(layer->membrane_potentials, 0,
+               layer->num_neurons * sizeof(float));
+        memset(layer->delayed_resets, 0,
+               layer->num_neurons * sizeof(float));
+        for (int i = 0; i < layer->num_neurons; i++) {
+            layer->voltage_thresholds[i] = VOLTAGE_THRESH;
+            layer->decay_rates[i]        = DECAY_RATE;
+        }
 #endif
     }
 }
@@ -357,5 +403,64 @@ void compute_buffer_sparsity(const uint8_t buffer[TAU][INPUT_BYTES],
             }
         }
         sparsity[t] = ((float)active_spike_count / num_neurons);
+    }
+}
+
+void conv_sparse_q7_add(
+    const uint8_t *in_bits,
+    const int8_t  (*W)[CONV1_FILTERS],
+    const int8_t  *bias,
+    int32_t       *sums)
+{
+    const int K     = CONV1_KERNEL;
+    const int H_in  = CONV1_H_IN,
+              W_in  = CONV1_W_IN;
+    const int H_out = CONV1_H_OUT,
+              W_out = CONV1_W_OUT;
+    const int F     = CONV1_FILTERS;
+    const int patches = H_out * W_out;
+    const int input_bytes = (H_in*W_in + 7)/8;
+
+    // 1) zero & bias broadcast
+    memset(sums, 0, F*patches*sizeof(int32_t));
+    for (int f = 0; f < F; f++) {
+        int32_t b = bias[f];
+        int32_t *row = sums + f*patches;
+        for (int p = 0; p < patches; p++)
+            row[p] = b;
+    }
+
+    // 2) event-driven: for each input spike
+    for (int byte_i = 0, bit_base = 0; byte_i < input_bytes; byte_i++, bit_base += 8) {
+        uint8_t byte = in_bits[byte_i];
+        while (byte) {
+            int bit = __builtin_ctz(byte);
+            byte &= byte - 1;
+            int idx = bit_base + bit;
+            int y0  = idx / W_in, x0 = idx % W_in;
+
+            // slide 3×3 kernel
+            for (int ky = 0; ky < K; ky++) {
+                int out_y = y0 - ky;
+                if (out_y < 0 || out_y >= H_out) continue;
+
+                for (int kx = 0; kx < K; kx++) {
+                    int out_x = x0 - kx;
+                    if (out_x < 0 || out_x >= W_out) continue;
+
+                    // compute flat k_idx & patch_base
+                    int k_idx     = ky*K + kx;                   // 0..8
+                    int patch     = out_y*W_out + out_x;         // 0..675
+                    int32_t *sump = sums + (patch*F);            // &sums[patch*4]
+
+                    // vectorized 4-at-a-time add:
+                    vectorize_q7_add_to_q31(
+                      &W[k_idx][0],    // srcA: int8_t[4] (weights for this k,pos)
+                      sump,            // dst:   int32_t[4]
+                      F                // 4
+                    );
+                }
+            }
+        }
     }
 }
