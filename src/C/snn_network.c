@@ -8,10 +8,11 @@ extern Snn_Network snn_network;
 
 static Layer static_layers[NUM_LAYERS];
 
-static int8_t *fc1_pointer_table[INPUT_SIZE];
-static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
+// static int8_t *fc1_pointer_table[INPUT_SIZE];
+// static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
+static int8_t *fc2_pointer_table[CONV1_NEURONS];
 
-static int8_t *fc1_bias_pointer = NULL;
+// static int8_t *fc1_bias_pointer = NULL;
 static int8_t *fc2_bias_pointer = NULL;
 static int weights_initialized = 0;
 

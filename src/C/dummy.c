@@ -1849,11 +1849,16 @@ const int8_t weights_fc2_data[HIDDEN_LAYER_1][NUM_CLASSES] = {
 };
 */
 
-const int8_t conv1_weights_col[CONV1_FILTERS][CONV1_KERNEL_FLATTEN] = {
-    { -31, 22, 47, -20, 42, -8, 37, 44, -29 },
-    { 46, 35, 40, -14, 7, 31, 55, -13, 12 },
-    { -45, -17, -15, -40, -3, -17, -41, 31, -7 },
-    { 50, 1, -42, 0, 25, -37, 49, -7, -34 },
+const int8_t conv1_weights_col[CONV1_KERNEL_FLATTEN][CONV1_FILTERS] = {
+    { -31, 46, -45, 50 },
+    { 22, 35, -17, 1 },
+    { 47, 40, -15, -42 },
+    { -20, -14, -40, 0 },
+    { 42, 7, -3, 25 },
+    { -8, 31, -17, -37 },
+    { 37, 55, -41, 49 },
+    { 44, -13, 31, -7 },
+    { -29, 12, -7, -34 },
 };
 
 const int8_t conv1_bias[CONV1_FILTERS] = {
