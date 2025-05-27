@@ -224,14 +224,6 @@ void initialize_network(int neurons_per_layer[],
         layer->num_neurons  = neurons_per_layer[l];
 
         if (l == 0) {
-            // Input layer
-            layer->type             = LAYER_INPUT;
-            layer->weights          = NULL;
-            layer->bias             = NULL;
-            layer->conv_weights_col = NULL;
-            layer->conv_bias        = NULL;
-        }
-        else if (l == 1) {
             // Conv layer
             layer->type             = LAYER_CONV;
             layer->conv_weights_col = conv1_weights_col;

@@ -25,7 +25,7 @@ int main() {
     srand((unsigned int)time(NULL));
 
     snn_network.num_layers = NUM_LAYERS;
-    int neurons_per_layer[] = {INPUT_SIZE, CONV1_NEURONS, NUM_CLASSES};
+    int neurons_per_layer[] = {CONV1_NEURONS, NUM_CLASSES};
 
     //FC
     // initialize_network(neurons_per_layer, weights_fc1_data, weights_fc2_data, bias_fc1, bias_fc2);
