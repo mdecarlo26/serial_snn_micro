@@ -1,4 +1,5 @@
 #include "dsp_helper.h"
+#include <string.h>
 
 inline void vectorize_q7_add_to_q31(
     const int8_t * __restrict srcA,
