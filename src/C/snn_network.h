@@ -48,8 +48,10 @@ void initialize_network(int neurons_per_layer[],
     // new conv layer weights & bias:
     const int8_t conv1_weights_col[CONV1_KERNEL*CONV1_KERNEL][CONV1_FILTERS],
     const int8_t conv1_bias[CONV1_FILTERS],
+    const int8_t weights_fc1_data[CONV1_NEURONS][HIDDEN_LAYER_1],
+    const int8_t bias_fc1[HIDDEN_LAYER_1],
     // final FC layer (from conv → output):
-    const int8_t weights_fc2_data[CONV1_NEURONS][NUM_CLASSES],
+    const int8_t weights_fc2_data[HIDDEN_LAYER_1][NUM_CLASSES],
     const int8_t bias_fc2[NUM_CLASSES]);
 
 void zero_network();
