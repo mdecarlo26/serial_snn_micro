@@ -33,7 +33,6 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   int            input_size)
 {
     int num_bytes = (input_size + 7) / 8;
-    int N = layer->layer_num;
 
     for (int t = 0; t < TAU; t++) {
         // Aligned scratch for sums
@@ -435,6 +434,7 @@ void conv_sparse_q7_add(
     const int input_bytes = (H_in*W_in + 7)/8;
 
     // 1) zero & bias broadcast
+    printf("szeof sums: %d\n", F * patches);
     memset(sums, 0, F*patches*sizeof(int32_t));
     for (int f = 0; f < F; f++) {
         int32_t b = bias[f];
