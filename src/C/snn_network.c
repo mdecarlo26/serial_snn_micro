@@ -146,11 +146,34 @@ Add compiler directives for float with vectorization
         );
 
         // pack spikes out
-        vector_pack_bits(
-            layer->delayed_resets,
-            output[t],
-            layer->num_neurons
-        );
+        // vector_pack_bits(
+        //     layer->delayed_resets,
+        //     output[t],
+        //     layer->num_neurons
+        // );
+        if (layer->type == LAYER_CONV) {
+            const int F = CONV1_FILTERS;
+            const int P = CONV1_H_OUT * CONV1_W_OUT;
+            // clear output bits
+            memset(output[t], 0, num_bytes);
+            // for each filter, then each patch
+            for (int f = 0; f < F; f++) {
+                int base_new = f * P;
+                for (int p = 0; p < P; p++) {
+                    // old index in delayed_resets is patch*F + f
+                    if (layer->delayed_resets[p*F + f]) {
+                        SET_BIT(output[t], base_new + p,1);
+                    }
+                }
+            }
+        } else {
+            // FC or input: packed in natural order
+            vector_pack_bits(
+                layer->delayed_resets,
+                output[t],
+                layer->num_neurons
+            );
+        }
     }
 }
 
@@ -434,7 +457,6 @@ void conv_sparse_q7_add(
     const int input_bytes = (H_in*W_in + 7)/8;
 
     // 1) zero & bias broadcast
-    printf("szeof sums: %d\n", F * patches);
     memset(sums, 0, F*patches*sizeof(int32_t));
     for (int f = 0; f < F; f++) {
         int32_t b = bias[f];
@@ -451,6 +473,8 @@ void conv_sparse_q7_add(
             byte &= byte - 1;
             int idx = bit_base + bit;
             int y0  = idx / W_in, x0 = idx % W_in;
+            // y0,x0 is the input pixel position (0..27, 0..27)
+            printf("Processing input spike at (%d, %d)\n", y0, x0);
 
             // slide 3×3 kernel
             for (int ky = 0; ky < K; ky++) {
