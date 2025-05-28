@@ -24,9 +24,11 @@ void setup() {
 
     // Serial.println("--Starting SNN--");
     snn_network.num_layers = NUM_LAYERS;
-    int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
+    int neurons_per_layer[] = {INPUT_SIZE, CONV1_NEURONS, NUM_CLASSES};
+    // int neurons_per_layer[] = {INPUT_SIZE, HIDDEN_LAYER_1, NUM_CLASSES};
 
-    initialize_network(neurons_per_layer, weights_fc1_data, weights_fc2_data, bias_fc1, bias_fc2);
+    // initialize_network(neurons_per_layer, weights_fc1_data, weights_fc2_data, bias_fc1, bias_fc2);
+    initialize_network(neurons_per_layer, conv1_weights_col, conv1_bias, weights_fc2_data, bias_fc2);
     zero_network();
 
 

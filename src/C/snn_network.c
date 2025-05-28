@@ -10,9 +10,10 @@ static Layer static_layers[NUM_LAYERS];
 
 // static int8_t *fc1_pointer_table[INPUT_SIZE];
 // static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
-static int8_t *fc2_pointer_table[CONV1_NEURONS];
+static int8_t *fc1_pointer_table[CONV1_NEURONS];
+static int8_t *fc2_pointer_table[HIDDEN_LAYER_1];
 
-// static int8_t *fc1_bias_pointer = NULL;
+static int8_t *fc1_bias_pointer = NULL;
 static int8_t *fc2_bias_pointer = NULL;
 static int weights_initialized = 0;
 
@@ -234,8 +235,10 @@ void initialize_network(int neurons_per_layer[],
     // new conv layer weights & bias:
     const int8_t conv1_weights_col[CONV1_KERNEL*CONV1_KERNEL][CONV1_FILTERS],
     const int8_t conv1_bias[CONV1_FILTERS],
+    const int8_t weights_fc1_data[CONV1_NEURONS][HIDDEN_LAYER_1],
+    const int8_t bias_fc1[HIDDEN_LAYER_1],
     // final FC layer (from conv → output):
-    const int8_t weights_fc2_data[CONV1_NEURONS][NUM_CLASSES],
+    const int8_t weights_fc2_data[HIDDEN_LAYER_1][NUM_CLASSES],
     const int8_t bias_fc2[NUM_CLASSES])
 {
     // Hook up our static layers array
@@ -245,6 +248,10 @@ void initialize_network(int neurons_per_layer[],
     if (!weights_initialized) {
         // Build pointer table for FC2 (conv1 is used directly)
         for (int i = 0; i < CONV1_NEURONS; i++) {
+            fc1_pointer_table[i] = (int8_t *)weights_fc1_data[i];
+        }
+        fc1_bias_pointer = (int8_t *)bias_fc1;
+        for (int i = 0; i < HIDDEN_LAYER_1; i++) {
             fc2_pointer_table[i] = (int8_t *)weights_fc2_data[i];
         }
         fc2_bias_pointer = (int8_t *)bias_fc2;
@@ -273,13 +280,21 @@ void initialize_network(int neurons_per_layer[],
             layer->weights          = NULL;
             layer->bias             = NULL;
         }
+        else if (l == 2) {
+            // fc layer
+            layer->type             = LAYER_FC;
+            layer->conv_weights_col = NULL;
+            layer->conv_bias        = NULL;
+            layer->weights          = fc1_pointer_table;
+            layer->bias             = fc1_bias_pointer;
+        }
         else {
             // Output FC layer
             layer->type             = LAYER_FC;
-            layer->weights          = fc2_pointer_table;
-            layer->bias             = fc2_bias_pointer;
             layer->conv_weights_col = NULL;
             layer->conv_bias        = NULL;
+            layer->weights          = fc2_pointer_table;
+            layer->bias             = fc2_bias_pointer;
         }
 
 #if (Q07_FLAG)

@@ -1,4 +1,5 @@
 #include "dsp_helper.h"
+#include <string.h>
 
 inline void vectorize_q7_add_to_q31(
     const int8_t * __restrict srcA,
@@ -59,10 +60,10 @@ inline void vectorize_float_add_to_float(
 
 /// Scale Q31 array by a Q7 fixed-point factor (DECAY_FP7 >> DECAY_SHIFT).
 inline void vector_scale_q31(
-    const int32_t * __restrict src,
+    const int32_t * src,
     int16_t         scale_fp7,
     int              shift,
-    int32_t       * __restrict dst,
+    int32_t       * dst,
     size_t          blockSize
 ) {
     size_t i=0;

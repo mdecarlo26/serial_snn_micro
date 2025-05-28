@@ -30,7 +30,14 @@ int main() {
     //FC
     // initialize_network(neurons_per_layer, weights_fc1_data, weights_fc2_data, bias_fc1, bias_fc2);
     // Conv
-    initialize_network(neurons_per_layer, conv1_weights_col, conv1_bias, weights_fc2_data, bias_fc2);
+    initialize_network(neurons_per_layer,
+        conv1_weights_col,
+        conv1_bias,
+        weights_fc1_data,
+        bias_fc1,
+        weights_fc2_data,
+        bias_fc2
+    );
     zero_network();
     printf("Network initialized\n");
 

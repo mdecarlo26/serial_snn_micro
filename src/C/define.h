@@ -27,11 +27,11 @@
 #define INPUT_SIZE 784 // 28x28 flattened images
 #define NUM_CLASSES 10 
 #define HIDDEN_LAYER_1 256
-#define NUM_LAYERS 3
+#define NUM_LAYERS 4
 
 // Max neurons and layers
-#define MAX_LAYERS 2
-#define MAX_NEURONS MAX2(CONV1_NEURONS, NUM_CLASSES)
+#define MAX_LAYERS 4
+#define MAX_NEURONS MAX4(CONV1_NEURONS, NUM_CLASSES, HIDDEN_LAYER_1, INPUT_SIZE)
 
 // Network parameters
 #define VOLTAGE_THRESH 1.0f
