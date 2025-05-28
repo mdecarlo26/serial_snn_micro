@@ -112,7 +112,7 @@ Add support for vectorized float
 Add compiler directives for IF and LIF with vectorization
 Add compiler directives for float with vectorization
 */
-    LIF_STEP:
+    // LIF_STEP:
         // decay: V = (DECAY_FP7 * V) >> DECAY_SHIFT
         vector_scale_q31(
             layer->membrane_potentials,
