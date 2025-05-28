@@ -33,6 +33,7 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                   int            input_size)
 {
     int num_bytes = (input_size + 7) / 8;
+    int N = layer->layer_num;
 
     for (int t = 0; t < TAU; t++) {
         // Aligned scratch for sums
@@ -89,6 +90,17 @@ void update_layer(const uint8_t input[TAU][INPUT_BYTES],
                             sums[i] += dequantize_q07(layer->weights[j][i]);
                     #endif
                     }
+                }
+            }
+        }
+        else {
+            for (int i = 0; i < layer->num_neurons; i++) {
+                if (GET_BIT(input[t], i)) {
+#if (Q07_FLAG)
+                    sums[i] += (1 << DECAY_SHIFT);  // Q0.7 equivalent of +1
+#else               
+                    sums[i] += 1.0f;
+#endif
                 }
             }
         }
@@ -224,6 +236,14 @@ void initialize_network(int neurons_per_layer[],
         layer->num_neurons  = neurons_per_layer[l];
 
         if (l == 0) {
+            // Input layer
+            layer->type             = LAYER_INPUT;
+            layer->weights          = NULL;
+            layer->bias             = NULL;
+            layer->conv_weights_col = NULL;
+            layer->conv_bias        = NULL;
+        }
+        else if (l == 0) {
             // Conv layer
             layer->type             = LAYER_CONV;
             layer->conv_weights_col = conv1_weights_col;
