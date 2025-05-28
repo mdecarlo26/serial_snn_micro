@@ -357,7 +357,6 @@ int inference(const uint8_t input[NUM_SAMPLES][TIME_WINDOW][INPUT_BYTES], int sa
         }
         for (int l = 0; l < snn_network.num_layers; l++) {
             int input_size = (l == 0) ? snn_network.layers[l].num_neurons : snn_network.layers[l - 1].num_neurons;
-            printf("Layer type: %d, num_neurons: %d\n", snn_network.layers[l].type,input_size);
 
             // float layer_sparsity[TAU];
             // compute_buffer_sparsity(ping_pong_buffer_1, input_size, layer_sparsity);
@@ -474,7 +473,6 @@ void conv_sparse_q7_add(
             int idx = bit_base + bit;
             int y0  = idx / W_in, x0 = idx % W_in;
             // y0,x0 is the input pixel position (0..27, 0..27)
-            printf("Processing input spike at (%d, %d)\n", y0, x0);
 
             // slide 3×3 kernel
             for (int ky = 0; ky < K; ky++) {
